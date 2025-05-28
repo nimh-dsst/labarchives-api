@@ -1,6 +1,6 @@
 from labarchives_api.client import generate_signature
 
-# from LabArchives API documentation
+# Values from the LabArchives API documentation
 test_akid: str = "0234wedkfjrtfd34er"
 test_api_method: str = "entry_attachment"
 test_expires: int = 264433207000

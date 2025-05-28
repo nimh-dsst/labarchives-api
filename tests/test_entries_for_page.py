@@ -1,7 +1,9 @@
+import logging
+
 import pytest
 from pytest import LogCaptureFixture
+
 from labarchives_api.client import LAClient
-import logging
 
 
 @pytest.fixture
@@ -13,25 +15,24 @@ def client():
     return client
 
 
-@pytest.fixture
-def notebook_name() -> str:
-    """Provide the test notebook name"""
-    return "DSST Test Notebook"
-
-
 def test_get_entries_for_page(
-    client: LAClient, notebook_name: str, caplog: LogCaptureFixture
+    client: LAClient,
+    test_notebook_name: str,
+    target_page_name: str,
+    caplog: LogCaptureFixture,
 ):
     """Test getting entries for a specific page named 'API Test'"""
     # Find notebook ID matching notebook_name
     nbid = None
     for notebook in client.ua_info["notebooks"]:
-        if notebook["name"] == notebook_name:
+        print(test_notebook_name)
+        print(notebook["name"])
+        if notebook["name"] == test_notebook_name:
             nbid = notebook["id"]
             break
 
     assert nbid is not None, (
-        f"Could not find notebook with name: {notebook_name}"
+        f"Could not find notebook with name: {test_notebook_name}"
     )
 
     pages = client.get_all_pages(nbid)
@@ -40,11 +41,13 @@ def test_get_entries_for_page(
     api_test_page = None
     for page in pages:
         display_text = page.find("display-text")
-        if display_text is not None and display_text.text == "API Test":
+        if display_text is not None and display_text.text == target_page_name:
             api_test_page = page
             break
 
-    assert api_test_page is not None, "Could not find 'API Test' page"
+    assert api_test_page is not None, (
+        f"Could not find '{target_page_name}' page"
+    )
 
     # Get the tree_id for the API Test page
     tree_id = api_test_page.find("tree-id")

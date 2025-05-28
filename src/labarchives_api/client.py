@@ -1,15 +1,12 @@
-import base64
-import hmac
 import logging
 import re
 import threading
 import time
 import webbrowser
-from hashlib import sha512
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Union, Literal
+from typing import Any, Literal, Union
 from urllib.parse import parse_qs, quote_plus, urlencode, urlparse, urlunparse
 from xml.etree import ElementTree as ET
 
@@ -17,7 +14,7 @@ import requests
 from requests import Response
 
 from .config import config
-from .utils import parse_user_access_info_response
+from .utils import generate_signature, parse_user_access_info_response
 
 
 def mask_sensitive_url(
@@ -166,21 +163,6 @@ def start_callback_server(port: int = 8000) -> HTTPServer:
     thread.daemon = True
     thread.start()
     return server
-
-
-def generate_signature(
-    access_key_id: str, api_method: str, expires: int, access_password: str
-) -> str:
-    signature_base: str = access_key_id + api_method + str(expires)
-    signature_bytes: bytes = hmac.new(
-        access_password.encode("utf-8"),
-        signature_base.encode("utf-8"),
-        sha512,
-    ).digest()
-    signature: str = quote_plus(
-        base64.b64encode(signature_bytes).decode("utf-8")
-    )
-    return signature
 
 
 class LAClient:

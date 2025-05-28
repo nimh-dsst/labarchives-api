@@ -1,6 +1,10 @@
+import base64
+import hmac
 import xml.etree.ElementTree as ET
+from hashlib import sha512
 from io import BytesIO
 from typing import Any, Union
+from urllib.parse import quote_plus
 
 from requests import Response
 
@@ -90,3 +94,18 @@ def parse_user_access_info_response(response: Response) -> dict[str, Any]:
         raise ValueError("Root tag was not 'user' in response!")
 
     return user_access
+
+
+def generate_signature(
+    access_key_id: str, api_method: str, expires: int, access_password: str
+) -> str:
+    signature_base: str = access_key_id + api_method + str(expires)
+    signature_bytes: bytes = hmac.new(
+        access_password.encode("utf-8"),
+        signature_base.encode("utf-8"),
+        sha512,
+    ).digest()
+    signature: str = quote_plus(
+        base64.b64encode(signature_bytes).decode("utf-8")
+    )
+    return signature
