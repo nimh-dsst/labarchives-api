@@ -18,7 +18,9 @@ uv add "labarchives-api @ git+https://github.com/nimh-dsst/labarchives-api"
 pip install labarchives-api@git+https://github.com/nimh-dsst/labarchives-api
 ```
 
-## API Credientials
+After the package installs, please create a `.env` file to store your LabArchives API credientials, see below.
+
+### API Credientials
 
 This code requires prior LabArchives API credientials. LabArchives will provide an API_URL, ACCESS_KEY_ID, and an ACCESS_PASSWORD. Please create a `.env` in the root directory of the repo using the template below. Your provided API_URL may be different than shown.
 
@@ -29,6 +31,21 @@ access_password="yourAccessPassword"
 ```
 
 **Do NOT commit your actual `.env` file containing the API credientials to version control.** The `.env` file is ignored by git in this repo to help prevent this.
+
+### SSL Issue
+
+Organizations, like NIH, may have root SSL certificates that must be added to Python's bundled `cacert.pem` file for SSL requests to route successfully. Alternatively, the `LAClient` has a `cer_filepath` parameter that allows a user to specify a root cert file for SSL requests.
+
+```python
+from pathlib import Path
+
+from labarchives-api import LAClient
+
+certificate: Path = Path(r"/etc/ssl/certs/my-fancy-ROOT-cert.pem")
+client: LAClient = LAClient(cer_filepath=certificate)
+client.login()
+assert client.is_auth
+```
 
 ## PyTest Setup
 
@@ -52,11 +69,11 @@ We use the `pytest.ini` file as a convenient way to set these values without har
     [pytest]
     # --- Test Configuration for My API Tests ---
     # Specify the target notebook for testing.
-    # Example: "MyProjectNotebook"
+    # Do not use quotes
     test_notebook = DSST Test Notebook
 
     # Specify the target page name within the notebook for testing.
-    # Example: "UserAuthenticationTests"
+    # Do not use quotes
     test_page_name = API Test
     ```
 
