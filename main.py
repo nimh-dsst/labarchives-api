@@ -67,7 +67,7 @@ class User:
     def notebooks(self):
         return self._notebooks
 
-class Notebooks:
+class Notebooks: # TODO inherit from mapping and iterable?
     def __init__(self, notebooks: list[NotebookInfo], user: User, client: Client):
         self._user = user
         self._client = client
@@ -98,11 +98,18 @@ class Notebooks:
 class NotebookNode(ABC, MutableMapping):
     # acts as a dict
     # should assigns be implemented? (MutableMapping) or delegated to a function?
+    # would need Page/Directory Inits to be passed for assigns, or-- Notebook with NoneType created with factory constructor?
+    # need to retain data that this is an inorder list behind the scenes
+    # TODO inherit from iterator?
     
     pass
 
-
+@dataclass
 class NotebookItem(ABC):
+    _can_read_comments: bool
+    _can_write_comments: bool
+    _can_read: bool
+    _can_write: bool
 
     @property
     def can_read_comments(self):
