@@ -7,6 +7,8 @@ from datetime import timedelta, datetime
 from lxml import etree
 from copy import deepcopy
 from dataclasses import dataclass
+from abs import ABC, abstractmethod
+from collections.abc import MutableMapping
 
 @dataclass
 class NotebookInfo:
@@ -93,7 +95,33 @@ class Notebooks:
     # create notebook
     # XXX are there any other things we want off this?
 
-class Notebook:
+class NotebookNode(ABC, MutableMapping):
+    # acts as a dict
+    # should assigns be implemented? (MutableMapping) or delegated to a function?
+    
+    pass
+
+
+class NotebookItem(ABC):
+
+    @property
+    def can_read_comments(self):
+        return self._can_read_comments
+
+    @property
+    def can_write_comments(self):
+        return self._can_write_comments
+
+    @property
+    def can_read(self):
+        return self._can_read
+
+    @property
+    def can_write(self):
+        return self._can_write
+
+
+class Notebook(NotebookNode):
     def __init__(self, init: NotebookInfo, user, client):
         self._id = init.id
         self._name = init.name
@@ -122,6 +150,17 @@ class Notebook:
     # tree tools
     #    - ex search for specific page
     #    - etc.
+
+    
+
+class NotebookDirectory(NotebookItem, NotebookNode):
+    pass
+
+class NotebookPage(NotebookItem):
+    pass
+
+class Entry:
+    pass
 
 
 
