@@ -5,18 +5,37 @@ from base64 import b64encode
 from requests import get
 from datetime import timedelta, datetime
 from lxml import etree
+from copy import deepcopy
+from dataclasses import dataclass
+
+@dataclass
+class NotebookInfo:
+    id: str
+    name: str
+    is_default: bool
 
 class User:
-    def __init__(self, uid: str, auto_login: bool, notebooks: list[dict[str, any]], client: Client):
-        self.uid = uid
-        self.can_refresh = auto_login
-        self.notebooks = notebooks
-        self.client = client
+    def __init__(self, uid: str, auto_login: bool, notebooks: list[NotebookInfo], client: Client):
+        self._uid = uid
+        self._can_refresh = auto_login
+        self._notebooks = Notebooks(notebooks, self, client)
+        self._client = client
+
+    """
+    Utility method to automatically integrate client uid
+    """
+    def _construct_client_url(self, api_method_uri: str | list[str], query: dict[str, any], expires_in: timedelta | datetime = None):
+        _query = deepcopy(query)
+
+        if "uid" not in _query:
+            _query["uid"] = self._uid
+        
+        return self._client.construct_url(api_method, _query, expires_in)
 
     def refresh(self, *, authenticated=False):
-        if not self.can_refresh and not authenticated:
-            raise "Cannot" # TODO
-        refresh_request = get(self.client.construct_url("users/user_info_via_id", {"uid": self.uid, "authenticated":authenticated}))
+        if not self._can_refresh and not authenticated:
+            raise "Cannot Automatically Refresh" # TODO
+        refresh_request = get(self._construct_client_url("users/user_info_via_id", {"authenticated":authenticated}))
 
         # TODO handle failure
 
@@ -25,11 +44,91 @@ class User:
         self.uid = uid_tree.findtext(".//users/id")
         # XXX should we refresh ability to auto_login and notebooks here?
 
-    
+        # TODO
+
+    def get_max_upload_size() -> int:
+        # NOTE the api reference doesn't explain what unit this is, so I'm going to treat this as bytes
+        size_request = get(self._construct_client_url("users/max_file_size")
+
+        # TODO handle failure
+        # TODO centralize requests through the client so the client can handle request failures there, and just let its Exceptions do the handling
+        # NOTE based on usage patterns im seeing while writing this I think the user should probably also handle requests requiring its uid, or patch over the client's request handling
+
+        size_tree = etree.fromstring(size_request.text)
+
+        # TODO handle conversion failure
+        max_filesize = int(size_tree.findtext(".//max-file-size"))
+
+        return max_filesize  
+
+    @property
+    def notebooks(self):
+        return self._notebooks
+
+class Notebooks:
+    def __init__(self, notebooks: list[NotebookInfo], user: User, client: Client):
+        self._user = user
+        self._client = client
+        self._notebooks = [Notebook(n, user, client) for n in notebooks]
+        self._notebooks_by_id = {n.id: n for n in self._notebooks}
+        self._notebooks_by_name = {n.name: n] for n in self._notebooks}
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            # TODO evaluate the usage of enum values here
+            key_type = key.start
+            key_value = key.stop
+        else:
+            key_type = "id"
+            key_value = key
+
+        # NOTE assumes only possible key types are id and name
+        notebooks_reference = self._notebooks if key_type == "id" else self._notebooks_by_name
+
+        return notebooks_reference[key_value]
+
+    def __iter__(self):
+        return self._notebooks.__iter__()
+        
+    # create notebook
+    # XXX are there any other things we want off this?
+
+class Notebook:
+    def __init__(self, init: NotebookInfo, user, client):
+        self._id = init.id
+        self._name = init.name
+        self._is_default = init.is_default
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def is_default(self): # FIXME what is this for anyways??
+        return self._is_default
+        
+    # get info
+    # modify info
+    # get users
+    # change user perms
+    # del users
+    # delete notebook?
+    # metadata?
+    # transfer ownership?
+    # tree tools
+    #    - ex search for specific page
+    #    - etc.
+
+
 
 class Client:
 
     def __init__(self, base_url: str, akid: str, akpass: bytes | str):
+        # TODO private the vars
         self.base_url = urlsplit(base_url).geturl()
         self.akid = akid
         self.hmac = HMAC(akpass if isinstance(akpass, bytes) else bytes(akpass, 'utf8'), SHA512())
@@ -52,18 +151,18 @@ class Client:
         uid_tree = etree.fromstring(uid_request.text)
 
         uid = uid_tree.findtext(".//users/id")
+
+        # TODO handle conversion failure
         auto_login = bool(uid_tree.findtext(".//users/auto-login-allowed"))
 
         notebooks = []
         
         for notebook in uid_tree.iterfind(".//notebook"):
             notebook_id = notebook.findtext('./id')
+            notebook_name = notebook.findtext('./name')
+            is_default = bool(notebook.findtext('./is-default')) # TODO handle conversion failure
 
-            notebooks.append({
-                "id": notebook_id, 
-                "name": notebook.findtext('./name'),
-                "default": bool(notebook.findtext('./is-default'))
-            })
+            notebooks.append(NotebookInfo(notebook_id, notebook_name, is_default))
 
         notebooks.sort(key=lambda k: k["default"])
 
