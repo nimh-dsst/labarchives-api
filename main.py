@@ -7,8 +7,8 @@ from datetime import timedelta, datetime
 from lxml import etree
 from copy import deepcopy
 from dataclasses import dataclass
-from abs import ABC, abstractmethod
-from collections.abc import MutableMapping
+from abc import ABC, abstractmethod
+from collections.abc import MutableMapping, Mapping
 
 @dataclass
 class NotebookInfo:
@@ -32,7 +32,7 @@ class User:
         if "uid" not in _query:
             _query["uid"] = self._uid
         
-        return self._client.construct_url(api_method, _query, expires_in)
+        return self._client.construct_url(api_method_uri, _query, expires_in)
 
     def refresh(self, *, authenticated=False):
         if not self._can_refresh and not authenticated:
@@ -48,9 +48,9 @@ class User:
 
         # TODO
 
-    def get_max_upload_size() -> int:
+    def get_max_upload_size(self) -> int:
         # NOTE the api reference doesn't explain what unit this is, so I'm going to treat this as bytes
-        size_request = get(self._construct_client_url("users/max_file_size")
+        size_request = get(self._construct_client_url("users/max_file_size"))
 
         # TODO handle failure
         # TODO centralize requests through the client so the client can handle request failures there, and just let its Exceptions do the handling
@@ -67,13 +67,13 @@ class User:
     def notebooks(self):
         return self._notebooks
 
-class Notebooks: # TODO inherit from mapping and iterable?
+class Notebooks(Mapping): # TODO inherit from mapping and iterable?
     def __init__(self, notebooks: list[NotebookInfo], user: User, client: Client):
         self._user = user
         self._client = client
         self._notebooks = [Notebook(n, user, client) for n in notebooks]
         self._notebooks_by_id = {n.id: n for n in self._notebooks}
-        self._notebooks_by_name = {n.name: n] for n in self._notebooks}
+        self._notebooks_by_name = {n.name: n for n in self._notebooks} # TODO multiple ids with same name
 
     def __getitem__(self, key):
         if isinstance(key, slice):
@@ -85,31 +85,77 @@ class Notebooks: # TODO inherit from mapping and iterable?
             key_value = key
 
         # NOTE assumes only possible key types are id and name
-        notebooks_reference = self._notebooks if key_type == "id" else self._notebooks_by_name
+        notebooks_reference = self._notebooks_by_id if key_type == "id" else self._notebooks_by_name
 
         return notebooks_reference[key_value]
 
     def __iter__(self):
         return self._notebooks.__iter__()
+    
+    def __len__(self):
+        return self._notebooks.__len__()
         
     # create notebook
     # XXX are there any other things we want off this?
 
-class NotebookNode(ABC, MutableMapping):
+class NotebookNode(ABC, Mapping):
     # acts as a dict
     # should assigns be implemented? (MutableMapping) or delegated to a function?
+    # XXX people like assigns
+    # XXX assign by name and object type?
     # would need Page/Directory Inits to be passed for assigns, or-- Notebook with NoneType created with factory constructor?
     # need to retain data that this is an inorder list behind the scenes
     # TODO inherit from iterator?
-    
-    pass
+
+    _children: list[NotebookDirectory | NotebookPage]
+
+    @abstractmethod
+    def _populate(self):
+        pass
+
+
+    def __getitem__(self, key: str | slice) -> NotebookDirectory | NotebookPage:
+        if self._children is None:
+            if isinstance(key, str) or key.start == 'id': # We're relying on the type guards to catch the error here.
+                pass
+            else:
+                self._populate()
+        else:
+            raise "Nuh uh" # TODO
+
+
+    def insert(self, item: NotebookItem) -> str: # NOTE returns id
+        pass
+
+
+    def __len__(self):
+        if self._children is None:
+            self._populate()
+
+        return self._children.__len__()
+
+    def __iter__(self):
+        if self._children is None:
+            self._populate()
+
+        return self._children.__iter__()
 
 @dataclass
 class NotebookItem(ABC):
+    _name: str
+    _id: str
     _can_read_comments: bool
     _can_write_comments: bool
     _can_read: bool
     _can_write: bool
+
+    @property
+    def name(self):
+        return self._name
+    
+    @property
+    def id(self):
+        return self._id
 
     @property
     def can_read_comments(self):
@@ -129,10 +175,12 @@ class NotebookItem(ABC):
 
 
 class Notebook(NotebookNode):
-    def __init__(self, init: NotebookInfo, user, client):
+    def __init__(self, init: NotebookInfo, user: User, client: Client):
         self._id = init.id
         self._name = init.name
         self._is_default = init.is_default
+        self._user = user
+        self._client = client
 
     @property
     def id(self):
@@ -213,12 +261,7 @@ class Client:
         notebooks.sort(key=lambda k: k["default"])
 
         return User(uid, auto_login, notebooks, self)
-
-
-    def login_token(self):
-        # TODO see login_authcode, it's that but with a different name
-
-        pass
+    
 
     def construct_url(self, api_method_uri: str | list[str], query: dict[str, any], expires_in: timedelta | datetime = None, *,
                             should_prefix_api: bool = True, signature_method: str = None):
@@ -255,10 +298,7 @@ class Client:
         return b64encode(sig_raw).decode()
 
 
-    def _sign_url(self, url: str, api_method: str, expires_in: timedelta | datetime = None) -> str:
-        if expires_in is None: 
-            expires_in = timedelta(seconds=60)
-
+    def _sign_url(self, url: str, api_method: str, expires_in: timedelta | datetime = timedelta(seconds=60)) -> str:
         scheme, netloc, path, querystring, _f = urlsplit(url)
         query = dict(parse_qsl(querystring))
 
