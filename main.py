@@ -98,12 +98,7 @@ class Notebooks(Mapping): # TODO inherit from mapping and iterable?
     # create notebook
     # XXX are there any other things we want off this?
 
-class NotebookNode(ABC, Mapping):
-    # acts as a dict
-    # should assigns be implemented? (MutableMapping) or delegated to a function?
-    # XXX people like assigns
-    # XXX assign by name and object type?
-    # would need Page/Directory Inits to be passed for assigns, or-- Notebook with NoneType created with factory constructor?
+class NotebookNode(ABC, Mapping, Iterable):
     # need to retain data that this is an inorder list behind the scenes
     # TODO inherit from iterator?
 
@@ -123,10 +118,13 @@ class NotebookNode(ABC, Mapping):
         else:
             raise "Nuh uh" # TODO
 
+    def insert_page(self, name: str) -> str: # NOTE returns id 
+                                             # XXX should this return an actual instance instead?
+                                             # and should that be a hydrated instance or just the id?
+        pass # TODO
 
-    def insert(self, item: NotebookItem) -> str: # NOTE returns id
-        pass
-
+    def insert_directory(self, name: str) -> str: # see above
+        pass # TODO
 
     def __len__(self):
         if self._children is None:
