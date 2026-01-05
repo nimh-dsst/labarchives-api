@@ -129,7 +129,7 @@ class NotebookEntity(ABC):
 
     @property
     def name(self) -> str:
-        return self._name
+        return self._name # TODO allow this to be set
 
     @property
     def id(self) -> str:
