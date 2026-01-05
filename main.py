@@ -1,184 +1,218 @@
-from urllib.parse import urlsplit, urlunsplit, quote, urlencode, parse_qsl
-from cryptography.hazmat.primitives.hmac import HMAC
-from cryptography.hazmat.primitives.hashes import SHA512
-from base64 import b64encode
-from requests import get
-from datetime import timedelta, datetime
-from lxml import etree
-from copy import deepcopy
-from dataclasses import dataclass
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from collections.abc import MutableMapping, Mapping
+from base64 import b64encode
+from collections.abc import Mapping, Callable, Sequence
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Literal
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from operator import itemgetter
+
+from cryptography.hazmat.primitives.hashes import SHA512
+from cryptography.hazmat.primitives.hmac import HMAC
+from lxml import etree
+from requests import codes as status_codes
+from requests import get
+
 
 @dataclass
-class NotebookInfo:
+class NotebookInit:
     id: str
     name: str
     is_default: bool
 
+
+class Index(Enum):
+    Id = 1
+    Name = 2
+
+
+type IdOrNameIndex = str | slice[Index, str, None]
+
+type EtreeExtractorDict = Mapping[str, EtreeExtractorDict | Callable[[Any], Any]]
+
+
+def _flatten_dict(
+    val: EtreeExtractorDict, prefix: str = ""
+) -> dict[str, Callable[[Any], Any]]:
+    items: dict[str, Callable[[Any], Any]] = {}
+
+    for _key, value in val.items():
+        if len(_key) == 0:
+            raise  # TODO raise exc for invalid value
+
+        key = f"{prefix}/{_key}"
+
+        if isinstance(value, Callable):
+            items[key] = value
+        else:
+            items.update(_flatten_dict(value, key))
+
+    return items
+
+
+def _extract_etree(etree: etree.Element, format: EtreeExtractorDict) -> dict[str, Any]:
+    flat = _flatten_dict(format)
+
+    items: dict[str, Any] = {}
+
+    for key, mapper in flat.items():
+        value = etree.findtext(f"./{key}")
+
+        if (
+            value is None
+        ):  # XXX should we collate errors and return at end with the dict or?
+            raise  # TODO raise missing value exc
+        try:
+            items[key.split("/")[-1]] = mapper(value)
+        except ValueError as err:
+            raise err  # TODO raise invalid value exc
+
+    return items
+
+
 class User:
-    def __init__(self, uid: str, auto_login: bool, notebooks: list[NotebookInfo], client: Client):
+    def __init__(
+        self,
+        uid: str,
+        auto_login: bool,
+        notebooks: Sequence[NotebookInit],
+        client: Client,
+    ):
         self._uid = uid
         self._can_refresh = auto_login
-        self._notebooks = Notebooks(notebooks, self, client)
+        self._notebooks = Notebooks(notebooks, self)
         self._client = client
 
-    """
-    Utility method to automatically integrate client uid
-    """
-    def _construct_client_url(self, api_method_uri: str | list[str], query: dict[str, any], expires_in: timedelta | datetime = None):
-        _query = deepcopy(query)
+    def api_get(self, api_method_uri: str | Sequence[str], **kwargs: Any):
+        return self._client.api_get(api_method_uri, **kwargs, uid=self._uid)
 
-        if "uid" not in _query:
-            _query["uid"] = self._uid
-        
-        return self._client.construct_url(api_method_uri, _query, expires_in)
+    # def api_post(self, api_method_uri: str | Sequence[str], **kwargs):
+    # return self._client.api_post(api_method_uri, **kwargs, uid=self.uid)
 
-    def refresh(self, *, authenticated=False):
+    def refresh(self, *, authenticated: bool = False):
         if not self._can_refresh and not authenticated:
-            raise "Cannot Automatically Refresh" # TODO
-        refresh_request = get(self._construct_client_url("users/user_info_via_id", {"authenticated":authenticated}))
+            raise RuntimeError  # "Cannot Automatically Refresh"  # TODO fill in error
 
-        # TODO handle failure
-
-        uid_tree = etree.fromstring(refresh_request.text)
-
-        self.uid = uid_tree.findtext(".//users/id")
+        uid_tree = self.api_get("users/user_info_via_id", authenticated=authenticated)
+        self.uid = uid_tree.findtext(".//users/id")  # TODO extract etree
         # XXX should we refresh ability to auto_login and notebooks here?
 
-        # TODO
+        # TODO fill in rest of function
 
     def get_max_upload_size(self) -> int:
         # NOTE the api reference doesn't explain what unit this is, so I'm going to treat this as bytes
-        size_request = get(self._construct_client_url("users/max_file_size"))
-
-        # TODO handle failure
-        # TODO centralize requests through the client so the client can handle request failures there, and just let its Exceptions do the handling
-        # NOTE based on usage patterns im seeing while writing this I think the user should probably also handle requests requiring its uid, or patch over the client's request handling
-
-        size_tree = etree.fromstring(size_request.text)
-
-        # TODO handle conversion failure
-        max_filesize = int(size_tree.findtext(".//max-file-size"))
-
-        return max_filesize  
+        return _extract_etree(
+            self.api_get("users/max_file_size"), {"max-file-size": int}
+        )["max-file-size"]
 
     @property
     def notebooks(self):
         return self._notebooks
 
-class Notebooks(Mapping): # TODO inherit from mapping and iterable?
-    def __init__(self, notebooks: list[NotebookInfo], user: User, client: Client):
-        self._user = user
-        self._client = client
-        self._notebooks = [Notebook(n, user, client) for n in notebooks]
-        self._notebooks_by_id = {n.id: n for n in self._notebooks}
-        self._notebooks_by_name = {n.name: n for n in self._notebooks} # TODO multiple ids with same name
 
-    def __getitem__(self, key):
-        if isinstance(key, slice):
-            # TODO evaluate the usage of enum values here
-            key_type = key.start
-            key_value = key.stop
-        else:
-            key_type = "id"
-            key_value = key
-
-        # NOTE assumes only possible key types are id and name
-        notebooks_reference = self._notebooks_by_id if key_type == "id" else self._notebooks_by_name
-
-        return notebooks_reference[key_value]
-
-    def __iter__(self):
-        return self._notebooks.__iter__()
-    
-    def __len__(self):
-        return self._notebooks.__len__()
-        
-    # create notebook
-    # XXX are there any other things we want off this?
-
-class NotebookNode(ABC, Mapping, Iterable):
-    # need to retain data that this is an inorder list behind the scenes
-    # TODO inherit from iterator?
-
-    _children: list[NotebookDirectory | NotebookPage]
-
-    @abstractmethod
-    def _populate(self):
-        pass
-
-
-    def __getitem__(self, key: str | slice) -> NotebookDirectory | NotebookPage:
-        if self._children is None:
-            if isinstance(key, str) or key.start == 'id': # We're relying on the type guards to catch the error here.
-                pass
-            else:
-                self._populate()
-        else:
-            raise "Nuh uh" # TODO
-
-    def insert_page(self, name: str) -> str: # NOTE returns id 
-                                             # XXX should this return an actual instance instead?
-                                             # and should that be a hydrated instance or just the id?
-        pass # TODO
-
-    def insert_directory(self, name: str) -> str: # see above
-        pass # TODO
-
-    def __len__(self):
-        if self._children is None:
-            self._populate()
-
-        return self._children.__len__()
-
-    def __iter__(self):
-        if self._children is None:
-            self._populate()
-
-        return self._children.__iter__()
+type NotebookNode = "NotebookPage | NotebookDirectory"
 
 @dataclass
-class NotebookItem(ABC):
-    _name: str
+class NotebookEntity(ABC):
     _id: str
+    _name: str
+    _root: "Notebook"
+    _parent: NotebookTreeNode | None
     _can_read_comments: bool
     _can_write_comments: bool
     _can_read: bool
     _can_write: bool
+    _user: "User"
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
-    
+
     @property
-    def id(self):
+    def id(self) -> str:
         return self._id
 
     @property
-    def can_read_comments(self):
+    def can_read_comments(self) -> bool:
         return self._can_read_comments
 
     @property
-    def can_write_comments(self):
+    def can_write_comments(self) -> bool:
         return self._can_write_comments
 
     @property
-    def can_read(self):
+    def can_read(self) -> bool:
         return self._can_read
 
     @property
-    def can_write(self):
+    def can_write(self) -> bool:
         return self._can_write
+    
+    @property
+    def parent(self) -> NotebookTreeNode | None:
+        return self._parent
+    
+    @property
+    def root(self) -> "Notebook":
+        return self._root
 
 
-class Notebook(NotebookNode):
-    def __init__(self, init: NotebookInfo, user: User, client: Client):
+class NotebookTreeNode(
+    ABC, Mapping[IdOrNameIndex, NotebookNode | Sequence[NotebookNode]]
+):
+    _children: Sequence[NotebookNode]
+    _populated: bool
+
+    @abstractmethod
+    def _populate(self) -> None:
+        raise NotImplementedError
+
+    def _ensure_populated(self):
+        if not self._populated:
+            self._populate()
+            self._populated = True
+
+    def __len__(self) -> int:
+        self._ensure_populated()
+        return len(self._children)
+
+    def __iter__(self):
+        self._ensure_populated()
+        return iter(child.id for child in self._children)
+    
+    # TODO moving things around
+
+    def __getitem__(self, key: IdOrNameIndex) -> NotebookNode | list[NotebookNode]:
+        self._ensure_populated()
+
+        if isinstance(key, slice):
+            key_type = key.start
+            key_value = key.stop
+        else:
+            key_type = Index.Id
+            key_value = key
+
+        match key_type:
+            case Index.Id:
+                for node in self._children:
+                    if node.id == key_value:
+                        return node
+                raise KeyError  # TODO exc type
+            case Index.Name:
+                return list(filter(lambda k: k.name == key_value, self._children))
+
+
+class Notebook(NotebookTreeNode):
+    def __init__(self, init: NotebookInit, user: User, notebooks: Notebooks):
         self._id = init.id
         self._name = init.name
         self._is_default = init.is_default
         self._user = user
-        self._client = client
+        self._notebooks = notebooks
+        self._inserts_from_bottom = None
 
     @property
     def id(self):
@@ -188,81 +222,234 @@ class Notebook(NotebookNode):
     def name(self):
         return self._name
 
+    @name.setter
+    def name_setter(self, value: str):
+        self._user.api_get("notebooks/modify_notebook_info", nbid=self.id, name=value)
+
+        self._name = value
+
     @property
-    def is_default(self): # FIXME what is this for anyways??
+    def inserts_from_bottom(self) -> bool:
+        if self._inserts_from_bottom is None:
+            self._inserts_from_bottom = not _extract_etree(
+                self._user.api_get("notebooks/notebook_info", nbid=self.id),
+                {"notebook": {"add-entry-to-page-top": bool}},
+            )["add-entry-to-page-top"]
+
+        return self._inserts_from_bottom
+
+    @property
+    def is_default(self):  # FIXME what is this for anyways??
         return self._is_default
-        
-    # get info
-    # modify info
-    # get users
-    # change user perms
-    # del users
+
+    def get_tree(self, parent: NotebookDirectory | Literal["0"]):
+        xml_tree = self._user.api_get(
+            "tree_tools/get_tree_level",
+            nbid=self.id,
+            parent_tree_id=parent if parent == "0" else parent.id,
+        )
+
+        nodes: list["NotebookPage | NotebookDirectory"] = []
+
+        for subtree in xml_tree.iterfind(".//level-node"):
+            node = _extract_etree(
+                subtree,
+                {
+                    "is-page": bool,
+                    "tree-id": str,
+                    "display-text": str,
+                    "user-access": {
+                        "can-read": bool,
+                        "can-write": bool,
+                        "can-read-comments": bool,
+                        "can-write-comments": bool,
+                    },
+                },
+            )  # TODO do we want to handle errors here?
+
+            node_constructor = NotebookPage if node["is-page"] else NotebookDirectory
+
+            nodes.append(
+                node_constructor(
+                    node["tree-id"],
+                    node["display-text"],
+                    self,
+                    self if parent == "0" else parent,
+                    node["can-read-comments"],
+                    node["can-write-comments"],
+                    node["can-read"],
+                    node["can-write"],
+                    self._user
+                )
+            )
+
+        return nodes
+
+    def _populate(self):
+        self._children = self.get_tree("0")
+
+    # get info # This is basically irrelevant
     # delete notebook?
     # metadata?
-    # transfer ownership?
     # tree tools
     #    - ex search for specific page
     #    - etc.
 
+
+class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
+    def __init__(self, notebooks: Sequence[NotebookInit], user: User):
+        self._user = user
+        self._notebooks = [Notebook(n, user, self) for n in notebooks]
+        self._notebooks_by_id = {n.id: n for n in self._notebooks}
+
+    def __getitem__(self, key: IdOrNameIndex) -> Notebook | list[Notebook]:
+        if isinstance(key, slice):
+            key_type = key.start
+            key_value = key.stop
+        else:
+            key_type = Index.Id
+            key_value = key
+
+        match key_type:
+            case Index.Id:
+                return self._notebooks_by_id[key_value]
+            case Index.Name:
+                return list(filter(lambda k: k.name == key_value, self._notebooks))
+
+    def __iter__(self):
+        return iter(map(lambda c: (c.id), self._notebooks))
+
+    def __len__(self):
+        return self._notebooks.__len__()
+
+    def create_notebook(self, name: str) -> Notebook:
+        nbid = _extract_etree(
+            self._user.api_get(
+                "notebooks/create_notebook", name=name, initial_folders="Empty"
+            ),
+            {"nbid": str},
+        )["nbid"]
+
+        new_notebook = Notebook(NotebookInit(nbid, name, False), self._user, self)
+
+        self._notebooks.append(new_notebook)
+        self._notebooks_by_id[nbid] = new_notebook
+
+        return new_notebook
+
+
+class NotebookDirectory(NotebookTreeNode, NotebookEntity):
+    def _populate(self):
+        self._children = self._root.get_tree(self)
+
+
+class NotebookPage(NotebookEntity):
+    _entries: list[Entries] | None
     
+    @property
+    def entries(self):
+        if self._entries is None:
+            entries: list[Entry] = []
+            
+            entries_tree = self._user.api_get("tree_tools/get_entries_for_page", page_tree_id=self.id, nbid=self._root.id, entry_data=True)
+            for entry in entries_tree.iterfind(".//entry"):
+                entry_data = _extract_etree(entry, {
+                    "eid": str,
+                    "part-type": str,
+                    "attach-file-name": str,
+                    "attach-content-type": str,
+                    "entry-data": str
+                })
 
-class NotebookDirectory(NotebookItem, NotebookNode):
-    pass
+                entries.append(Entry(
+                    entry_data['eid'],
+                    entry_data['part-type'],
+                    entry_data['attach-file-name'],
+                    entry_data['attach-content-type'],
+                    entry_data['entry-data'],
+                    self._user
+                ))
 
-class NotebookPage(NotebookItem):
+            
+                 
+
+            
+
+class Entries:
     pass
 
 class Entry:
+    
+    def __init__(self, eid: str, part_type: str, filename: str, mimeType: str, data: str, user: User):
+        pass
+
+class Comment:
     pass
 
 
-
 class Client:
-
     def __init__(self, base_url: str, akid: str, akpass: bytes | str):
-        # TODO private the vars
-        self.base_url = urlsplit(base_url).geturl()
-        self.akid = akid
-        self.hmac = HMAC(akpass if isinstance(akpass, bytes) else bytes(akpass, 'utf8'), SHA512())
+        self._base_url = urlsplit(base_url).geturl()
+        self._akid = akid
+        self._hmac = HMAC(
+            bytes(akpass, "utf8") if isinstance(akpass, str) else akpass, SHA512()
+        )
 
     def generate_auth_url(self, redirect_url: str) -> str:
-        return self.construct_url("api_user_login", {"redirect_uri": redirect_url}, 
-                                  should_prefix_api=False, signature_method=redirect_url)
+        return self.construct_url(
+            "api_user_login",
+            {"redirect_uri": redirect_url},
+            should_prefix_api=False,
+            signature_method=redirect_url,
+        )
 
     def login_authcode(self, user_email: str, auth_code: str):
-        uid_request = get(self.construct_url(
-            "users/user_access_info", 
-            {
-                "login_or_email": user_email,
-                "password": auth_code
-            }
-        ))
+        uid_tree = self.api_get(
+            "users/user_access_info", login_or_email=user_email, password=auth_code
+        )
 
-        # TODO handle failure
+        uid, auto_login = itemgetter("uid", "auto-login-allowed")(
+            _extract_etree(uid_tree, {"users": {"id": str, "auto-login-allowed": bool}})
+        )
 
-        uid_tree = etree.fromstring(uid_request.text)
+        notebooks: list[NotebookInit] = []
 
-        uid = uid_tree.findtext(".//users/id")
-
-        # TODO handle conversion failure
-        auto_login = bool(uid_tree.findtext(".//users/auto-login-allowed"))
-
-        notebooks = []
-        
         for notebook in uid_tree.iterfind(".//notebook"):
-            notebook_id = notebook.findtext('./id')
-            notebook_name = notebook.findtext('./name')
-            is_default = bool(notebook.findtext('./is-default')) # TODO handle conversion failure
+            notebook_id, notebook_name, is_default = itemgetter(
+                "id", "name", "is-default"
+            )(_extract_etree(notebook, {"id": str, "name": str, "is-default": bool}))
 
-            notebooks.append(NotebookInfo(notebook_id, notebook_name, is_default))
+            # TODO error or warning when id/name are failed?
 
-        notebooks.sort(key=lambda k: k["default"])
+            notebooks.append(NotebookInit(notebook_id, notebook_name, is_default))
+
+        notebooks.sort(key=lambda k: k.is_default)
 
         return User(uid, auto_login, notebooks, self)
-    
 
-    def construct_url(self, api_method_uri: str | list[str], query: dict[str, any], expires_in: timedelta | datetime = None, *,
-                            should_prefix_api: bool = True, signature_method: str = None):
+    def api_get(
+        self, api_method_uri: str | Sequence[str], **kwargs: Any
+    ) -> etree.Element:
+        request = get(self.construct_url(api_method_uri, query=kwargs))
+
+        if request.status_code != status_codes.ok:
+            pass  # TODO error
+            # See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
+
+        return etree.fromstring(request.text)
+
+    # def api_post():
+    #    pass  # TODO fill in function
+
+    def construct_url(
+        self,
+        api_method_uri: str | Sequence[str],
+        query: Mapping[str, Any],
+        expires_in: timedelta | datetime | None = None,
+        *,
+        should_prefix_api: bool = True,
+        signature_method: str | None = None,
+    ):
         if isinstance(api_method_uri, str):
             api_method_uri = api_method_uri.split("/")
 
@@ -277,26 +464,40 @@ class Client:
 
         api_method = method_parts[-1] if signature_method is None else signature_method
 
-        scheme, netloc, path, _qs, _f = urlsplit(self.base_url)
+        scheme, netloc, path, _qs, _f = urlsplit(self._base_url)
 
-        if not path.endswith('/'):
-            path += '/'
+        if not path.endswith("/"):
+            path += "/"
 
         path += "/".join(method_parts)
 
-        return self._sign_url(urlunsplit((scheme, netloc, path, urlencode(query), _f)), api_method, expires_in)
-        
-    def _signature(self, api_method: str, expiry: int) -> str:
-        hmac = self.hmac.copy()
+        if expires_in:
+            return self._sign_url(
+                urlunsplit((scheme, netloc, path, urlencode(query), _f)),
+                api_method,
+                expires_in,
+            )
+        else:
+            return self._sign_url(
+                urlunsplit((scheme, netloc, path, urlencode(query), _f)),
+                api_method,
+            )
 
-        hmac.update(f'{self.akid}{api_method}{expiry}'.encode())
+    def _signature(self, api_method: str, expiry: int) -> str:
+        hmac = self._hmac.copy()
+
+        hmac.update(f"{self._akid}{api_method}{expiry}".encode())
 
         sig_raw = hmac.finalize()
 
         return b64encode(sig_raw).decode()
 
-
-    def _sign_url(self, url: str, api_method: str, expires_in: timedelta | datetime = timedelta(seconds=60)) -> str:
+    def _sign_url(
+        self,
+        url: str,
+        api_method: str,
+        expires_in: timedelta | datetime = timedelta(seconds=60),
+    ) -> str:
         scheme, netloc, path, querystring, _f = urlsplit(url)
         query = dict(parse_qsl(querystring))
 
@@ -306,12 +507,8 @@ class Client:
             expiry = round(expires_in.timestamp() * 1000)
         sig = self._signature(api_method, expiry)
 
-        query["akid"] = self.akid
+        query["akid"] = self._akid
         query["expires"] = str(expiry)
         query["sig"] = sig
 
         return urlunsplit((scheme, netloc, path, urlencode(query), _f))
-        
-
-
-
