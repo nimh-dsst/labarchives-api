@@ -30,7 +30,6 @@ class Index(Enum):
 
 
 type IdOrNameIndex = str | slice[Index, str, None]
-
 type EtreeExtractorDict = Mapping[str, EtreeExtractorDict | Callable[[Any], Any]]
 
 
@@ -45,12 +44,22 @@ def _flatten_dict(
 
         key = f"{prefix}/{_key}"
 
-        if isinstance(value, Callable):
+        if callable(value):
             items[key] = value
         else:
             items.update(_flatten_dict(value, key))
 
     return items
+
+
+def to_bool(s: str) -> bool:
+    match s.lower():
+        case "true":
+            return True
+        case "false":
+            return False
+        case _:
+            raise ValueError  # TODO
 
 
 def _extract_etree(etree: etree.Element, format: EtreeExtractorDict) -> dict[str, Any]:
@@ -97,7 +106,7 @@ class User:
             raise RuntimeError  # "Cannot Automatically Refresh"  # TODO fill in error
 
         uid_tree = self.api_get("users/user_info_via_id", authenticated=authenticated)
-        self.uid = uid_tree.findtext(".//users/id")  # TODO extract etree
+        self._uid = uid_tree.findtext(".//users/id")  # TODO extract etree
         # XXX should we refresh ability to auto_login and notebooks here?
 
         # TODO fill in rest of function
@@ -115,21 +124,33 @@ class User:
 
 type NotebookNode = "NotebookPage | NotebookDirectory"
 
-@dataclass
+
 class NotebookEntity(ABC):
-    _id: str
-    _name: str
-    _root: "Notebook"
-    _parent: NotebookTreeNode | None
-    _can_read_comments: bool
-    _can_write_comments: bool
-    _can_read: bool
-    _can_write: bool
-    _user: "User"
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        root: "Notebook",
+        parent: NotebookTreeNode | None,
+        can_read_comments: bool,
+        can_write_comments: bool,
+        can_read: bool,
+        can_write: bool,
+        user: "User",
+    ):
+        self._id = id
+        self._name = name
+        self._root = root
+        self._parent = parent
+        self._can_read_comments = can_read_comments
+        self._can_write_comments = can_write_comments
+        self._can_read = can_read
+        self._can_write = can_write
+        self._user = user
 
     @property
     def name(self) -> str:
-        return self._name # TODO allow this to be set
+        return self._name  # TODO allow this to be set
 
     @property
     def id(self) -> str:
@@ -150,11 +171,11 @@ class NotebookEntity(ABC):
     @property
     def can_write(self) -> bool:
         return self._can_write
-    
+
     @property
     def parent(self) -> NotebookTreeNode | None:
         return self._parent
-    
+
     @property
     def root(self) -> "Notebook":
         return self._root
@@ -163,8 +184,10 @@ class NotebookEntity(ABC):
 class NotebookTreeNode(
     ABC, Mapping[IdOrNameIndex, NotebookNode | Sequence[NotebookNode]]
 ):
-    _children: Sequence[NotebookNode]
-    _populated: bool
+    def __init__(self):
+        super().__init__()
+        self._children: Sequence[NotebookNode]
+        self._populated: bool = False
 
     @abstractmethod
     def _populate(self) -> None:
@@ -182,7 +205,7 @@ class NotebookTreeNode(
     def __iter__(self):
         self._ensure_populated()
         return iter(child.id for child in self._children)
-    
+
     # TODO moving things around
 
     def __getitem__(self, key: IdOrNameIndex) -> NotebookNode | list[NotebookNode]:
@@ -212,7 +235,7 @@ class Notebook(NotebookTreeNode):
         self._is_default = init.is_default
         self._user = user
         self._notebooks = notebooks
-        self._inserts_from_bottom = None
+        self._inserts_from_bottom: bool | None = None
 
     @property
     def id(self):
@@ -223,7 +246,7 @@ class Notebook(NotebookTreeNode):
         return self._name
 
     @name.setter
-    def name_setter(self, value: str):
+    def name(self, value: str):
         self._user.api_get("notebooks/modify_notebook_info", nbid=self.id, name=value)
 
         self._name = value
@@ -233,7 +256,7 @@ class Notebook(NotebookTreeNode):
         if self._inserts_from_bottom is None:
             self._inserts_from_bottom = not _extract_etree(
                 self._user.api_get("notebooks/notebook_info", nbid=self.id),
-                {"notebook": {"add-entry-to-page-top": bool}},
+                {"notebook": {"add-entry-to-page-top": to_bool}},
             )["add-entry-to-page-top"]
 
         return self._inserts_from_bottom
@@ -255,33 +278,34 @@ class Notebook(NotebookTreeNode):
             node = _extract_etree(
                 subtree,
                 {
-                    "is-page": bool,
+                    "is-page": to_bool,
                     "tree-id": str,
                     "display-text": str,
                     "user-access": {
-                        "can-read": bool,
-                        "can-write": bool,
-                        "can-read-comments": bool,
-                        "can-write-comments": bool,
+                        "can-read": to_bool,
+                        "can-write": to_bool,
+                        "can-read-comments": to_bool,
+                        "can-write-comments": to_bool,
                     },
                 },
             )  # TODO do we want to handle errors here?
 
-            node_constructor = NotebookPage if node["is-page"] else NotebookDirectory
-
-            nodes.append(
-                node_constructor(
-                    node["tree-id"],
-                    node["display-text"],
-                    self,
-                    self if parent == "0" else parent,
-                    node["can-read-comments"],
-                    node["can-write-comments"],
-                    node["can-read"],
-                    node["can-write"],
-                    self._user
-                )
+            args = (
+                node["tree-id"],
+                node["display-text"],
+                self,
+                self if parent == "0" else parent,
+                node["can-read-comments"],
+                node["can-write-comments"],
+                node["can-read"],
+                node["can-write"],
+                self._user,
             )
+
+            if node["is-page"]:
+                nodes.append(NotebookPage(*args))
+            else:
+                nodes.append(NotebookDirectory(*args))
 
         return nodes
 
@@ -338,50 +362,146 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
         return new_notebook
 
 
-class NotebookDirectory(NotebookTreeNode, NotebookEntity):
+class NotebookDirectory(NotebookEntity, NotebookTreeNode):
     def _populate(self):
         self._children = self._root.get_tree(self)
 
 
 class NotebookPage(NotebookEntity):
-    _entries: list[Entries] | None
-    
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        root: Notebook,
+        parent: NotebookTreeNode | None,
+        can_read_comments: bool,
+        can_write_comments: bool,
+        can_read: bool,
+        can_write: bool,
+        user: User,
+    ):
+        super().__init__(
+            id,
+            name,
+            root,
+            parent,
+            can_read_comments,
+            can_write_comments,
+            can_read,
+            can_write,
+            user,
+        )
+        self._entries = None
+
     @property
-    def entries(self):
+    def entries(self) -> Entries:
         if self._entries is None:
             entries: list[Entry] = []
-            
-            entries_tree = self._user.api_get("tree_tools/get_entries_for_page", page_tree_id=self.id, nbid=self._root.id, entry_data=True)
+
+            entries_tree = self._user.api_get(
+                "tree_tools/get_entries_for_page",
+                page_tree_id=self.id,
+                nbid=self._root.id,
+                entry_data=True,
+            )
             for entry in entries_tree.iterfind(".//entry"):
-                entry_data = _extract_etree(entry, {
-                    "eid": str,
-                    "part-type": str,
-                    "attach-file-name": str,
-                    "attach-content-type": str,
-                    "entry-data": str
-                })
+                entry_data = _extract_etree(
+                    entry,
+                    {
+                        "eid": str,
+                        "part-type": str,
+                        "attach-file-name": str,
+                        "attach-content-type": str,
+                        "entry-data": str,
+                    },
+                )
 
-                entries.append(Entry(
-                    entry_data['eid'],
-                    entry_data['part-type'],
-                    entry_data['attach-file-name'],
-                    entry_data['attach-content-type'],
-                    entry_data['entry-data'],
-                    self._user
-                ))
+                entries.append(
+                    Entry(
+                        entry_data["eid"],
+                        entry_data["part-type"],
+                        entry_data["attach-file-name"],
+                        entry_data["attach-content-type"],
+                        entry_data["entry-data"],
+                        self._user,
+                    )
+                )
 
-            
-                 
+            self._entries = Entries(entries)
 
-            
+        return self._entries
 
-class Entries:
-    pass
+
+class Entries(Mapping[str, "Entry"]):
+    def __init__(self, entries: Sequence[Entry]):
+        self._entries = {entry.id: entry for entry in entries}
+
+    def __getitem__(self, key: str):
+        return self._entries[key]
+
+    def __iter__(self):
+        return iter(self._entries)
+
+    def __len__(self):
+        return len(self._entries)
+
+    def values(self):
+        return self._entries.values()
+
+    def items(self):
+        return self._entries.items()
+
+    def keys(self):
+        return self._entries.keys()
+
+    # This class exists solely so we can add entries in future / delete them
+
 
 class Entry:
-    
-    def __init__(self, eid: str, part_type: str, filename: str, mimeType: str, data: str, user: User):
-        pass
+    # TODO perms
+    def __init__(
+        self,
+        eid: str,
+        part_type: str,
+        filename: str,
+        mimeType: str,
+        data: str,
+        user: User,
+    ):
+        self._id = eid
+        self._user = user
+        self._part_type = part_type
+        match part_type.lower():
+            case "attachment":
+                raise NotImplementedError
+            case (
+                "plain text entry"
+                | "text entry"
+                | "widget entry"
+                | "sketch entry"
+                | "heading"
+                | "equation entry"
+            ):
+                self._content_type = "text"
+                self._content = data
+            case "reference entry":
+                self._content_type = "xml"
+                self._content = etree.fromstring(data)
+            case "assignment entry" | _:
+                raise NotImplementedError
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def content_type(self) -> str:
+        return self._content_type
+
+    @property
+    def content(self) -> str | etree.Element:
+        return self._content
+
 
 class Comment:
     pass
@@ -409,7 +529,9 @@ class Client:
         )
 
         uid, auto_login = itemgetter("uid", "auto-login-allowed")(
-            _extract_etree(uid_tree, {"users": {"id": str, "auto-login-allowed": bool}})
+            _extract_etree(
+                uid_tree, {"users": {"id": str, "auto-login-allowed": to_bool}}
+            )
         )
 
         notebooks: list[NotebookInit] = []
@@ -417,7 +539,7 @@ class Client:
         for notebook in uid_tree.iterfind(".//notebook"):
             notebook_id, notebook_name, is_default = itemgetter(
                 "id", "name", "is-default"
-            )(_extract_etree(notebook, {"id": str, "name": str, "is-default": bool}))
+            )(_extract_etree(notebook, {"id": str, "name": str, "is-default": to_bool}))
 
             # TODO error or warning when id/name are failed?
 
