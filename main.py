@@ -40,7 +40,7 @@ def _flatten_dict(
 
     for _key, value in val.items():
         if len(_key) == 0:
-            raise  # TODO raise exc for invalid value
+            raise ValueError("Key cannot be empty string")
 
         key = f"{prefix}/{_key}"
 
@@ -59,7 +59,7 @@ def to_bool(s: str) -> bool:
         case "false":
             return False
         case _:
-            raise ValueError  # TODO
+            raise ValueError(f"Cannot convert '{s}' to bool")
 
 
 def _extract_etree(etree: etree.Element, format: EtreeExtractorDict) -> dict[str, Any]:
@@ -73,11 +73,11 @@ def _extract_etree(etree: etree.Element, format: EtreeExtractorDict) -> dict[str
         if (
             value is None
         ):  # XXX should we collate errors and return at end with the dict or?
-            raise  # TODO raise missing value exc
+            raise ValueError(f"Could not find value for '{key}'")
         try:
             items[key.split("/")[-1]] = mapper(value)
         except ValueError as err:
-            raise err  # TODO raise invalid value exc
+            raise ValueError(f"Could not map value {value} with {mapper.__name__} for '{key}'") from err
 
     return items
 
@@ -103,7 +103,7 @@ class User:
 
     def refresh(self, *, authenticated: bool = False):
         if not self._can_refresh and not authenticated:
-            raise RuntimeError  # "Cannot Automatically Refresh"  # TODO fill in error
+            raise RuntimeError("User session cannot be automatically refreshed")
 
         uid_tree = self.api_get("users/user_info_via_id", authenticated=authenticated)
         self._uid = uid_tree.findtext(".//users/id")  # TODO extract etree
@@ -223,7 +223,7 @@ class NotebookTreeNode(
                 for node in self._children:
                     if node.id == key_value:
                         return node
-                raise KeyError  # TODO exc type
+                raise KeyError(f"Node with id '{key_value}' not found")
             case Index.Name:
                 return list(filter(lambda k: k.name == key_value, self._children))
 
@@ -472,8 +472,6 @@ class Entry:
         self._user = user
         self._part_type = part_type
         match part_type.lower():
-            case "attachment":
-                raise NotImplementedError
             case (
                 "plain text entry"
                 | "text entry"
@@ -487,8 +485,8 @@ class Entry:
             case "reference entry":
                 self._content_type = "xml"
                 self._content = etree.fromstring(data)
-            case "assignment entry" | _:
-                raise NotImplementedError
+            case "assignment entry" | "attachment" | _:
+                self._content_type = "unsupported"
 
     @property
     def id(self):
@@ -500,6 +498,8 @@ class Entry:
 
     @property
     def content(self) -> str | etree.Element:
+        if self._content_type == "unsupported":
+            raise NotImplementedError
         return self._content
 
 
@@ -555,7 +555,9 @@ class Client:
         request = get(self.construct_url(api_method_uri, query=kwargs))
 
         if request.status_code != status_codes.ok:
-            pass  # TODO error
+            raise RuntimeError( # TODO make this more useful
+                f"API request failed with status code {request.status_code}: {request.text}"
+            )
             # See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
 
         return etree.fromstring(request.text)
