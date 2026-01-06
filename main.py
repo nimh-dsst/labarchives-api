@@ -1,3 +1,5 @@
+"""A client for the LabArchives API."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -9,6 +11,7 @@ from enum import Enum
 from typing import Any, Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from operator import itemgetter
+from warnings import deprecated
 
 from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.hazmat.primitives.hmac import HMAC
@@ -19,12 +22,16 @@ from requests import get
 
 @dataclass
 class NotebookInit:
+    """Initialisation data for a Notebook."""
+
     id: str
     name: str
     is_default: bool
 
 
 class Index(Enum):
+    """Index for accessing items in a collection."""
+
     Id = 1
     Name = 2
 
@@ -36,6 +43,15 @@ type EtreeExtractorDict = Mapping[str, EtreeExtractorDict | Callable[[Any], Any]
 def _flatten_dict(
     val: EtreeExtractorDict, prefix: str = ""
 ) -> dict[str, Callable[[Any], Any]]:
+    """Flattens a nested dictionary.
+
+    Args:
+        val: The dictionary to flatten.
+        prefix: The prefix to use for the keys.
+
+    Returns:
+        A flattened dictionary.
+    """
     items: dict[str, Callable[[Any], Any]] = {}
 
     for _key, value in val.items():
@@ -53,6 +69,14 @@ def _flatten_dict(
 
 
 def to_bool(s: str) -> bool:
+    """Converts a string to a boolean.
+
+    Args:
+        s: The string to convert.
+
+    Returns:
+        The boolean value.
+    """
     match s.lower():
         case "true":
             return True
@@ -63,6 +87,15 @@ def to_bool(s: str) -> bool:
 
 
 def _extract_etree(etree: etree.Element, format: EtreeExtractorDict) -> dict[str, Any]:
+    """Extracts data from an etree element.
+
+    Args:
+        etree: The etree element to extract data from.
+        format: The format to use for extraction.
+
+    Returns:
+        A dictionary of extracted data.
+    """
     flat = _flatten_dict(format)
 
     items: dict[str, Any] = {}
@@ -77,12 +110,16 @@ def _extract_etree(etree: etree.Element, format: EtreeExtractorDict) -> dict[str
         try:
             items[key.split("/")[-1]] = mapper(value)
         except ValueError as err:
-            raise ValueError(f"Could not map value {value} with {mapper.__name__} for '{key}'") from err
+            raise ValueError(
+                f"Could not map value {value} with {mapper.__name__} for '{key}'"
+            ) from err
 
     return items
 
 
 class User:
+    """A LabArchives user."""
+
     def __init__(
         self,
         uid: str,
@@ -96,22 +133,41 @@ class User:
         self._client = client
 
     def api_get(self, api_method_uri: str | Sequence[str], **kwargs: Any):
+        """Makes a GET request to the LabArchives API.
+
+        Args:
+            api_method_uri: The API method to call.
+            **kwargs: Additional arguments to pass to the API method.
+
+        Returns:
+            The response from the API.
+        """
         return self._client.api_get(api_method_uri, **kwargs, uid=self._uid)
 
     # def api_post(self, api_method_uri: str | Sequence[str], **kwargs):
     # return self._client.api_post(api_method_uri, **kwargs, uid=self.uid)
 
-    def refresh(self, *, authenticated: bool = False):
-        if not self._can_refresh and not authenticated:
+    def refresh(self, *, user_requested: bool = False):
+        """Refreshes the user's session.
+
+        Args:
+            user_requested: Whether the refresh request is explicitly requested by the user
+        """
+        if not self._can_refresh and not user_requested:
             raise RuntimeError("User session cannot be automatically refreshed")
 
-        uid_tree = self.api_get("users/user_info_via_id", authenticated=authenticated)
+        uid_tree = self.api_get("users/user_info_via_id", authenticated=user_requested)
         self._uid = uid_tree.findtext(".//users/id")  # TODO extract etree
         # XXX should we refresh ability to auto_login and notebooks here?
 
         # TODO fill in rest of function
 
     def get_max_upload_size(self) -> int:
+        """Gets the maximum upload size for the user.
+
+        Returns:
+            The maximum upload size in bytes.
+        """
         # NOTE the api reference doesn't explain what unit this is, so I'm going to treat this as bytes
         return _extract_etree(
             self.api_get("users/max_file_size"), {"max-file-size": int}
@@ -119,6 +175,7 @@ class User:
 
     @property
     def notebooks(self):
+        """The user's notebooks."""
         return self._notebooks
 
 
@@ -126,6 +183,8 @@ type NotebookNode = "NotebookPage | NotebookDirectory"
 
 
 class NotebookEntity(ABC):
+    """Base class for notebook entities."""
+
     def __init__(
         self,
         id: str,
@@ -150,40 +209,54 @@ class NotebookEntity(ABC):
 
     @property
     def name(self) -> str:
+        """The name of the entity."""
         return self._name  # TODO allow this to be set
 
     @property
     def id(self) -> str:
+        """The ID of the entity."""
         return self._id
 
     @property
+    @deprecated("This doesn't does not affect the API behavior")
     def can_read_comments(self) -> bool:
+        """Whether the user can read comments on the entity."""
         return self._can_read_comments
 
     @property
+    @deprecated("This doesn't does not affect the API behavior")
     def can_write_comments(self) -> bool:
+        """Whether the user can write comments on the entity."""
         return self._can_write_comments
 
     @property
+    @deprecated("This doesn't does not affect the API behavior")
     def can_read(self) -> bool:
+        """Whether the user can read the entity."""
         return self._can_read
 
     @property
+    @deprecated("This doesn't does not affect the API behavior")
     def can_write(self) -> bool:
+        """Whether the user can write the entity."""
         return self._can_write
 
     @property
     def parent(self) -> NotebookTreeNode | None:
+        """The parent of the entity."""
         return self._parent
 
     @property
     def root(self) -> "Notebook":
+        """The root of the entity."""
         return self._root
 
 
 class NotebookTreeNode(
     ABC, Mapping[IdOrNameIndex, NotebookNode | Sequence[NotebookNode]]
 ):
+    """Base class for notebook tree nodes."""
+
     def __init__(self):
         super().__init__()
         self._children: Sequence[NotebookNode]
@@ -229,6 +302,8 @@ class NotebookTreeNode(
 
 
 class Notebook(NotebookTreeNode):
+    """A LabArchives notebook."""
+
     def __init__(self, init: NotebookInit, user: User, notebooks: Notebooks):
         self._id = init.id
         self._name = init.name
@@ -239,10 +314,12 @@ class Notebook(NotebookTreeNode):
 
     @property
     def id(self):
+        """The ID of the notebook."""
         return self._id
 
     @property
     def name(self):
+        """The name of the notebook."""
         return self._name
 
     @name.setter
@@ -253,6 +330,7 @@ class Notebook(NotebookTreeNode):
 
     @property
     def inserts_from_bottom(self) -> bool:
+        """Whether new entries are inserted at the bottom of the page."""
         if self._inserts_from_bottom is None:
             self._inserts_from_bottom = not _extract_etree(
                 self._user.api_get("notebooks/notebook_info", nbid=self.id),
@@ -263,9 +341,18 @@ class Notebook(NotebookTreeNode):
 
     @property
     def is_default(self):  # FIXME what is this for anyways??
+        """Whether the notebook is the default notebook."""
         return self._is_default
 
     def get_tree(self, parent: NotebookDirectory | Literal["0"]):
+        """Gets the tree of a notebook.
+
+        Args:
+            parent: The parent of the tree.
+
+        Returns:
+            The tree of the notebook.
+        """
         xml_tree = self._user.api_get(
             "tree_tools/get_tree_level",
             nbid=self.id,
@@ -321,6 +408,8 @@ class Notebook(NotebookTreeNode):
 
 
 class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
+    """A collection of notebooks."""
+
     def __init__(self, notebooks: Sequence[NotebookInit], user: User):
         self._user = user
         self._notebooks = [Notebook(n, user, self) for n in notebooks]
@@ -347,6 +436,14 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
         return self._notebooks.__len__()
 
     def create_notebook(self, name: str) -> Notebook:
+        """Creates a new notebook.
+
+        Args:
+            name: The name of the notebook.
+
+        Returns:
+            The new notebook.
+        """
         nbid = _extract_etree(
             self._user.api_get(
                 "notebooks/create_notebook", name=name, initial_folders="Empty"
@@ -363,11 +460,15 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
 
 class NotebookDirectory(NotebookEntity, NotebookTreeNode):
+    """A directory in a notebook."""
+
     def _populate(self):
         self._children = self._root.get_tree(self)
 
 
 class NotebookPage(NotebookEntity):
+    """A page in a notebook."""
+
     def __init__(
         self,
         id: str,
@@ -395,6 +496,7 @@ class NotebookPage(NotebookEntity):
 
     @property
     def entries(self) -> Entries:
+        """The entries on the page."""
         if self._entries is None:
             entries: list[Entry] = []
 
@@ -433,6 +535,8 @@ class NotebookPage(NotebookEntity):
 
 
 class Entries(Mapping[str, "Entry"]):
+    """A collection of entries."""
+
     def __init__(self, entries: Sequence[Entry]):
         self._entries = {entry.id: entry for entry in entries}
 
@@ -458,6 +562,8 @@ class Entries(Mapping[str, "Entry"]):
 
 
 class Entry:
+    """An entry on a page."""
+
     # TODO perms
     def __init__(
         self,
@@ -490,24 +596,31 @@ class Entry:
 
     @property
     def id(self):
+        """The ID of the entry."""
         return self._id
 
     @property
     def content_type(self) -> str:
+        """The content type of the entry."""
         return self._content_type
 
     @property
     def content(self) -> str | etree.Element:
+        """The content of the entry."""
         if self._content_type == "unsupported":
             raise NotImplementedError
         return self._content
 
 
 class Comment:
+    """A comment on an entity."""
+
     pass
 
 
 class Client:
+    """A client for the LabArchives API."""
+
     def __init__(self, base_url: str, akid: str, akpass: bytes | str):
         self._base_url = urlsplit(base_url).geturl()
         self._akid = akid
@@ -516,6 +629,14 @@ class Client:
         )
 
     def generate_auth_url(self, redirect_url: str) -> str:
+        """Generates a URL for authentication.
+
+        Args:
+            redirect_url: The URL to redirect to after authentication.
+
+        Returns:
+            The authentication URL.
+        """
         return self.construct_url(
             "api_user_login",
             {"redirect_uri": redirect_url},
@@ -524,6 +645,15 @@ class Client:
         )
 
     def login_authcode(self, user_email: str, auth_code: str):
+        """Logs in a user with an authentication code.
+
+        Args:
+            user_email: The user's email address.
+            auth_code: The authentication code.
+
+        Returns:
+            A User object.
+        """
         uid_tree = self.api_get(
             "users/user_access_info", login_or_email=user_email, password=auth_code
         )
@@ -552,10 +682,19 @@ class Client:
     def api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any
     ) -> etree.Element:
+        """Makes a GET request to the LabArchives API.
+
+        Args:
+            api_method_uri: The API method to call.
+            **kwargs: Additional arguments to pass to the API method.
+
+        Returns:
+            The response from the API as an etree element.
+        """
         request = get(self.construct_url(api_method_uri, query=kwargs))
 
         if request.status_code != status_codes.ok:
-            raise RuntimeError( # TODO make this more useful
+            raise RuntimeError(  # TODO make this more useful
                 f"API request failed with status code {request.status_code}: {request.text}"
             )
             # See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
@@ -574,6 +713,18 @@ class Client:
         should_prefix_api: bool = True,
         signature_method: str | None = None,
     ):
+        """Constructs a URL for the LabArchives API.
+
+        Args:
+            api_method_uri: The API method to call.
+            query: The query string parameters.
+            expires_in: The expiration time for the URL.
+            should_prefix_api: Whether to prefix the API method with "api".
+            signature_method: The signature method to use.
+
+        Returns:
+            The constructed URL.
+        """
         if isinstance(api_method_uri, str):
             api_method_uri = api_method_uri.split("/")
 

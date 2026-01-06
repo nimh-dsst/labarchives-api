@@ -1,7 +1,7 @@
 [project]
 name = "labapi"
 version = "0.1.0"
-description = "Add your description here"
+description = "A Python client for the LabArchives API."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
