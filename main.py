@@ -218,25 +218,25 @@ class NotebookEntity(ABC):
         return self._id
 
     @property
-    @deprecated("This doesn't does not affect the API behavior")
+    @deprecated("This doesn't affect the API behavior")
     def can_read_comments(self) -> bool:
         """Whether the user can read comments on the entity."""
         return self._can_read_comments
 
     @property
-    @deprecated("This doesn't does not affect the API behavior")
+    @deprecated("This doesn't affect the API behavior")
     def can_write_comments(self) -> bool:
         """Whether the user can write comments on the entity."""
         return self._can_write_comments
 
     @property
-    @deprecated("This doesn't does not affect the API behavior")
+    @deprecated("This doesn't affect the API behavior")
     def can_read(self) -> bool:
         """Whether the user can read the entity."""
         return self._can_read
 
     @property
-    @deprecated("This doesn't does not affect the API behavior")
+    @deprecated("This doesn't affect the API behavior")
     def can_write(self) -> bool:
         """Whether the user can write the entity."""
         return self._can_write
