@@ -86,7 +86,7 @@ def to_bool(s: str) -> bool:
             raise ValueError(f"Cannot convert '{s}' to bool")
 
 
-def _extract_etree(etree: etree.Element, format: EtreeExtractorDict) -> dict[str, Any]:
+def _extract_etree(_etree: etree.Element, format: EtreeExtractorDict) -> dict[str, Any]:
     """Extracts data from an etree element.
 
     Args:
@@ -101,17 +101,20 @@ def _extract_etree(etree: etree.Element, format: EtreeExtractorDict) -> dict[str
     items: dict[str, Any] = {}
 
     for key, mapper in flat.items():
-        value = etree.findtext(f"./{key}")
+        value = _etree.findtext(f"./{key}")
 
         if (
             value is None
         ):  # XXX should we collate errors and return at end with the dict or?
-            raise ValueError(f"Could not find value for '{key}'")
+            for i in etree.tostring(_etree, pretty_print=True).splitlines():
+                print(i)
+            raise ValueError(f"Could not find value for './{key}'")
+
         try:
             items[key.split("/")[-1]] = mapper(value)
         except ValueError as err:
             raise ValueError(
-                f"Could not map value {value} with {mapper.__name__} for '{key}'"
+                f"Could not map value {value} with {mapper.__name__} for './{key}'"
             ) from err
 
     return items

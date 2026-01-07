@@ -3,7 +3,7 @@ name = "labapi"
 version = "0.1.0"
 description = "A Python client for the LabArchives API."
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 dependencies = [
     "cryptography>=46.0.3",
     "lxml>=6.0.2",
