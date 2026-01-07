@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "cryptography>=46.0.3",
     "lxml>=6.0.2",
+    "pytest>=9.0.2",
     "python-dotenv>=1.2.1",
     "requests>=2.32.5",
     "types-lxml>=2026.1.1",

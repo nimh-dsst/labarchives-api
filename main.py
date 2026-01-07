@@ -8,16 +8,18 @@ from collections.abc import Mapping, Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, overload, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from operator import itemgetter
 from warnings import deprecated
+from http.server import SimpleHTTPRequestHandler
+from socketserver import TCPServer
 
 from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.hazmat.primitives.hmac import HMAC
 from lxml import etree
 from requests import codes as status_codes
-from requests import get
+from requests import get, post
 
 
 @dataclass
@@ -32,8 +34,8 @@ class NotebookInit:
 class Index(Enum):
     """Index for accessing items in a collection."""
 
-    Id = 1
-    Name = 2
+    Id = "id"
+    Name = "name"
 
 
 type IdOrNameIndex = str | slice[Index, str, None]
@@ -108,6 +110,7 @@ def _extract_etree(_etree: etree.Element, format: EtreeExtractorDict) -> dict[st
         ):  # XXX should we collate errors and return at end with the dict or?
             for i in etree.tostring(_etree, pretty_print=True).splitlines():
                 print(i)
+
             raise ValueError(f"Could not find value for './{key}'")
 
         try:
@@ -130,6 +133,7 @@ class User:
         notebooks: Sequence[NotebookInit],
         client: Client,
     ):
+        super().__init__()
         self._uid = uid
         self._can_refresh = auto_login
         self._notebooks = Notebooks(notebooks, self)
@@ -147,8 +151,13 @@ class User:
         """
         return self._client.api_get(api_method_uri, **kwargs, uid=self._uid)
 
-    # def api_post(self, api_method_uri: str | Sequence[str], **kwargs):
-    # return self._client.api_post(api_method_uri, **kwargs, uid=self.uid)
+    def api_post(
+        self,
+        api_method_uri: str | Sequence[str],
+        body: Mapping[str, str],
+        **kwargs: Any,
+    ):
+        return self._client.api_post(api_method_uri, body, **kwargs, uid=self._uid)
 
     def refresh(self, *, user_requested: bool = False):
         """Refreshes the user's session.
@@ -200,6 +209,7 @@ class NotebookEntity(ABC):
         can_write: bool,
         user: "User",
     ):
+        super().__init__()
         self._id = id
         self._name = name
         self._root = root
@@ -262,7 +272,7 @@ class NotebookTreeNode(
 
     def __init__(self):
         super().__init__()
-        self._children: Sequence[NotebookNode]
+        self._children: Sequence[NotebookNode] = []
         self._populated: bool = False
 
     @abstractmethod
@@ -284,6 +294,20 @@ class NotebookTreeNode(
 
     # TODO moving things around
 
+    @overload
+    def __getitem__(self, key: str) -> NotebookNode:
+        pass
+
+    @overload
+    def __getitem__(self, key: "slice[Literal[Index.Id], str, None]") -> NotebookNode:
+        pass
+
+    @overload
+    def __getitem__(
+        self, key: "slice[Literal[Index.Name], str, None]"
+    ) -> list[NotebookNode]:
+        pass
+
     def __getitem__(self, key: IdOrNameIndex) -> NotebookNode | list[NotebookNode]:
         self._ensure_populated()
 
@@ -303,11 +327,20 @@ class NotebookTreeNode(
             case Index.Name:
                 return list(filter(lambda k: k.name == key_value, self._children))
 
+    @abstractmethod
+    def create_directory(self, name: str) -> "NotebookDirectory":
+        raise NotImplementedError
+
+    @abstractmethod
+    def create_page(self, name: str) -> "NotebookPage":
+        raise NotImplementedError
+
 
 class Notebook(NotebookTreeNode):
     """A LabArchives notebook."""
 
     def __init__(self, init: NotebookInit, user: User, notebooks: Notebooks):
+        super().__init__()
         self._id = init.id
         self._name = init.name
         self._is_default = init.is_default
@@ -334,7 +367,9 @@ class Notebook(NotebookTreeNode):
     @property
     def inserts_from_bottom(self) -> bool:
         """Whether new entries are inserted at the bottom of the page."""
-        if self._inserts_from_bottom is None:
+        if (
+            self._inserts_from_bottom is None
+        ):  # XXX we can probably get this on init, should we?
             self._inserts_from_bottom = not _extract_etree(
                 self._user.api_get("notebooks/notebook_info", nbid=self.id),
                 {"notebook": {"add-entry-to-page-top": to_bool}},
@@ -402,6 +437,36 @@ class Notebook(NotebookTreeNode):
     def _populate(self):
         self._children = self.get_tree("0")
 
+    def create_page(self, name: str) -> NotebookPage:
+        # TODO take into account whether can write in this directory
+        create_tree = self._user.api_get(
+            "tree_tools/insert_node",
+            nbid=self.id,
+            parent_tree_id="0",
+            display_text=name,
+            is_folder="false",
+        )
+        tree_id = _extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
+
+        return NotebookPage(
+            tree_id, name, self, self, True, True, True, True, self._user
+        )
+
+    def create_directory(self, name: str) -> NotebookDirectory:
+        # TODO take into account whether can write in this directory
+        create_tree = self._user.api_get(
+            "tree_tools/insert_node",
+            nbid=self.id,
+            parent_tree_id="0",
+            display_text=name,
+            is_folder="true",
+        )
+        tree_id = _extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
+
+        return NotebookDirectory(
+            tree_id, name, self, self, True, True, True, True, self._user
+        )
+
     # get info # This is basically irrelevant
     # delete notebook?
     # metadata?
@@ -414,9 +479,24 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
     """A collection of notebooks."""
 
     def __init__(self, notebooks: Sequence[NotebookInit], user: User):
+        super().__init__()
         self._user = user
         self._notebooks = [Notebook(n, user, self) for n in notebooks]
         self._notebooks_by_id = {n.id: n for n in self._notebooks}
+
+    @overload
+    def __getitem__(self, key: str) -> Notebook:
+        pass
+
+    @overload
+    def __getitem__(self, key: "slice[Literal[Index.Id], str, None]") -> Notebook:
+        pass
+
+    @overload
+    def __getitem__(
+        self, key: "slice[Literal[Index.Name], str, None]"
+    ) -> list[Notebook]:
+        pass
 
     def __getitem__(self, key: IdOrNameIndex) -> Notebook | list[Notebook]:
         if isinstance(key, slice):
@@ -438,6 +518,10 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
     def __len__(self):
         return self._notebooks.__len__()
 
+    @override
+    def values(self):
+        return self._notebooks_by_id.values()
+
     def create_notebook(self, name: str) -> Notebook:
         """Creates a new notebook.
 
@@ -454,6 +538,8 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
             {"nbid": str},
         )["nbid"]
 
+        # TODO check that the notebook with same id does not already exist
+
         new_notebook = Notebook(NotebookInit(nbid, name, False), self._user, self)
 
         self._notebooks.append(new_notebook)
@@ -464,6 +550,38 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
 class NotebookDirectory(NotebookEntity, NotebookTreeNode):
     """A directory in a notebook."""
+
+    def create_page(self, name: str) -> NotebookPage:
+        if not self._can_write:
+            raise RuntimeError("Action Not Allowed")  # TODO better error
+        create_tree = self._user.api_get(
+            "tree_tools/insert_node",
+            nbid=self.id,
+            parent_tree_id=self.id,
+            display_text=name,
+            is_folder="false",
+        )
+        tree_id = _extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
+
+        return NotebookPage(
+            tree_id, name, self._root, self, True, True, True, True, self._user
+        )
+
+    def create_directory(self, name: str) -> NotebookDirectory:
+        if not self._can_write:
+            raise RuntimeError("Action Not Allowed")  # TODO better error
+        create_tree = self._user.api_get(
+            "tree_tools/insert_node",
+            nbid=self.id,
+            parent_tree_id=self.id,
+            display_text=name,
+            is_folder="true",
+        )
+        tree_id = _extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
+
+        return NotebookDirectory(
+            tree_id, name, self._root, self, True, True, True, True, self._user
+        )
 
     def _populate(self):
         self._children = self._root.get_tree(self)
@@ -532,7 +650,7 @@ class NotebookPage(NotebookEntity):
                     )
                 )
 
-            self._entries = Entries(entries)
+            self._entries = Entries(entries, self._user, self)
 
         return self._entries
 
@@ -540,7 +658,10 @@ class NotebookPage(NotebookEntity):
 class Entries(Mapping[str, "Entry"]):
     """A collection of entries."""
 
-    def __init__(self, entries: Sequence[Entry]):
+    def __init__(self, entries: Sequence[Entry], user: User, page: NotebookPage):
+        super().__init__()
+        self._user = user
+        self._page = page
         self._entries = {entry.id: entry for entry in entries}
 
     def __getitem__(self, key: str):
@@ -561,6 +682,27 @@ class Entries(Mapping[str, "Entry"]):
     def keys(self):
         return self._entries.keys()
 
+    # TODO delete entries
+
+    def create_entry(
+        self,
+        entry_type: Literal["heading", "text entry", "plain text entry"],
+        data: str,
+    ) -> Entry:
+        entry_tree = self._user.api_post(
+            "entries/add_entry",
+            {"entry_data": data},
+            part_type=entry_type,
+            pid=self._page.id,
+            nbid=self._page.root.id,
+        )
+
+        id = _extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
+
+        self._entries[id] = Entry(id, entry_type, "", "", data, self._user)
+
+        return self._entries[id]
+
     # This class exists solely so we can add entries in future / delete them
 
 
@@ -577,6 +719,7 @@ class Entry:
         data: str,
         user: User,
     ):
+        super().__init__()
         self._id = eid
         self._user = user
         self._part_type = part_type
@@ -593,7 +736,7 @@ class Entry:
                 self._content = data
             case "reference entry":
                 self._content_type = "xml"
-                self._content = etree.fromstring(data)
+                self._content = etree.fromstring(bytes(data, encoding="utf-8"))
             case "assignment entry" | "attachment" | _:
                 self._content_type = "unsupported"
 
@@ -625,6 +768,7 @@ class Client:
     """A client for the LabArchives API."""
 
     def __init__(self, base_url: str, akid: str, akpass: bytes | str):
+        super().__init__()
         self._base_url = urlsplit(base_url).geturl()
         self._akid = akid
         self._hmac = HMAC(
@@ -661,9 +805,16 @@ class Client:
             "users/user_access_info", login_or_email=user_email, password=auth_code
         )
 
-        uid, auto_login = itemgetter("uid", "auto-login-allowed")(
+        uid = itemgetter(
+            "id",
+            # "auto-login-allowed"
+        )(
             _extract_etree(
-                uid_tree, {"users": {"id": str, "auto-login-allowed": to_bool}}
+                uid_tree,
+                {
+                    "id": str,
+                    # "auto-login-allowed": to_bool
+                },
             )
         )
 
@@ -680,7 +831,7 @@ class Client:
 
         notebooks.sort(key=lambda k: k.is_default)
 
-        return User(uid, auto_login, notebooks, self)
+        return User(uid, False, notebooks, self)
 
     def api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any
@@ -702,10 +853,65 @@ class Client:
             )
             # See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
 
-        return etree.fromstring(request.text)
+        return etree.fromstring(bytes(request.text, encoding="utf-8"))
 
-    # def api_post():
-    #    pass  # TODO fill in function
+    def api_post(
+        self,
+        api_method_uri: str | Sequence[str],
+        body: Mapping[str, str],
+        **kwargs: Any,
+    ) -> etree.Element:
+        """Makes a GET request to the LabArchives API.
+
+        Args:
+            api_method_uri: The API method to call.
+            **kwargs: Additional arguments to pass to the API method.
+
+        Returns:
+            The response from the API as an etree element.
+        """
+        request = post(self.construct_url(api_method_uri, query=kwargs), data=body)
+
+        if request.status_code != status_codes.ok:
+            raise RuntimeError(  # TODO make this more useful
+                f"API request failed with status code {request.status_code}: {request.text}"
+            )
+            # See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
+
+        return etree.fromstring(bytes(request.text, encoding="utf-8"))
+
+    def collect_auth_response(self) -> User:
+        """Launches default localhost server at 8089 to collect LabArchives Authentication Response.
+
+        Returns:
+            An authenticated user.
+        """
+
+        auth_info: dict[str, str] = {}
+
+        class AuthRequestHandler(SimpleHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.send_header("Content-type", "text/html")
+                self.end_headers()
+
+                _s, _n, _p, querystring, _f = urlsplit(self.path)
+
+                query = dict(parse_qsl(querystring))
+
+                if "error" in query:
+                    self.wfile.write(
+                        bytes(f"Error: {query['error']}", encoding="utf-8")
+                    )
+                else:
+                    self.wfile.write(b"Thanks for Authenticating.")
+                    auth_info["auth_code"] = query["auth_code"]
+                    auth_info["email"] = query["email"]
+
+        with TCPServer(("127.0.0.1", 8089), AuthRequestHandler) as httpd:
+            httpd.handle_request()
+
+        return self.login_authcode(auth_info["email"], auth_info["auth_code"])
 
     def construct_url(
         self,
