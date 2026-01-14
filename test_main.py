@@ -337,7 +337,7 @@ def notebook_tree(client: MockClient, notebook: LA.Notebook) -> LA.NotebookTreeN
             {"/a/b/c": str},
         ),
         # Empty dict at leaf
-        ({"a": {"b": {"c": {}}}}, "", {}),  
+        ({"a": {"b": {"c": {}}}}, "", {}),
     ],
 )
 def test_flatten_dict_success(
@@ -354,7 +354,7 @@ def test_flatten_dict_success(
 )
 def test_flatten_dict_value_error(val: LA.EtreeExtractorDict, prefix: str):
     with pytest.raises(ValueError):
-        LA._flatten_dict(val, prefix) # pyright: ignore[reportPrivateUsage]
+        LA._flatten_dict(val, prefix)  # pyright: ignore[reportPrivateUsage]
 
 
 @pytest.mark.parametrize(
@@ -377,7 +377,7 @@ def test_to_bool_success(s: str, expected: bool):
 @pytest.mark.parametrize(
     "s",
     [
-        "",git 
+        "",
         "0",
         "1",
         "yes",
