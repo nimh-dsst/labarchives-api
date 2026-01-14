@@ -546,6 +546,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
         )["nbid"]
 
         # TODO check that the notebook with same id does not already exist
+        #      why though? that should never happen unless their api is broken
 
         new_notebook = Notebook(NotebookInit(nbid, name, False), self._user, self)
 
@@ -919,6 +920,7 @@ class Client:
 
         return etree.fromstring(bytes(request.text, encoding="utf-8"))
 
+    # TODO try the iframe thing
     def collect_auth_response(self) -> User:
         """Launches default localhost server at 8089 to collect LabArchives Authentication Response.
 
