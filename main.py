@@ -287,10 +287,12 @@ class NotebookTreeNode(
             self._populate()
             self._populated = True
 
+    @override
     def __len__(self) -> int:
         self._ensure_populated()
         return len(self._children)
 
+    @override
     def __iter__(self):
         self._ensure_populated()
         return iter(child.id for child in self._children)
@@ -311,6 +313,7 @@ class NotebookTreeNode(
     ) -> list[NotebookNode]:
         pass
 
+    @override
     def __getitem__(self, key: IdOrNameIndex) -> NotebookNode | list[NotebookNode]:
         self._ensure_populated()
 
@@ -437,9 +440,11 @@ class Notebook(NotebookTreeNode):
 
         return nodes
 
+    @override
     def _populate(self):
         self._children = self.get_tree("0")
 
+    @override
     def create_page(self, name: str) -> NotebookPage:
         # TODO take into account whether can write in this directory
         create_tree = self._user.api_get(
@@ -457,6 +462,7 @@ class Notebook(NotebookTreeNode):
         self._children.append(new_page)
         return new_page
 
+    @override
     def create_directory(self, name: str) -> NotebookDirectory:
         # TODO take into account whether can write in this directory
         create_tree = self._user.api_get(
@@ -505,6 +511,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
     ) -> list[Notebook]:
         pass
 
+    @override
     def __getitem__(self, key: IdOrNameIndex) -> Notebook | list[Notebook]:
         if isinstance(key, slice):
             key_type = key.start
@@ -519,9 +526,11 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
             case Index.Name:
                 return list(filter(lambda k: k.name == key_value, self._notebooks))
 
+    @override
     def __iter__(self):
         return iter(map(lambda c: (c.id), self._notebooks))
 
+    @override
     def __len__(self):
         return self._notebooks.__len__()
 
@@ -702,21 +711,27 @@ class Entries(Mapping[str, "Entry"]):
         self._page = page
         self._entries = {entry.id: entry for entry in entries}
 
+    @override
     def __getitem__(self, key: str):
         return self._entries[key]
 
+    @override
     def __iter__(self):
         return iter(self._entries)
 
+    @override
     def __len__(self):
         return len(self._entries)
 
+    @override
     def values(self):
         return self._entries.values()
 
+    @override
     def items(self):
         return self._entries.items()
 
+    @override
     def keys(self):
         return self._entries.keys()
 
