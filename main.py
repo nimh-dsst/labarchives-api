@@ -2,30 +2,31 @@
 
 from __future__ import annotations
 
+import platform
+import webbrowser
 from abc import ABC, abstractmethod
 from base64 import b64encode
-from collections.abc import Mapping, Callable, Sequence, MutableSequence
+from collections.abc import Callable, Mapping, MutableSequence, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Literal, overload, override
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
-from operator import itemgetter
-from warnings import deprecated
 from http.server import SimpleHTTPRequestHandler
+from io import BufferedIOBase
+from operator import itemgetter
 from socketserver import TCPServer
+from typing import Any, Generic, Literal, TypeVar, overload, override
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from warnings import deprecated
 
+import selenium.webdriver as webdriver
 from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.hazmat.primitives.hmac import HMAC
 from lxml import etree
 from requests import codes as status_codes
 from requests import get, post
-import platform
-import webbrowser
-import selenium.webdriver as webdriver
 
 if platform.system() == "Windows":
-    from winreg import OpenKey, QueryValueEx, HKEY_CURRENT_USER
+    from winreg import HKEY_CURRENT_USER, OpenKey, QueryValueEx
 
     with OpenKey(
         HKEY_CURRENT_USER,
@@ -158,10 +159,18 @@ class User:
         client: Client,
     ):
         super().__init__()
-        self._uid = uid
+        self._id = uid
         self._can_refresh = auto_login
         self._notebooks = Notebooks(notebooks, self)
         self._client = client
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def client(self):
+        return self._client
 
     def api_get(self, api_method_uri: str | Sequence[str], **kwargs: Any):
         """Makes a GET request to the LabArchives API.
@@ -173,7 +182,7 @@ class User:
         Returns:
             The response from the API.
         """
-        return self._client.api_get(api_method_uri, **kwargs, uid=self._uid)
+        return self._client.api_get(api_method_uri, **kwargs, uid=self._id)
 
     def api_post(
         self,
@@ -181,7 +190,7 @@ class User:
         body: Mapping[str, str],
         **kwargs: Any,
     ):
-        return self._client.api_post(api_method_uri, body, **kwargs, uid=self._uid)
+        return self._client.api_post(api_method_uri, body, **kwargs, uid=self._id)
 
     def refresh(self, *, user_requested: bool = False):
         """Refreshes the user's session.
@@ -193,7 +202,7 @@ class User:
             raise RuntimeError("User session cannot be automatically refreshed")
 
         uid_tree = self.api_get("users/user_info_via_id", authenticated=user_requested)
-        self._uid = uid_tree.findtext(".//users/id")  # TODO extract etree
+        self._id = uid_tree.findtext(".//users/id")  # TODO extract etree
         # XXX should we refresh ability to auto_login and notebooks here?
 
         # TODO fill in rest of function
@@ -559,7 +568,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
     @override
     def __len__(self):
-        return self._notebooks.__len__()
+        return len(self._notebooks)
 
     @override
     def values(self):
@@ -786,41 +795,21 @@ class Entries(Mapping[str, "Entry"]):
     # This class exists solely so we can add entries in future / delete them
 
 
-class Entry:
+T = TypeVar("T")
+
+
+class Entry(ABC, Generic[T]):
     """An entry on a page."""
 
     # TODO perms
     def __init__(
         self,
         eid: str,
-        part_type: str,
-        filename: str,
-        mimeType: str,
-        data: str,
         user: User,
     ):
         super().__init__()
         self._id = eid
         self._user = user
-        self._part_type = part_type
-        self._content_type = "text"
-        self._content = data
-        # match part_type.lower():
-        #     case (
-        #         "plain text entry"
-        #         | "text entry"
-        #         | "widget entry"
-        #         | "sketch entry"
-        #         | "heading"
-        #         | "equation entry"
-        #     ):
-        #         self._content_type = "text"
-        #         self._content = data
-        #     case "reference entry":
-        #         self._content_type = "xml"
-        #         self._content = etree.fromstring(bytes(data, encoding="utf-8"))
-        #     case "assignment entry" | "attachment" | _:
-        #         self._content_type = "unsupported"
 
     @property
     def id(self):
@@ -828,16 +817,105 @@ class Entry:
         return self._id
 
     @property
+    @abstractmethod
     def content_type(self) -> str:
         """The content type of the entry."""
-        return self._content_type
+        raise NotImplementedError
 
     @property
+    @abstractmethod
+    def content(self) -> T:
+        """The content of the entry."""
+        raise NotImplementedError
+
+
+class BaseTextEntry(Entry[str], ABC):
+    def __init__(self, eid: str, data: str, user: User):
+        super().__init__(eid, user)
+        self._entry_data = data
+
+    @property
+    @override
     def content(self) -> str:
         """The content of the entry."""
-        if self._content_type == "unsupported":
-            raise NotImplementedError
-        return self._content
+        return self._entry_data
+
+
+class TextEntry(BaseTextEntry):
+    @property
+    @override
+    def content_type(self) -> str:
+        """The content type of the entry."""
+        return "text entry"
+
+
+class HeaderEntry(BaseTextEntry):
+    @property
+    @override
+    def content_type(self) -> str:
+        """The content type of the entry."""
+        return "heading"
+
+
+class PlainTextEntry(BaseTextEntry):
+    @property
+    @override
+    def content_type(self) -> str:
+        """The content type of the entry."""
+        return "plain text entry"
+
+
+class WidgetEntry(BaseTextEntry):
+    @property
+    @override
+    def content_type(self) -> str:
+        """The content type of the entry."""
+        return "widget"
+
+
+class AttachmentEntry(Entry[BufferedIOBase]):
+    def __init__(self, eid: str, caption: str, user: User):
+        super().__init__(eid, user)
+        self._caption = caption
+        self._data = None
+
+    @property
+    @override
+    def content_type(self) -> str:
+        """The content type of the entry."""
+        return "Attachment"
+
+    @property
+    @override
+    def content(self) -> BufferedIOBase:
+        """The content of the entry."""
+        if self._data is None:
+            attachment = get(
+                self._user.client.construct_url(
+                    "entries/entry_attachment",
+                    {  # TODO move into client
+                        "uid": self._user.id,
+                        "eid": self.id,
+                    },
+                ),
+                stream=True,
+            )
+
+            content_type = (  # noqa: F841
+                attachment.headers.get("Content-Type") or "application/octet-stream"
+            )
+            filename = attachment.headers.get("Content-Disposition")
+
+            assert filename is not None  # TODO
+
+            filename = tuple(
+                k.split("=")[1].strip('"')
+                for k in filename.split(";")
+                if k.strip().startswith("filename")
+            )[0]
+
+            return  # TODO
+        return self._data
 
 
 class Comment:
@@ -1015,6 +1093,7 @@ class Client:
         auth_info: dict[str, str] = {}
 
         class AuthRequestHandler(SimpleHTTPRequestHandler):
+            @override
             def do_GET(self):
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
@@ -1032,6 +1111,10 @@ class Client:
                     self.wfile.write(b"Thanks for Authenticating. Close this Window")
                     auth_info["auth_code"] = query["auth_code"]
                     auth_info["email"] = query["email"]
+
+            @override
+            def log_message(self, format: str, *args: Any) -> None:
+                pass
 
         with TCPServer(("127.0.0.1", 8089), AuthRequestHandler) as httpd:
             httpd.handle_request()

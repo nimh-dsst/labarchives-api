@@ -419,7 +419,7 @@ def test_user__api_get(
     assert user.api_get(api_method, **kwargs) == expected_api_response
 
     kwargs_with_uid = dict(kwargs.items())
-    kwargs_with_uid["uid"] = user._uid  # pyright: ignore[reportPrivateUsage]
+    kwargs_with_uid["uid"] = user._id  # pyright: ignore[reportPrivateUsage]
 
     assert client.api_log == (api_method, kwargs_with_uid)
 
@@ -550,12 +550,12 @@ def test_integration_suite():
 
     for entry in test_page.entries.values():
         print(entry.content)
-    e1 = page.entries.create_entry("heading", "It's a Test!")
-    e2 = page.entries.create_entry(
+    e1 = page.entries.create_entry("heading", "It's a Test!")  # noqa: F841
+    e2 = page.entries.create_entry(  # noqa: F841
         "plain text entry", "This is some cool info for a test to have!"
     )
-    e3 = page.entries.create_entry("heading", "time for some JSON")
-    e4 = page.entries.create_entry(
+    e3 = page.entries.create_entry("heading", "time for some JSON")  # noqa: F841
+    e4 = page.entries.create_entry(  # noqa: F841
         "plain text entry",
         dumps(
             {  # TODO replace this a note that Dustin would be interested in seeing
