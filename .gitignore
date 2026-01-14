@@ -10,3 +10,11 @@ wheels/
 .venv
 
 .env
+
+# Coverage reports
+.coverage
+
+# IDE files
+.vscode/
+.idea/
+*.iml
