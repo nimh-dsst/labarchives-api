@@ -20,6 +20,33 @@ from cryptography.hazmat.primitives.hmac import HMAC
 from lxml import etree
 from requests import codes as status_codes
 from requests import get, post
+import platform
+import webbrowser
+import selenium.webdriver as webdriver
+
+if platform.system() == "Windows":
+    from winreg import OpenKey, QueryValueEx, HKEY_CURRENT_USER
+
+    with OpenKey(
+        HKEY_CURRENT_USER,
+        r"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice",
+    ) as key:
+        raw_browser = QueryValueEx(key, "ProgId")[0].lower()
+elif platform.system() == "Darwin":
+    raw_browser = "safari"
+else:
+    raw_browser = webbrowser.get().name.lower()
+
+if "chrome" in raw_browser:
+    default_browser = "chrome"
+elif "firefox" in raw_browser:
+    default_browser = "firefox"
+elif "safari" in raw_browser:
+    default_browser = "safari"
+elif "edge" in raw_browser:
+    default_browser = "edge"
+else:
+    default_browser = "terminal"
 
 
 @dataclass
@@ -935,7 +962,49 @@ class Client:
 
         return etree.fromstring(bytes(request.text, encoding="utf-8"))
 
-    # TODO try the iframe thing
+    def default_authenticate(self) -> User:
+        """Authenticates a user using the default browser and localhost server.
+
+        Returns:
+            An authenticated user.
+        """
+        auth_url = self.generate_auth_url("http://localhost:8089/")
+
+        driver = None
+        options = None
+
+        match default_browser:
+            case "chrome":
+                options = webdriver.ChromeOptions()
+                driver = webdriver.Chrome(options=options)
+                print("Opening Chrome for authentication...")
+            case "firefox":
+                options = webdriver.FirefoxOptions()
+                driver = webdriver.Firefox(options=options)
+                print("Opening Firefox for authentication...")
+            case "safari":
+                options = webdriver.SafariOptions()
+                driver = webdriver.Safari(options=options)
+                print("Opening Safari for authentication...")
+            case "edge":
+                options = webdriver.EdgeOptions()
+                driver = webdriver.Edge(options=options)
+                print("Opening Edge for authentication...")
+            case _:
+                print("Open authentication URL in your browser:")
+                print(auth_url)
+
+        if driver is not None:
+            driver.get(auth_url)
+            print("Please complete the authentication in the opened browser window...")
+
+        user = self.collect_auth_response()
+
+        if driver is not None:
+            driver.quit()
+
+        return user
+
     def collect_auth_response(self) -> User:
         """Launches default localhost server at 8089 to collect LabArchives Authentication Response.
 
