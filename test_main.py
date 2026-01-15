@@ -1,4 +1,4 @@
-from typing import override, Any, Sequence, Mapping
+from typing import override, Any, Sequence, Mapping, Callable
 from datetime import datetime, timedelta
 from urllib.parse import parse_qsl, urlsplit, urlunsplit, urlencode
 from dotenv import load_dotenv
@@ -310,6 +310,90 @@ def notebook_tree(client: MockClient, notebook: LA.Notebook) -> LA.NotebookTreeN
 
 
 @pytest.mark.parametrize(
+    "val,prefix,expected",
+    [
+        # Single-level, no prefix
+        (
+            {"a": str, "b": int},
+            "",
+            {"/a": str, "/b": int},
+        ),
+        # Nested, no prefix
+        (
+            {"a": {"b": int, "c": str}},
+            "",
+            {"/a/b": int, "/a/c": str},
+        ),
+        # Nested with prefix
+        (
+            {"a": {"b": int}, "c": str},
+            "root",
+            {"root/a/b": int, "root/c": str},
+        ),
+        # Deeper nesting
+        (
+            {"a": {"b": {"c": str}}},
+            "",
+            {"/a/b/c": str},
+        ),
+        # Empty dict at leaf
+        ({"a": {"b": {"c": {}}}}, "", {}),
+    ],
+)
+def test_flatten_dict_success(
+    val: LA.EtreeExtractorDict, prefix: str, expected: dict[str, Callable[[Any], Any]]
+):
+    assert LA._flatten_dict(val, prefix) == expected  # pyright: ignore[reportPrivateUsage]
+
+
+@pytest.mark.parametrize(
+    "val, prefix",
+    [
+        ({"": {"b": int}}, ""),  # Empty key
+    ],
+)
+def test_flatten_dict_value_error(val: LA.EtreeExtractorDict, prefix: str):
+    with pytest.raises(ValueError):
+        LA._flatten_dict(val, prefix)  # pyright: ignore[reportPrivateUsage]
+
+
+@pytest.mark.parametrize(
+    "s,expected",
+    [
+        ("true", True),
+        ("TRUE", True),
+        ("True", True),
+        ("false", False),
+        ("FALSE", False),
+        ("False", False),
+        ("tRuE", True),
+        ("fAlSe", False),
+    ],
+)
+def test_to_bool_success(s: str, expected: bool):
+    assert LA.to_bool(s) is expected
+
+
+@pytest.mark.parametrize(
+    "s",
+    [
+        "",
+        "0",
+        "1",
+        "yes",
+        "no",
+        "truthy",
+        " falsE ",  # note: your current implementation does not strip
+        " true ",  # note: your current implementation does not strip
+        "none",
+    ],
+)
+def test_to_bool_invalid_raises(s: str):
+    with pytest.raises(ValueError, match=r"Cannot convert '.*' to bool"):
+        LA.to_bool(s)
+
+
+@pytest.mark.parametrize(
     "api_method,kwargs",
     [
         ("tests/get_id", {}),
@@ -433,6 +517,7 @@ def test_tree_traversal(notebook: LA.Notebook, notebook_tree: LA.NotebookTreeNod
     assert len(k) == 0
 
 
+@pytest.mark.is_interactive
 def test_integration_suite():
     api_url = getenv("api_url", "https://api.labarchives.com")
     access_key_id = getenv("access_key_id")
@@ -456,11 +541,11 @@ def test_integration_suite():
 
     assert isinstance(tests_dir, LA.NotebookDirectory)
 
-    test_id = str(randrange(0, 100_000_000))
+    test_id = str(randrange(0, 100_000_000))  # TODO datetime
     test_dir = tests_dir.create_directory(test_id)
     page = test_dir.create_page("Test Page A")
 
-    test_page = tests_dir[LA.Index.Name : "Test Page"][0]
+    test_page = test_dir[LA.Index.Name : "Test Page A"][0]
     assert isinstance(test_page, LA.NotebookPage)
 
     for entry in test_page.entries.values():
@@ -473,7 +558,9 @@ def test_integration_suite():
     e4 = page.entries.create_entry(
         "plain text entry",
         dumps(
-            {
+            {  # TODO replace this a note that Dustin would be interested in seeing
+                # attach a JSON file that looks like something that would be in an ELN
+                # fMRI group flavored
                 "test object": [1, 2, 3, 4],
                 "hooray": {"wow, what a test": ":)", "yep": True},
             },

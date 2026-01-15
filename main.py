@@ -108,9 +108,6 @@ def _extract_etree(_etree: etree.Element, format: EtreeExtractorDict) -> dict[st
         if (
             value is None
         ):  # XXX should we collate errors and return at end with the dict or?
-            for i in etree.tostring(_etree, pretty_print=True).splitlines():
-                print(i)
-
             raise ValueError(f"Could not find value for './{key}'")
 
         try:
@@ -192,6 +189,12 @@ class User:
 
 
 type NotebookNode = "NotebookPage | NotebookDirectory"
+
+
+class MixinTreeCopy(ABC):
+    @abstractmethod
+    def copy_to(self, destination: Notebook | NotebookDirectory) -> NotebookNode:
+        raise NotImplementedError
 
 
 class NotebookEntity(ABC):
@@ -461,9 +464,11 @@ class Notebook(NotebookTreeNode):
         )
         tree_id = _extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
 
-        return NotebookPage(
+        new_page = NotebookPage(
             tree_id, name, self, self, True, True, True, True, self._user
         )
+        self._children.append(new_page)
+        return new_page
 
     @override
     def create_directory(self, name: str) -> NotebookDirectory:
@@ -477,9 +482,11 @@ class Notebook(NotebookTreeNode):
         )
         tree_id = _extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
 
-        return NotebookDirectory(
+        new_dir = NotebookDirectory(
             tree_id, name, self, self, True, True, True, True, self._user
         )
+        self._children.append(new_dir)
+        return new_dir
 
     # get info # This is basically irrelevant
     # delete notebook?
@@ -562,7 +569,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
         return new_notebook
 
 
-class NotebookDirectory(NotebookEntity, NotebookTreeNode):
+class NotebookDirectory(NotebookEntity, NotebookTreeNode, MixinTreeCopy):
     """A directory in a notebook."""
 
     @override
@@ -589,9 +596,12 @@ class NotebookDirectory(NotebookEntity, NotebookTreeNode):
         )
         tree_id = _extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
 
-        return NotebookPage(
+        new_page = NotebookPage(
             tree_id, name, self._root, self, True, True, True, True, self._user
         )
+
+        self._children.append(new_page)
+        return new_page
 
     @override
     def create_directory(self, name: str) -> NotebookDirectory:
@@ -606,15 +616,28 @@ class NotebookDirectory(NotebookEntity, NotebookTreeNode):
         )
         tree_id = _extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
 
-        return NotebookDirectory(
+        new_dir = NotebookDirectory(
             tree_id, name, self._root, self, True, True, True, True, self._user
         )
 
+        self._children.append(new_dir)
+        return new_dir
+
+    @override
     def _populate(self):
         self._children = self._root.get_tree(self)
 
+    @override
+    def copy_to(self, destination: Notebook | NotebookDirectory) -> NotebookNode:
+        new_dir = destination.create_directory(self.name)
 
-class NotebookPage(NotebookEntity):
+        for child in self._children:
+            child.copy_to(new_dir)
+
+        return new_dir
+
+
+class NotebookPage(NotebookEntity, MixinTreeCopy):
     """A page in a notebook."""
 
     def __init__(
@@ -680,6 +703,18 @@ class NotebookPage(NotebookEntity):
             self._entries = Entries(entries, self._user, self)
 
         return self._entries
+
+    @override
+    def copy_to(self, destination: Notebook | NotebookDirectory) -> NotebookNode:
+        new_page = destination.create_page(self.name)
+
+        for entry in self.entries.values():
+            new_page.entries.create_entry(
+                entry._part_type,  # pyright: ignore[reportArgumentType, reportPrivateUsage]
+                entry.content,
+            )
+
+        return new_page
 
 
 class Entries(Mapping[str, "Entry"]):
@@ -750,22 +785,24 @@ class Entry:
         self._id = eid
         self._user = user
         self._part_type = part_type
-        match part_type.lower():
-            case (
-                "plain text entry"
-                | "text entry"
-                | "widget entry"
-                | "sketch entry"
-                | "heading"
-                | "equation entry"
-            ):
-                self._content_type = "text"
-                self._content = data
-            case "reference entry":
-                self._content_type = "xml"
-                self._content = etree.fromstring(bytes(data, encoding="utf-8"))
-            case "assignment entry" | "attachment" | _:
-                self._content_type = "unsupported"
+        self._content_type = "text"
+        self._content = data
+        # match part_type.lower():
+        #     case (
+        #         "plain text entry"
+        #         | "text entry"
+        #         | "widget entry"
+        #         | "sketch entry"
+        #         | "heading"
+        #         | "equation entry"
+        #     ):
+        #         self._content_type = "text"
+        #         self._content = data
+        #     case "reference entry":
+        #         self._content_type = "xml"
+        #         self._content = etree.fromstring(bytes(data, encoding="utf-8"))
+        #     case "assignment entry" | "attachment" | _:
+        #         self._content_type = "unsupported"
 
     @property
     def id(self):
@@ -778,7 +815,7 @@ class Entry:
         return self._content_type
 
     @property
-    def content(self) -> str | etree.Element:
+    def content(self) -> str:
         """The content of the entry."""
         if self._content_type == "unsupported":
             raise NotImplementedError
@@ -931,7 +968,7 @@ class Client:
                         bytes(f"Error: {query['error']}", encoding="utf-8")
                     )
                 else:
-                    self.wfile.write(b"Thanks for Authenticating.")
+                    self.wfile.write(b"Thanks for Authenticating. Close this Window")
                     auth_info["auth_code"] = query["auth_code"]
                     auth_info["email"] = query["email"]
 
