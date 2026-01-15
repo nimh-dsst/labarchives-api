@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from base64 import b64encode
-from collections.abc import Mapping, Callable, Sequence
+from collections.abc import Mapping, Callable, Sequence, MutableSequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Literal, overload, override
+from typing import Any, Literal, overload, override, Self
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from operator import itemgetter
 from warnings import deprecated
@@ -224,6 +224,11 @@ class NotebookEntity(ABC):
     def name(self) -> str:
         """The name of the entity."""
         return self._name  # TODO allow this to be set
+    
+    @name.setter
+    def name(self, value: str):
+        """Set the name of the entity"""
+        
 
     @property
     def id(self) -> str:
@@ -272,7 +277,7 @@ class NotebookTreeNode(
 
     def __init__(self):
         super().__init__()
-        self._children: Sequence[NotebookNode] = []
+        self._children: MutableSequence[NotebookNode] = []
         self._populated: bool = False
 
     @abstractmethod
@@ -292,7 +297,9 @@ class NotebookTreeNode(
         self._ensure_populated()
         return iter(child.id for child in self._children)
 
-    # TODO moving things around
+    @abstractmethod
+    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
+        pass
 
     @overload
     def __getitem__(self, key: str) -> NotebookNode:
@@ -434,9 +441,15 @@ class Notebook(NotebookTreeNode):
 
         return nodes
 
+    @override
     def _populate(self):
         self._children = self.get_tree("0")
 
+    @override
+    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
+        raise RuntimeError("Notebook cannot be moved")
+
+    @override
     def create_page(self, name: str) -> NotebookPage:
         # TODO take into account whether can write in this directory
         create_tree = self._user.api_get(
@@ -452,6 +465,7 @@ class Notebook(NotebookTreeNode):
             tree_id, name, self, self, True, True, True, True, self._user
         )
 
+    @override
     def create_directory(self, name: str) -> NotebookDirectory:
         # TODO take into account whether can write in this directory
         create_tree = self._user.api_get(
@@ -551,6 +565,18 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 class NotebookDirectory(NotebookEntity, NotebookTreeNode):
     """A directory in a notebook."""
 
+    @override
+    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
+        new_id = "0" if isinstance(new_parent, Notebook) else new_parent.id
+
+        self._user.api_get("tree_tools/update_node", nbid=self._root.id, tree_id=self.id, parent_tree_id=new_id)
+        del self._parent._children[self._parent._children.index(self)] # This removes current node from old parent in-place
+        self._parent = new_parent
+        self._parent._children.append(self) # This adds current node to new parent in-place
+        return self
+
+
+    @override
     def create_page(self, name: str) -> NotebookPage:
         if not self._can_write:
             raise RuntimeError("Action Not Allowed")  # TODO better error
@@ -567,6 +593,7 @@ class NotebookDirectory(NotebookEntity, NotebookTreeNode):
             tree_id, name, self._root, self, True, True, True, True, self._user
         )
 
+    @override
     def create_directory(self, name: str) -> NotebookDirectory:
         if not self._can_write:
             raise RuntimeError("Action Not Allowed")  # TODO better error

@@ -13,6 +13,7 @@ import main as LA
 
 load_dotenv()
 
+
 class MockClient(LA.Client):
     def __init__(self):
         super().__init__("https://test-labapi.test", "test", "test")
@@ -417,19 +418,21 @@ def test_notebook__inserts_from_bottom(client: MockClient, notebook: LA.Notebook
     assert notebook.inserts_from_bottom
     assert client.api_log[0] == "notebooks/notebook_info"
 
+
 def test_tree_traversal(notebook: LA.Notebook, notebook_tree: LA.NotebookTreeNode):
     k = notebook_tree["dir-1"]
     assert isinstance(k, LA.NotebookDirectory)
     assert isinstance(k["page-1-1"], LA.NotebookPage)
     assert k.parent == notebook
-    
+
     k = notebook_tree[LA.Index.Name : "Test Folder B"][0]
     assert isinstance(k, LA.NotebookDirectory)
-    
+
     k = list(k.values())[0]
     assert isinstance(k, LA.NotebookDirectory)
     assert len(k) == 0
-    
+
+
 def test_integration_suite():
     api_url = getenv("api_url", "https://api.labarchives.com")
     access_key_id = getenv("access_key_id")
@@ -444,12 +447,12 @@ def test_integration_suite():
 
     user = client.collect_auth_response()
 
-    notebook = user.notebooks[LA.Index.Name:"DSST Test Notebook"][0]
+    notebook = user.notebooks[LA.Index.Name : "DSST Test Notebook"][0]
 
-    if len(notebook[LA.Index.Name:"LabArchives API Test"]) == 0:
+    if len(notebook[LA.Index.Name : "LabArchives API Test"]) == 0:
         tests_dir = notebook.create_directory("LabArchives API Test")
     else:
-        tests_dir = notebook[LA.Index.Name:"LabArchives API Test"][0]
+        tests_dir = notebook[LA.Index.Name : "LabArchives API Test"][0]
 
     assert isinstance(tests_dir, LA.NotebookDirectory)
 
@@ -457,31 +460,36 @@ def test_integration_suite():
     test_dir = tests_dir.create_directory(test_id)
     page = test_dir.create_page("Test Page A")
 
-    test_page = tests_dir[LA.Index.Name:"Test Page"][0]
+    test_page = tests_dir[LA.Index.Name : "Test Page"][0]
     assert isinstance(test_page, LA.NotebookPage)
 
     for entry in test_page.entries.values():
         print(entry.content)
     e1 = page.entries.create_entry("heading", "It's a Test!")
-    e2 = page.entries.create_entry("plain text entry", "This is some cool info for a test to have!")
+    e2 = page.entries.create_entry(
+        "plain text entry", "This is some cool info for a test to have!"
+    )
     e3 = page.entries.create_entry("heading", "time for some JSON")
-    e4 = page.entries.create_entry("plain text entry", dumps({
-        "test object": [1, 2, 3, 4],
-        "hooray": {
-            "wow, what a test": ":)",
-            "yep": True
-        }
-    }, indent=4))
+    e4 = page.entries.create_entry(
+        "plain text entry",
+        dumps(
+            {
+                "test object": [1, 2, 3, 4],
+                "hooray": {"wow, what a test": ":)", "yep": True},
+            },
+            indent=4,
+        ),
+    )
 
-    notebook._populated = False # pyright: ignore[reportPrivateUsage]
+    notebook._populated = False  # pyright: ignore[reportPrivateUsage]
 
-    tests_dir = notebook[LA.Index.Name:"LabArchives API Test"][0]
+    tests_dir = notebook[LA.Index.Name : "LabArchives API Test"][0]
     assert isinstance(tests_dir, LA.NotebookDirectory)
 
-    test_dir = tests_dir[LA.Index.Name:test_id][0]
+    test_dir = tests_dir[LA.Index.Name : test_id][0]
     assert isinstance(test_dir, LA.NotebookDirectory)
-    
-    test_page = test_dir[LA.Index.Name:"Test Page A"][0]
+
+    test_page = test_dir[LA.Index.Name : "Test Page A"][0]
     assert isinstance(test_page, LA.NotebookPage)
     assert page.id == test_page.id
 
@@ -489,7 +497,3 @@ def test_integration_suite():
         print(entry.content)
         if entry.content_type == "header":
             print("-----------------------------------")
-    
-
-
-    
