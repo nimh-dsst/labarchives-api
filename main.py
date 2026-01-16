@@ -6,24 +6,31 @@ import platform
 import webbrowser
 from abc import ABC, abstractmethod
 from base64 import b64encode
-from collections.abc import Callable, Mapping, MutableSequence, Sequence
+from collections.abc import Callable, Generator, Mapping, MutableSequence, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from email.message import Message
 from enum import Enum
 from http.server import SimpleHTTPRequestHandler
-from io import BufferedIOBase, BytesIO
+from io import BufferedIOBase, BufferedRandom, BufferedReader, BytesIO
+from mimetypes import guess_file_type
 from operator import itemgetter
 from socketserver import TCPServer
-from typing import Any, Generic, Literal, Self, TypeVar, overload, override
+from typing import Any, Generic, Literal, Self, TypeAlias, TypeVar, overload, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from warnings import deprecated
+from tempfile import TemporaryFile
 
 import selenium.webdriver as webdriver
 from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.hazmat.primitives.hmac import HMAC
 from lxml import etree
+from requests import Response, get, post
 from requests import codes as status_codes
-from requests import get, post
+from typing_extensions import Buffer, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from tempfile import _TemporaryFileWrapper  # pyright: ignore[reportPrivateUsage]
 
 if platform.system() == "Windows":
     from winreg import HKEY_CURRENT_USER, OpenKey, QueryValueEx
@@ -148,6 +155,9 @@ def _extract_etree(_etree: etree.Element, format: EtreeExtractorDict) -> dict[st
     return items
 
 
+# TODO deletions are just moving things into a custom, top-level "API-Deleted Items" folder
+
+
 class User:
     """A LabArchives user."""
 
@@ -187,7 +197,7 @@ class User:
     def api_post(
         self,
         api_method_uri: str | Sequence[str],
-        body: Mapping[str, str],
+        body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ):
         return self._client.api_post(api_method_uri, body, **kwargs, uid=self._id)
@@ -764,7 +774,7 @@ class NotebookPage(NotebookEntity, MixinTreeCopy):
             new_page.entries.create_entry(  # pyright: ignore[reportCallIssue]
                 # TODO add in the other create_entries so this doesn't explode
                 entry.content_type,  # pyright: ignore[reportArgumentType]
-                entry.content,
+                entry.content,  # FIXME content is not always the right output
             )
 
         return new_page
@@ -819,24 +829,50 @@ class Entries(Mapping[str, "Entry[Any]"]):
     ) -> PlainTextEntry:
         pass
 
+    @overload
     def create_entry(
         self,
-        entry_type: Literal["heading", "text entry", "plain text entry"],
-        data: str,
-    ) -> HeaderEntry | TextEntry | PlainTextEntry:  # TODO attachment
-        entry_tree = self._user.api_post(
-            "entries/add_entry",
-            {"entry_data": data},
-            part_type=entry_type,
-            pid=self._page.id,
-            nbid=self._page.root.id,
-        )
+        entry_type: Literal["attachment", "Attachment"],
+        data: Attachment,
+    ) -> AttachmentEntry:
+        pass
 
-        id = _extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
+    def create_entry(
+        self,
+        entry_type: Literal[
+            "heading", "text entry", "plain text entry", "attachment", "Attachment"
+        ],
+        data: str | Attachment,
+    ) -> HeaderEntry | TextEntry | PlainTextEntry | AttachmentEntry:
+        if entry_type == "Attachment" or entry_type == "attachment":
+            assert isinstance(data, Attachment)
+            entry_tree = self._user.api_post(
+                "entires/add_attachment",
+                data,
+                filename=data.filename,
+                caption=data.caption,
+                nbid=self._page.root.id,
+                pid=self._page.id,
+                change_description="File uploaded via API",
+            )
 
-        entry = Entry.get_entry(entry_type, id, data, self._user)
+            id = _extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
+            entry = Entry.get_entry("attachment", id, data.caption, self._user)
+
+        else:
+            assert isinstance(data, str)
+            entry_tree = self._user.api_post(
+                "entries/add_entry",
+                {"entry_data": data},
+                part_type=entry_type,
+                pid=self._page.id,
+                nbid=self._page.root.id,
+            )
+
+            id = _extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
+            entry = Entry.get_entry(entry_type, id, data, self._user)
+
         self._entries[id] = entry
-
         return entry  # pyright: ignore[reportReturnType]
         # XXX the python typechecker here does not understand that entry_type is constrained
         #     and so picks a nonsense overload which tries to return too wide of a type
@@ -845,7 +881,6 @@ class Entries(Mapping[str, "Entry[Any]"]):
 
 
 T = TypeVar("T")
-K = TypeVar("K")
 
 
 class Entry(ABC, Generic[T]):
@@ -873,6 +908,11 @@ class Entry(ABC, Generic[T]):
 
     @overload
     @staticmethod
+    def get_entry(part_type: Literal["widget"], *args: Any) -> WidgetEntry:
+        pass
+
+    @overload
+    @staticmethod
     def get_entry(part_type: str, *args: Any) -> Entry[Any]:
         pass
 
@@ -880,17 +920,15 @@ class Entry(ABC, Generic[T]):
     def get_entry(part_type: str, *args: Any) -> Entry[Any]:  # pyright: ignore[reportInvalidTypeVarUse]
         match part_type.lower().strip():
             case "plain text entry":
-                assert K is str
                 return PlainTextEntry(*args)
             case "text entry":
-                assert K is str
                 return TextEntry(*args)
             case "heading":
-                assert K is str
                 return HeaderEntry(*args)
             case "attachment":
-                assert K is BufferedIOBase
                 return AttachmentEntry(*args)
+            case "widget":
+                return WidgetEntry(*args)
             case _:
                 raise NotImplementedError
 
@@ -937,7 +975,7 @@ class BaseTextEntry(Entry[str], ABC):
 class TextEntry(BaseTextEntry):
     @property
     @override
-    def content_type(self) -> str:
+    def content_type(self):
         """The content type of the entry."""
         return "text entry"
 
@@ -945,7 +983,7 @@ class TextEntry(BaseTextEntry):
 class HeaderEntry(BaseTextEntry):
     @property
     @override
-    def content_type(self) -> str:
+    def content_type(self):
         """The content type of the entry."""
         return "heading"
 
@@ -953,7 +991,7 @@ class HeaderEntry(BaseTextEntry):
 class PlainTextEntry(BaseTextEntry):
     @property
     @override
-    def content_type(self) -> str:
+    def content_type(self):
         """The content type of the entry."""
         return "plain text entry"
 
@@ -961,9 +999,73 @@ class PlainTextEntry(BaseTextEntry):
 class WidgetEntry(BaseTextEntry):
     @property
     @override
-    def content_type(self) -> str:
+    def content_type(self):
         """The content type of the entry."""
         return "widget"
+
+
+# NOTE: from Pylance
+# Unfortunately PEP 688 does not allow us to distinguish read-only
+# from writable buffers. We use these aliases for readability for now.
+# Perhaps a future extension of the buffer protocol will allow us to
+# distinguish these cases in the type system.
+# Same as WriteableBuffer, but also includes read-only buffer types (like bytes).
+ReadableBuffer: TypeAlias = Buffer  # stable
+
+
+class Attachment(BufferedIOBase):
+    # TODO writes need explicit syncing with server
+    # TODO update attachment without delete and re-add
+
+    @overload
+    @staticmethod
+    def from_file(file: BufferedReader) -> Attachment:
+        pass
+
+    @overload
+    @staticmethod
+    def from_file(file: BufferedRandom) -> Attachment:
+        pass
+
+    @staticmethod
+    def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
+        mime_type = guess_file_type(file.name)[0] or "application/octet-stream"
+        return Attachment(
+            file,  # pyright: ignore[reportUnknownVariableType, reportArgumentType]
+            mime_type,
+            file.name,
+            caption=f"API-uploaded {mime_type} file.",
+        )
+
+    def __init__(
+        self,
+        backing: BufferedRandom
+        | BufferedReader
+        | BytesIO
+        | _TemporaryFileWrapper[bytes],
+        mime_type: str,
+        filename: str,
+        caption: str,
+    ):
+        self._backing = backing
+        self._mime_type = mime_type
+        self._filename = filename
+        self._caption = caption
+
+    def __getattr__(self, attr: str):
+        return getattr(self._backing, attr)
+
+    @property
+    def filename(self) -> str:
+        return self._filename
+
+    @property
+    def mime_type(self) -> str:
+        return self._mime_type
+
+    @property
+    def caption(self) -> str:
+        return self._caption
 
 
 class AttachmentEntry(Entry[BufferedIOBase]):
@@ -976,64 +1078,54 @@ class AttachmentEntry(Entry[BufferedIOBase]):
 
     @property
     @override
-    def content_type(self) -> str:
+    def content_type(self):
         """The content type of the entry."""
         return "Attachment"
 
-    @property
-    @override
-    def content(
-        self,
-    ) -> (
-        BufferedIOBase
-    ):  # XXX there's a filesize limit on LA, but we should still prepare for the
-        # eventuality that a file is big enough we don't want to hold it in memory
-        # TODO see above
-        """The content of the entry."""
-        if self._data is None:
-            attachment = get(
-                self._user.client.construct_url(
-                    "entries/entry_attachment",
-                    {  # TODO move into client
-                        "uid": self._user.id,
-                        "eid": self.id,
-                    },
-                ),
-                stream=True,
+    def get_attachment(self, use_tempfile: bool = False) -> Attachment:
+        # BUG: currently the implementation means that the backing buffer can be used while a reference is maintained
+        #      to it
+        if self._data is None or self._data.closed:
+            attachment = self._user.client.stream_api_get(
+                "entries/entry_attachment", uid=self._user.id, eid=self.id
             )
 
-            self._mime_type = (  # noqa: F841
-                attachment.headers.get("Content-Type") or "application/octet-stream"
-            )
-            filename = attachment.headers.get("Content-Disposition")
+            if use_tempfile:
+                output = TemporaryFile()
+            else:
+                output = BytesIO()
 
-            assert filename is not None  # TODO
+            try:
+                while True:
+                    output.write(next(attachment))
+            except StopIteration as stopit:
+                response = stopit.value
 
-            self._filename = tuple(
-                k.split("=")[1].strip('"')
-                for k in filename.split(";")
-                if k.strip().startswith("filename")
-            )[0]
+                msg = Message()
+                msg["Content-Type"] = (
+                    response.headers.get("Content-Type") or "application/octet-stream"
+                )
+                msg["Content-Disposition"] = response.headers.get("Content-Disposition")
+                filename = msg.get_filename()
+                mime_type = msg.get_content_type()
 
-            output = BytesIO()
+                assert filename is not None
 
-            for chunk in attachment.iter_content(chunk_size=1024 * 1024):
-                output.write(chunk)
+            output.seek(0)
 
-            return output
+            self._data = Attachment(output, mime_type, filename, self._caption)
+
         return self._data
 
     @property
-    def mime_type(self) -> str:
-        if self._mime_type is None:
-            raise RuntimeError("Mime type does not exist until content fetched")
-        return self._mime_type
+    @override
+    def content(self) -> Attachment:
+        """The content of the entry."""
+        return self.get_attachment()
 
     @property
-    def filename(self) -> str:
-        if self._filename is None:
-            raise RuntimeError("Filename does not exist until content fetched")
-        return self._filename
+    def caption(self) -> str:
+        return self._caption
 
 
 class Comment:
@@ -1111,6 +1203,98 @@ class Client:
 
         return User(uid, False, notebooks, self)
 
+    @staticmethod
+    def _handle_request_status(response: Response) -> None:
+        if response.status_code != status_codes.ok:
+            raise RuntimeError(  # TODO make this more useful
+                f"API request failed with status code {response.status_code}: {response.text}"
+            )
+            # See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
+
+    def stream_api_get(
+        self, api_method_uri: str | Sequence[str], **kwargs: Any
+    ) -> Generator[bytes, None, Response]:
+        """Makes a GET request to the LabArchives API.
+
+        Args:
+            api_method_uri: The API method to call.
+            **kwargs: Additional arguments to pass to the API method.
+
+        Returns:
+            The response from the API as a stream of bytes.
+        """
+        with get(
+            self.construct_url(api_method_uri, query=kwargs), stream=True
+        ) as request:
+            Client._handle_request_status(request)
+
+            for chunk in request.iter_content(1024 * 1024):
+                yield chunk
+
+            return request
+
+    def stream_api_post(
+        self,
+        api_method_uri: str | Sequence[str],
+        body: Mapping[str, str] | BufferedIOBase,
+        **kwargs: Any,
+    ) -> Generator[bytes, None, Response]:
+        """Makes a POST request to the LabArchives API.
+
+        Args:
+            api_method_uri: The API method to call.
+            **kwargs: Additional arguments to pass to the API method.
+
+        Returns:
+            The response from the API as a stream of bytes.
+        """
+        with post(
+            self.construct_url(api_method_uri, query=kwargs), data=body, stream=True
+        ) as request:
+            Client._handle_request_status(request)
+
+            for chunk in request.iter_content(1024 * 1024):
+                yield chunk
+
+            return request
+
+    def raw_api_get(
+        self, api_method_uri: str | Sequence[str], **kwargs: Any
+    ) -> Response:
+        """Makes a GET request to the LabArchives API.
+
+        Args:
+            api_method_uri: The API method to call.
+            **kwargs: Additional arguments to pass to the API method.
+
+        Returns:
+            The response from the API.
+        """
+        request = get(self.construct_url(api_method_uri, query=kwargs))
+        Client._handle_request_status(request)
+
+        return request
+
+    def raw_api_post(
+        self,
+        api_method_uri: str | Sequence[str],
+        body: Mapping[str, str] | BufferedIOBase,
+        **kwargs: Any,
+    ) -> Response:
+        """Makes a POST request to the LabArchives API.
+
+        Args:
+            api_method_uri: The API method to call.
+            **kwargs: Additional arguments to pass to the API method.
+
+        Returns:
+            The response from the API.
+        """
+        request = post(self.construct_url(api_method_uri, query=kwargs), data=body)
+        Client._handle_request_status(request)
+
+        return request
+
     def api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any
     ) -> etree.Element:
@@ -1123,23 +1307,18 @@ class Client:
         Returns:
             The response from the API as an etree element.
         """
-        request = get(self.construct_url(api_method_uri, query=kwargs))
 
-        if request.status_code != status_codes.ok:
-            raise RuntimeError(  # TODO make this more useful
-                f"API request failed with status code {request.status_code}: {request.text}"
-            )
-            # See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
-
-        return etree.fromstring(bytes(request.text, encoding="utf-8"))
+        return etree.fromstring(
+            bytes(self.raw_api_get(api_method_uri, **kwargs).text, encoding="utf-8")
+        )
 
     def api_post(
         self,
         api_method_uri: str | Sequence[str],
-        body: Mapping[str, str],
+        body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ) -> etree.Element:
-        """Makes a GET request to the LabArchives API.
+        """Makes a POST request to the LabArchives API.
 
         Args:
             api_method_uri: The API method to call.
@@ -1148,15 +1327,12 @@ class Client:
         Returns:
             The response from the API as an etree element.
         """
-        request = post(self.construct_url(api_method_uri, query=kwargs), data=body)
 
-        if request.status_code != status_codes.ok:
-            raise RuntimeError(  # TODO make this more useful
-                f"API request failed with status code {request.status_code}: {request.text}"
+        return etree.fromstring(
+            bytes(
+                self.raw_api_post(api_method_uri, body, **kwargs).text, encoding="utf-8"
             )
-            # See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
-
-        return etree.fromstring(bytes(request.text, encoding="utf-8"))
+        )
 
     def default_authenticate(self) -> User:
         """Authenticates a user using the default browser and localhost server.

@@ -528,9 +528,7 @@ def test_integration_suite():
 
     client = LA.Client(api_url, access_key_id, access_password)
 
-    print("Authentication URI: ", client.generate_auth_url("http://localhost:8089"))
-
-    user = client.collect_auth_response()
+    user = client.default_authenticate()
 
     notebook = user.notebooks[LA.Index.Name : "DSST Test Notebook"][0]
 
@@ -584,3 +582,12 @@ def test_integration_suite():
         print(entry.content)
         if entry.content_type == "header":
             print("-----------------------------------")
+
+    trash = notebook[LA.Index.Name : "Deleted Items"]
+
+    for t in notebook:
+        print(notebook[t].name)
+
+    assert isinstance(trash, LA.NotebookDirectory)
+
+    tests_dir.move_to(trash)
