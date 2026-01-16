@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from http.server import SimpleHTTPRequestHandler
-from io import BufferedIOBase
+from io import BufferedIOBase, BytesIO
 from operator import itemgetter
 from socketserver import TCPServer
 from typing import Any, Generic, Literal, Self, TypeVar, overload, override
@@ -719,7 +719,7 @@ class NotebookPage(NotebookEntity, MixinTreeCopy):
     def entries(self) -> Entries:
         """The entries on the page."""
         if self._entries is None:
-            entries: list[Entry] = []
+            entries: list[Entry[Any]] = []
 
             entries_tree = self._user.api_get(
                 "tree_tools/get_entries_for_page",
@@ -739,12 +739,14 @@ class NotebookPage(NotebookEntity, MixinTreeCopy):
                     },
                 )
 
+                part_type = entry_data["part-type"]
+
+                assert isinstance(part_type, str)
+
                 entries.append(
-                    Entry(
+                    Entry.get_entry(
+                        part_type,
                         entry_data["eid"],
-                        entry_data["part-type"],
-                        entry_data["attach-file-name"],
-                        entry_data["attach-content-type"],
                         entry_data["entry-data"],
                         self._user,
                     )
@@ -759,18 +761,19 @@ class NotebookPage(NotebookEntity, MixinTreeCopy):
         new_page = destination.create_page(self.name)
 
         for entry in self.entries.values():
-            new_page.entries.create_entry(
-                entry._part_type,  # pyright: ignore[reportArgumentType, reportPrivateUsage]
+            new_page.entries.create_entry(  # pyright: ignore[reportCallIssue]
+                # TODO add in the other create_entries so this doesn't explode
+                entry.content_type,  # pyright: ignore[reportArgumentType]
                 entry.content,
             )
 
         return new_page
 
 
-class Entries(Mapping[str, "Entry"]):
+class Entries(Mapping[str, "Entry[Any]"]):
     """A collection of entries."""
 
-    def __init__(self, entries: Sequence[Entry], user: User, page: NotebookPage):
+    def __init__(self, entries: Sequence[Entry[Any]], user: User, page: NotebookPage):
         super().__init__()
         self._user = user
         self._page = page
@@ -802,11 +805,25 @@ class Entries(Mapping[str, "Entry"]):
 
     # TODO delete entries
 
+    @overload
+    def create_entry(self, entry_type: Literal["heading"], data: str) -> HeaderEntry:
+        pass
+
+    @overload
+    def create_entry(self, entry_type: Literal["text entry"], data: str) -> TextEntry:
+        pass
+
+    @overload
+    def create_entry(
+        self, entry_type: Literal["plain text entry"], data: str
+    ) -> PlainTextEntry:
+        pass
+
     def create_entry(
         self,
         entry_type: Literal["heading", "text entry", "plain text entry"],
         data: str,
-    ) -> Entry:
+    ) -> HeaderEntry | TextEntry | PlainTextEntry:  # TODO attachment
         entry_tree = self._user.api_post(
             "entries/add_entry",
             {"entry_data": data},
@@ -817,18 +834,65 @@ class Entries(Mapping[str, "Entry"]):
 
         id = _extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
 
-        self._entries[id] = Entry(id, entry_type, "", "", data, self._user)
+        entry = Entry.get_entry(entry_type, id, data, self._user)
+        self._entries[id] = entry
 
-        return self._entries[id]
+        return entry  # pyright: ignore[reportReturnType]
+        # XXX the python typechecker here does not understand that entry_type is constrained
+        #     and so picks a nonsense overload which tries to return too wide of a type
 
     # This class exists solely so we can add entries in future / delete them
 
 
 T = TypeVar("T")
+K = TypeVar("K")
 
 
 class Entry(ABC, Generic[T]):
     """An entry on a page."""
+
+    @overload
+    @staticmethod
+    def get_entry(part_type: Literal["heading"], *args: Any) -> HeaderEntry:
+        pass
+
+    @overload
+    @staticmethod
+    def get_entry(part_type: Literal["plain text entry"], *args: Any) -> PlainTextEntry:
+        pass
+
+    @overload
+    @staticmethod
+    def get_entry(part_type: Literal["text entry"], *args: Any) -> TextEntry:
+        pass
+
+    @overload
+    @staticmethod
+    def get_entry(part_type: Literal["attachment"], *args: Any) -> AttachmentEntry:
+        pass
+
+    @overload
+    @staticmethod
+    def get_entry(part_type: str, *args: Any) -> Entry[Any]:
+        pass
+
+    @staticmethod
+    def get_entry(part_type: str, *args: Any) -> Entry[Any]:  # pyright: ignore[reportInvalidTypeVarUse]
+        match part_type.lower().strip():
+            case "plain text entry":
+                assert K is str
+                return PlainTextEntry(*args)
+            case "text entry":
+                assert K is str
+                return TextEntry(*args)
+            case "heading":
+                assert K is str
+                return HeaderEntry(*args)
+            case "attachment":
+                assert K is BufferedIOBase
+                return AttachmentEntry(*args)
+            case _:
+                raise NotImplementedError
 
     # TODO perms
     def __init__(
@@ -907,6 +971,8 @@ class AttachmentEntry(Entry[BufferedIOBase]):
         super().__init__(eid, user)
         self._caption = caption
         self._data = None
+        self._filename = None
+        self._mime_type = None
 
     @property
     @override
@@ -916,7 +982,13 @@ class AttachmentEntry(Entry[BufferedIOBase]):
 
     @property
     @override
-    def content(self) -> BufferedIOBase:
+    def content(
+        self,
+    ) -> (
+        BufferedIOBase
+    ):  # XXX there's a filesize limit on LA, but we should still prepare for the
+        # eventuality that a file is big enough we don't want to hold it in memory
+        # TODO see above
         """The content of the entry."""
         if self._data is None:
             attachment = get(
@@ -930,21 +1002,38 @@ class AttachmentEntry(Entry[BufferedIOBase]):
                 stream=True,
             )
 
-            content_type = (  # noqa: F841
+            self._mime_type = (  # noqa: F841
                 attachment.headers.get("Content-Type") or "application/octet-stream"
             )
             filename = attachment.headers.get("Content-Disposition")
 
             assert filename is not None  # TODO
 
-            filename = tuple(
+            self._filename = tuple(
                 k.split("=")[1].strip('"')
                 for k in filename.split(";")
                 if k.strip().startswith("filename")
             )[0]
 
-            return  # TODO
+            output = BytesIO()
+
+            for chunk in attachment.iter_content(chunk_size=1024 * 1024):
+                output.write(chunk)
+
+            return output
         return self._data
+
+    @property
+    def mime_type(self) -> str:
+        if self._mime_type is None:
+            raise RuntimeError("Mime type does not exist until content fetched")
+        return self._mime_type
+
+    @property
+    def filename(self) -> str:
+        if self._filename is None:
+            raise RuntimeError("Filename does not exist until content fetched")
+        return self._filename
 
 
 class Comment:
