@@ -14,7 +14,7 @@ from http.server import SimpleHTTPRequestHandler
 from io import BufferedIOBase
 from operator import itemgetter
 from socketserver import TCPServer
-from typing import Any, Generic, Literal, TypeVar, overload, override
+from typing import Any, Generic, Literal, Self, TypeVar, overload, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from warnings import deprecated
 
@@ -264,6 +264,10 @@ class NotebookEntity(ABC):
         """The name of the entity."""
         return self._name  # TODO allow this to be set
 
+    @name.setter
+    def name(self, value: str):
+        """Set the name of the entity"""
+
     @property
     def id(self) -> str:
         """The ID of the entity."""
@@ -333,7 +337,9 @@ class NotebookTreeNode(
         self._ensure_populated()
         return iter(child.id for child in self._children)
 
-    # TODO moving things around
+    @abstractmethod
+    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
+        pass
 
     @overload
     def __getitem__(self, key: str) -> NotebookNode:
@@ -481,6 +487,10 @@ class Notebook(NotebookTreeNode):
         self._children = self.get_tree("0")
 
     @override
+    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
+        raise RuntimeError("Notebook cannot be moved")
+
+    @override
     def create_page(self, name: str) -> NotebookPage:
         # TODO take into account whether can write in this directory
         create_tree = self._user.api_get(
@@ -603,6 +613,25 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
 class NotebookDirectory(NotebookEntity, NotebookTreeNode, MixinTreeCopy):
     """A directory in a notebook."""
+
+    @override
+    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
+        new_id = "0" if isinstance(new_parent, Notebook) else new_parent.id
+
+        self._user.api_get(
+            "tree_tools/update_node",
+            nbid=self._root.id,
+            tree_id=self.id,
+            parent_tree_id=new_id,
+        )
+        del self._parent._children[
+            self._parent._children.index(self)
+        ]  # This removes current node from old parent in-place
+        self._parent = new_parent
+        self._parent._children.append(
+            self
+        )  # This adds current node to new parent in-place
+        return self
 
     @override
     def create_page(self, name: str) -> NotebookPage:
