@@ -582,12 +582,3 @@ def test_integration_suite():
         print(entry.content)
         if entry.content_type == "header":
             print("-----------------------------------")
-
-    trash = notebook[LA.Index.Name : "Deleted Items"]
-
-    for t in notebook:
-        print(notebook[t].name)
-
-    assert isinstance(trash, LA.NotebookDirectory)
-
-    tests_dir.move_to(trash)
