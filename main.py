@@ -1457,17 +1457,12 @@ class Client:
 
         path += "/".join(method_parts)
 
+        url = urlunsplit((scheme, netloc, path, urlencode(query), _f))
+
         if expires_in:
-            return self._sign_url(
-                urlunsplit((scheme, netloc, path, urlencode(query), _f)),
-                api_method,
-                expires_in,
-            )
+            return self._sign_url(url, api_method, expires_in)
         else:
-            return self._sign_url(
-                urlunsplit((scheme, netloc, path, urlencode(query), _f)),
-                api_method,
-            )
+            return self._sign_url(url, api_method)
 
     def _signature(self, api_method: str, expiry: int) -> str:
         hmac = self._hmac.copy()
