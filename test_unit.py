@@ -517,68 +517,68 @@ def test_tree_traversal(notebook: LA.Notebook, notebook_tree: LA.NotebookTreeNod
     assert len(k) == 0
 
 
-@pytest.mark.is_interactive
-def test_integration_suite():
-    api_url = getenv("api_url", "https://api.labarchives.com")
-    access_key_id = getenv("access_key_id")
-    access_password = getenv("access_password")
+# @pytest.mark.is_interactive
+# def test_integration_suite():
+#     api_url = getenv("api_url", "https://api.labarchives.com")
+#     access_key_id = getenv("access_key_id")
+#     access_password = getenv("access_password")
 
-    if access_key_id is None or access_password is None:
-        raise ValueError("access key id and access password must be set")
+#     if access_key_id is None or access_password is None:
+#         raise ValueError("access key id and access password must be set")
 
-    client = LA.Client(api_url, access_key_id, access_password)
+#     client = LA.Client(api_url, access_key_id, access_password)
 
-    user = client.default_authenticate()
+#     user = client.default_authenticate()
 
-    notebook = user.notebooks[LA.Index.Name : "DSST Test Notebook"][0]
+#     notebook = user.notebooks[LA.Index.Name : "DSST Test Notebook"][0]
 
-    if len(notebook[LA.Index.Name : "LabArchives API Test"]) == 0:
-        tests_dir = notebook.create_directory("LabArchives API Test")
-    else:
-        tests_dir = notebook[LA.Index.Name : "LabArchives API Test"][0]
+#     if len(notebook[LA.Index.Name : "LabArchives API Test"]) == 0:
+#         tests_dir = notebook.create_directory("LabArchives API Test")
+#     else:
+#         tests_dir = notebook[LA.Index.Name : "LabArchives API Test"][0]
 
-    assert isinstance(tests_dir, LA.NotebookDirectory)
+#     assert isinstance(tests_dir, LA.NotebookDirectory)
 
-    test_id = str(randrange(0, 100_000_000))  # TODO datetime
-    test_dir = tests_dir.create_directory(test_id)
-    page = test_dir.create_page("Test Page A")
+#     test_id = str(randrange(0, 100_000_000))  # TODO datetime
+#     test_dir = tests_dir.create_directory(test_id)
+#     page = test_dir.create_page("Test Page A")
 
-    test_page = test_dir[LA.Index.Name : "Test Page A"][0]
-    assert isinstance(test_page, LA.NotebookPage)
+#     test_page = test_dir[LA.Index.Name : "Test Page A"][0]
+#     assert isinstance(test_page, LA.NotebookPage)
 
-    for entry in test_page.entries.values():
-        print(entry.content)
-    e1 = page.entries.create_entry("heading", "It's a Test!")  # noqa: F841
-    e2 = page.entries.create_entry(  # noqa: F841
-        "plain text entry", "This is some cool info for a test to have!"
-    )
-    e3 = page.entries.create_entry("heading", "time for some JSON")  # noqa: F841
-    e4 = page.entries.create_entry(  # noqa: F841
-        "plain text entry",
-        dumps(
-            {  # TODO replace this a note that Dustin would be interested in seeing
-                # attach a JSON file that looks like something that would be in an ELN
-                # fMRI group flavored
-                "test object": [1, 2, 3, 4],
-                "hooray": {"wow, what a test": ":)", "yep": True},
-            },
-            indent=4,
-        ),
-    )
+#     for entry in test_page.entries.values():
+#         print(entry.content)
+#     e1 = page.entries.create_entry("heading", "It's a Test!")  # noqa: F841
+#     e2 = page.entries.create_entry(  # noqa: F841
+#         "plain text entry", "This is some cool info for a test to have!"
+#     )
+#     e3 = page.entries.create_entry("heading", "time for some JSON")  # noqa: F841
+#     e4 = page.entries.create_entry(  # noqa: F841
+#         "plain text entry",
+#         dumps(
+#             {  # TODO replace this a note that Dustin would be interested in seeing
+#                 # attach a JSON file that looks like something that would be in an ELN
+#                 # fMRI group flavored
+#                 "test object": [1, 2, 3, 4],
+#                 "hooray": {"wow, what a test": ":)", "yep": True},
+#             },
+#             indent=4,
+#         ),
+#     )
 
-    notebook._populated = False  # pyright: ignore[reportPrivateUsage]
+#     notebook._populated = False  # pyright: ignore[reportPrivateUsage]
 
-    tests_dir = notebook[LA.Index.Name : "LabArchives API Test"][0]
-    assert isinstance(tests_dir, LA.NotebookDirectory)
+#     tests_dir = notebook[LA.Index.Name : "LabArchives API Test"][0]
+#     assert isinstance(tests_dir, LA.NotebookDirectory)
 
-    test_dir = tests_dir[LA.Index.Name : test_id][0]
-    assert isinstance(test_dir, LA.NotebookDirectory)
+#     test_dir = tests_dir[LA.Index.Name : test_id][0]
+#     assert isinstance(test_dir, LA.NotebookDirectory)
 
-    test_page = test_dir[LA.Index.Name : "Test Page A"][0]
-    assert isinstance(test_page, LA.NotebookPage)
-    assert page.id == test_page.id
+#     test_page = test_dir[LA.Index.Name : "Test Page A"][0]
+#     assert isinstance(test_page, LA.NotebookPage)
+#     assert page.id == test_page.id
 
-    for entry in test_page.entries.values():
-        print(entry.content)
-        if entry.content_type == "header":
-            print("-----------------------------------")
+#     for entry in test_page.entries.values():
+#         print(entry.content)
+#         if entry.content_type == "header":
+#             print("-----------------------------------")

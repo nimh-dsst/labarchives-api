@@ -3,6 +3,7 @@ __pycache__/
 *.py[oc]
 build/
 dist/
+tests/__pycache__
 wheels/
 *.egg-info
 
@@ -10,6 +11,8 @@ wheels/
 .venv
 
 .env
+.python-version
+.ruff_cache/
 
 # Coverage reports
 .coverage
