@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import platform
-import webbrowser
 from abc import ABC, abstractmethod
 from base64 import b64encode
 from collections.abc import Callable, Generator, Mapping, MutableSequence, Sequence
@@ -32,29 +30,40 @@ from typing_extensions import Buffer, TYPE_CHECKING
 if TYPE_CHECKING:
     from tempfile import _TemporaryFileWrapper  # pyright: ignore[reportPrivateUsage]
 
-if platform.system() == "Windows":
-    from winreg import HKEY_CURRENT_USER, OpenKey, QueryValueEx
+import installed_browsers # pyright: ignore[reportMissingTypeStubs]
+browsers = [x for x in installed_browsers.browsers() if (
+    "chrome" in x["name"].lower() or 
+    "firefox" in x["name"].lower() or
+    "edge" in x["name"].lower())]
+raw_default_browser = installed_browsers.what_is_the_default_browser()
 
-    with OpenKey(
-        HKEY_CURRENT_USER,
-        r"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice",
-    ) as key:
-        raw_browser = QueryValueEx(key, "ProgId")[0].lower()
-elif platform.system() == "Darwin":
-    raw_browser = "safari"
-else:
-    raw_browser = webbrowser.get().name.lower()
+default_browser = "terminal"
 
-if "chrome" in raw_browser:
-    default_browser = "chrome"
-elif "firefox" in raw_browser:
-    default_browser = "firefox"
-elif "safari" in raw_browser:
-    default_browser = "safari"
-elif "edge" in raw_browser:
-    default_browser = "edge"
-else:
-    default_browser = "terminal"
+if raw_default_browser:
+    raw_default_browser = raw_default_browser.lower()
+
+    if "chrome" in raw_default_browser:
+        default_browser = "chrome"
+    elif "firefox" in raw_default_browser:
+        default_browser = "firefox"
+    elif "edge" in raw_default_browser:
+        default_browser = "edge"
+
+if default_browser == "terminal":
+    if len(browsers) > 0:
+        browser_name = browsers[0]["name"].lower()
+
+        # BUG: I think we are detected betas and nightlys here which might cause an issue
+        # with Selenium if the installed location is wrong
+        # TODO: fix with get_details_of() and get the executable path to feed to the driver
+
+        if "chrome" in browser_name:
+            default_browser = "chrome"
+        elif "firefox" in browser_name:
+            default_browser = "firefox"
+        elif "edge" in browser_name:
+            default_browser = "edge"
+
 
 
 @dataclass
@@ -1354,15 +1363,15 @@ class Client:
                 options = webdriver.FirefoxOptions()
                 driver = webdriver.Firefox(options=options)
                 print("Opening Firefox for authentication...")
-            case "safari":
-                options = webdriver.SafariOptions()
-                driver = webdriver.Safari(options=options)
-                print("Opening Safari for authentication...")
             case "edge":
                 options = webdriver.EdgeOptions()
                 driver = webdriver.Edge(options=options)
                 print("Opening Edge for authentication...")
+            case "terminal":
+                print("Open authentication URL in your browser:")
+                print(auth_url)
             case _:
+                print("WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal")
                 print("Open authentication URL in your browser:")
                 print(auth_url)
 
