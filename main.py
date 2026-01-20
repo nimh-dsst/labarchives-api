@@ -862,7 +862,7 @@ class Entries(Mapping[str, "Entry[Any]"]):
             assert isinstance(data, Attachment)
             entry_tree = self._user.api_post(
                 "entries/add_attachment",
-                data,
+                data._backing, # pyright: ignore[reportPrivateUsage, reportArgumentType]
                 filename=data.filename,
                 caption=data.caption,
                 nbid=self._page.root.id,
