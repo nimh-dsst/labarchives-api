@@ -18,6 +18,7 @@ from typing import Any, Generic, Literal, Self, TypeAlias, TypeVar, overload, ov
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from warnings import deprecated
 from tempfile import TemporaryFile
+from os import getenv
 
 import selenium.webdriver as webdriver
 from cryptography.hazmat.primitives.hashes import SHA512
@@ -36,34 +37,38 @@ browsers = [x for x in installed_browsers.browsers() if (
     "firefox" in x["name"].lower() or
     "edge" in x["name"].lower())]
 raw_default_browser = installed_browsers.what_is_the_default_browser()
+raw_env_browser = getenv("LA_AUTH_BROWSER", "").strip().lower()
 
 default_browser = "terminal"
 
-if raw_default_browser:
-    raw_default_browser = raw_default_browser.lower()
+if raw_env_browser in ("chrome", "firefox", "edge", "terminal"):
+    if installed_browsers.do_i_have_installed(raw_env_browser):
+        default_browser = raw_env_browser
+else:
+    if raw_default_browser:
+        raw_default_browser = raw_default_browser.lower()
 
-    if "chrome" in raw_default_browser:
-        default_browser = "chrome"
-    elif "firefox" in raw_default_browser:
-        default_browser = "firefox"
-    elif "edge" in raw_default_browser:
-        default_browser = "edge"
-
-if default_browser == "terminal":
-    if len(browsers) > 0:
-        browser_name = browsers[0]["name"].lower()
-
-        # BUG: I think we are detected betas and nightlys here which might cause an issue
-        # with Selenium if the installed location is wrong
-        # TODO: fix with get_details_of() and get the executable path to feed to the driver
-
-        if "chrome" in browser_name:
+        if "chrome" in raw_default_browser:
             default_browser = "chrome"
-        elif "firefox" in browser_name:
+        elif "firefox" in raw_default_browser:
             default_browser = "firefox"
-        elif "edge" in browser_name:
+        elif "edge" in raw_default_browser:
             default_browser = "edge"
 
+    if default_browser == "terminal":
+        if len(browsers) > 0:
+            browser_name = browsers[0]["name"].lower()
+
+            # BUG: I think we are detected betas and nightlys here which might cause an issue
+            # with Selenium if the installed location is wrong
+            # TODO: fix with get_details_of() and get the executable path to feed to the driver
+
+            if "chrome" in browser_name:
+                default_browser = "chrome"
+            elif "firefox" in browser_name:
+                default_browser = "firefox"
+            elif "edge" in browser_name:
+                default_browser = "edge"
 
 
 @dataclass
