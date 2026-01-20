@@ -291,6 +291,7 @@ class NotebookEntity(ABC):
     @name.setter
     def name(self, value: str):
         """Set the name of the entity"""
+        pass
 
     @property
     def id(self) -> str:

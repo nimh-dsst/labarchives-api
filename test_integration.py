@@ -66,6 +66,13 @@ def tests_dir(root_test_dir: LA.NotebookDirectory):
     """Returns the 'tests' subdirectory."""
     return get_or_create_dir(root_test_dir, "tests")
 
+from datetime import datetime, timezone
+
+def add_readme(workspace: LA.NotebookDirectory, scenario: str, actions: str):
+    """Helper to add the required README to the test workspace."""
+    readme_page = workspace.create_page("README")
+    content = f"SCENARIO: {scenario}\n\nACTIONS TAKEN:\n{actions}"
+    readme_page.entries.create_entry("plain text entry", content)
 
 def create_json_rich_text(data: dict) -> str:
     """Formats a dictionary as a JSON string inside an HTML <pre> block."""
@@ -132,5 +139,102 @@ def data_dir_structure(root_test_dir: LA.NotebookDirectory):
 
     return data_dir
 
-def test_1(data_dir_structure):
-    pass
+@pytest.fixture
+def test_env(request: pytest.FixtureRequest, tests_dir: LA.NotebookDirectory, data_dir_structure: LA.NotebookDirectory):
+    """
+    Creates a timestamped directory for the specific test,
+    copies the data structure into it, and returns the workspace.
+    """
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    test_folder_name = f"test: {request.node.name} {timestamp}" # pyright: ignore[reportUnknownMemberType]
+    
+    # Create the isolated workspace
+    workspace = tests_dir.create_directory(test_folder_name)
+    
+    # Copy the baseline data structure into this workspace
+    # Note: Using your MixinTreeCopy logic
+    data_dir_structure.copy_to(workspace)
+    
+    return workspace
+
+def test_add_session_notes(test_env):
+    """Scenario: Adding clinician notes to an existing session file."""
+    # Setup README
+    add_readme(test_env, 
+               "Add new session notes", 
+               "Added a comment to notes.txt for subject 1 session 1.")
+
+    # Navigate to Subj 1 -> Sessions -> 1 -> notes.txt
+    # We navigate through the copy in our test_env
+    data_copy = test_env[Index.Name:"data"][0]
+    subj1 = data_copy[Index.Name:"method_1"][0][Index.Name:"subjects"][0][Index.Name:"subj_1"][0]
+    notes_page = subj1[Index.Name:"sessions"][0][Index.Name:"1"][0][Index.Name:"notes.txt"][0]
+    
+    # Add the plain text entry
+    notes_page.entries.create_entry("plain text entry", "fell asleep during test")
+    
+    assert any("fell asleep" in str(e.content) for e in notes_page.entries.values())
+
+# def test_move_and_merge_sessions(test_env):
+#     """Scenario: Transferring a session from one subject to another."""
+#     add_readme(test_env, 
+#                "Move subject 2's session 1 to subject 1", 
+#                "Renamed S2-S1 to '2', moved to S1, and verified placement.")
+
+#     data_copy = test_env[Index.Name:"data"][0]
+#     subjects = data_copy[Index.Name:"method_1"][0][Index.Name:"subjects"][0]
+    
+#     s1_sessions = subjects[Index.Name:"subj_1"][0][Index.Name:"sessions"][0]
+#     s2_sessions = subjects[Index.Name:"subj_2"][0][Index.Name:"sessions"][0]
+    
+#     # 1. Get Session 1 from Subject 2
+#     session_to_move = s2_sessions[Index.Name:"1"][0]
+    
+#     # 2. Rename it to '2' to avoid collision in the destination
+#     session_to_move.name = "2"
+    
+#     # 3. Move it to Subject 1's session directory
+#     session_to_move.move_to(s1_sessions)
+    
+#     # Verify move
+#     assert len(s1_sessions[Index.Name:"2"]) > 0
+#     assert len(s2_sessions[Index.Name:"1"]) == 0
+
+def test_upload_new_session(test_env):
+    """Scenario: Creating a second session for a subject."""
+    add_readme(test_env, 
+               "Upload a new session", 
+               "Created 'session 2' in subject 2 with empty notes.")
+
+    data_copy = test_env[Index.Name:"data"][0]
+    subj2 = data_copy[Index.Name:"method_1"][0][Index.Name:"subjects"][0][Index.Name:"subj_2"][0]
+    sess_root = subj2[Index.Name:"sessions"][0]
+    
+    # Create session 2
+    sess_2 = sess_root.create_directory("2")
+    notes_page = sess_2.create_page("notes.txt")
+    notes_page.entries.create_entry("plain text entry", "New session started.")
+    
+    assert len(sess_root[Index.Name:"2"]) > 0
+
+def test_fix_metadata(test_env):
+    """Scenario: Correcting an error in a metadata rich text entry."""
+    add_readme(test_env, 
+               "Fix data", 
+               "Corrected gender field in Subject 1's meta.json.")
+
+    data_copy = test_env[Index.Name:"data"][0]
+    subj1 = data_copy[Index.Name:"method_1"][0][Index.Name:"subjects"][0][Index.Name:"subj_1"][0]
+    meta_page = subj1[Index.Name:"meta.json"][0]
+    
+    # Update to 'male'
+    # Note: In the ELN, you usually add a new entry or edit. 
+    # Here we add the corrected rich text block.
+    from conftest import create_json_rich_text
+    new_meta = create_json_rich_text({"id": "test subject 1 id", "gender": "male"})
+    meta_page.entries.create_entry("text entry", new_meta)
+    
+    # Verify the most recent entry contains 'male'
+    latest_entry = list(meta_page.entries.values())[-1]
+    assert "male" in str(latest_entry.content)
+    assert "male" in str(latest_entry.content)
