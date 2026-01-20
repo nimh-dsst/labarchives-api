@@ -79,67 +79,64 @@ def tests_dir(root_test_dir: LA.NotebookDirectory):
     return get_or_create_dir(root_test_dir, "tests")
 
 
+def get_or_create_page_with_attachment(
+    parent: LA.NotebookDirectory, 
+    name: str, 
+    attachment: LA.Attachment
+) -> LA.NotebookPage:
+    """
+    Finds a page by name. If it exists, returns it.
+    If not, creates the page and uploads the provided attachment.
+    """
+    existing = parent[Index.Name:name]
+    if len(existing) > 0:
+        assert isinstance(existing[0], LA.NotebookPage)
+        return existing[0] # Assume entries exist if page exists
+    
+    new_page = parent.create_page(name)
+    new_page.entries.create_entry("attachment", attachment)
+    return new_page
+
 @pytest.fixture(scope="session")
 def data_dir_structure(root_test_dir: LA.NotebookDirectory):
-    """
-    Creates/Returns the complex 'data' directory structure using Attachments.
-    """
     data_dir = get_or_create_dir(root_test_dir, "data")
     m1_dir = get_or_create_dir(data_dir, "method_1")
     
-    # 1. method_1/meta.json as an Attachment
-    m1_meta_data = {"name": "", "description": ""}
-    m1_attachment = create_json_attachment(m1_meta_data, "meta.json")
-    
-    m1_page = m1_dir.create_page("meta.json")
-    m1_page.entries.create_entry("attachment", m1_attachment)
+    # 1. method_1/meta.json
+    # We still create the Attachment object here, but only call create_entry if needed
+    get_or_create_page_with_attachment(
+        m1_dir, "meta.json",
+        create_json_attachment({"name": "", "description": ""}, "meta.json")
+    )
     
     subjects_dir = get_or_create_dir(m1_dir, "subjects")
 
-    # 2. Create 3 subjects
     for i in range(1, 4):
         subj_name = f"subj_{i}"
         s_dir = get_or_create_dir(subjects_dir, subj_name)
         
-        # Subject meta.json attachment
+        # Subject meta.json
         gender = "male" if i % 2 == 0 else "female"
-        s_meta_attachment = create_json_attachment(
-            {"id": f"test subject {i} id", "gender": gender}, 
-            "meta.json"
+        get_or_create_page_with_attachment(
+            s_dir, "meta.json",
+            create_json_attachment({"id": f"test subject {i} id", "gender": gender}, "meta.json")
         )
-        s_meta_page = s_dir.create_page("meta.json")
-        s_meta_page.entries.create_entry("attachment", s_meta_attachment)
         
-        # sessions/1/
         sess_root = get_or_create_dir(s_dir, "sessions")
         sess_1 = get_or_create_dir(sess_root, "1")
         
-        # data.json (Upload from local file via Attachment.from_file)
-        # We assume the file exists in the project root as specified
-        with open("test_entry.json", "rb") as f:
-            # We use the existing class method if it supports the buffer, 
-            # or wrap it manually to ensure correct mime_type
-            data_attachment = LA.Attachment(
-                backing=f, 
-                mime_type="text/json",
-                filename="data.json",
-                caption="Main data file"
-            )
-
-            d_page = sess_1.create_page("data.json")
-            d_page.entries.create_entry("attachment", data_attachment)
+        # data.json from local file
+        # We only open the file if the page doesn't exist to save I/O
+        if not sess_1[Index.Name:"data.json"]:
+            with open("test_entry.json", "rb") as f:
+                data_att = LA.Attachment.from_file(f)
+                get_or_create_page_with_attachment(sess_1, "data.json", data_att)
         
-        
-        
-        # notes.txt (Empty file attachment)
-        notes_attachment = LA.Attachment(
-            backing=BytesIO(b""),
-            mime_type="text/plain",
-            filename="notes.txt",
-            caption="Session notes"
+        # notes.txt
+        get_or_create_page_with_attachment(
+            sess_1, "notes.txt",
+            LA.Attachment(BytesIO(b""), "text/plain", "notes.txt", "Notes")
         )
-        n_page = sess_1.create_page("notes.txt")
-        n_page.entries.create_entry("attachment", notes_attachment)
 
     return data_dir
 
