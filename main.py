@@ -1069,7 +1069,7 @@ class Attachment(BufferedIOBase):
         self._filename = filename
         self._caption = caption
 
-    def __getattr__(self, attr: str):
+    def __getattr__(self, attr: str): # FIXME This doesn't work to passthrough stuff for some reason
         return getattr(self._backing, attr)
 
     @property

@@ -125,9 +125,11 @@ def data_dir_structure(root_test_dir: LA.NotebookDirectory):
                 filename="data.json",
                 caption="Main data file"
             )
+
+            d_page = sess_1.create_page("data.json")
+            d_page.entries.create_entry("attachment", data_attachment)
         
-        d_page = sess_1.create_page("data.json")
-        d_page.entries.create_entry("attachment", data_attachment)
+        
         
         # notes.txt (Empty file attachment)
         notes_attachment = LA.Attachment(
