@@ -861,7 +861,7 @@ class Entries(Mapping[str, "Entry[Any]"]):
         if entry_type == "Attachment" or entry_type == "attachment":
             assert isinstance(data, Attachment)
             entry_tree = self._user.api_post(
-                "entires/add_attachment",
+                "entries/add_attachment",
                 data,
                 filename=data.filename,
                 caption=data.caption,
