@@ -11,14 +11,25 @@ from email.message import Message
 from enum import Enum
 from http.server import SimpleHTTPRequestHandler
 from io import BufferedIOBase, BufferedRandom, BufferedReader, BytesIO
+from json import dumps
 from mimetypes import guess_file_type
 from operator import itemgetter
+from os import getenv
 from socketserver import TCPServer
-from typing import Any, Generic, Literal, Self, TypeAlias, TypeVar, overload, override
+from tempfile import TemporaryFile
+from typing import (
+    Any,
+    Generic,
+    Literal,
+    Self,
+    Tuple,
+    TypeAlias,
+    TypeVar,
+    overload,
+    override,
+)
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from warnings import deprecated
-from tempfile import TemporaryFile
-from os import getenv
 
 import selenium.webdriver as webdriver
 from cryptography.hazmat.primitives.hashes import SHA512
@@ -26,16 +37,26 @@ from cryptography.hazmat.primitives.hmac import HMAC
 from lxml import etree
 from requests import Response, get, post
 from requests import codes as status_codes
-from typing_extensions import Buffer, TYPE_CHECKING
+from typing_extensions import TYPE_CHECKING, Buffer
+
+# TODO: refreshing data - currently the API assumes it's the only one touching the data during runtime
+#       this can cause its data to get out of date, needs fixing
+# TODO: optimize the hot-path of "get single item of name at node", ex. a[Index.Name:"aaa"][0]
 
 if TYPE_CHECKING:
     from tempfile import _TemporaryFileWrapper  # pyright: ignore[reportPrivateUsage]
 
-import installed_browsers # pyright: ignore[reportMissingTypeStubs]
-browsers = [x for x in installed_browsers.browsers() if (
-    "chrome" in x["name"].lower() or 
-    "firefox" in x["name"].lower() or
-    "edge" in x["name"].lower())]
+import installed_browsers  # pyright: ignore[reportMissingTypeStubs]
+
+browsers = [
+    x
+    for x in installed_browsers.browsers()
+    if (
+        "chrome" in x["name"].lower()
+        or "firefox" in x["name"].lower()
+        or "edge" in x["name"].lower()
+    )
+]
 raw_default_browser = installed_browsers.what_is_the_default_browser()
 raw_env_browser = getenv("LA_AUTH_BROWSER", "").strip().lower()
 
@@ -251,9 +272,17 @@ class User:
 type NotebookNode = "NotebookPage | NotebookDirectory"
 
 
-class MixinTreeCopy(ABC):
+class _MixinTreeNodeOperations(ABC):
     @abstractmethod
-    def copy_to(self, destination: Notebook | NotebookDirectory) -> NotebookNode:
+    def copy_to(self, destination: Notebook | NotebookDirectory) -> Self:
+        raise NotImplementedError
+
+    @abstractmethod
+    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self) -> None:
         raise NotImplementedError
 
 
@@ -286,12 +315,19 @@ class NotebookEntity(ABC):
     @property
     def name(self) -> str:
         """The name of the entity."""
-        return self._name  # TODO allow this to be set
+        return self._name
 
     @name.setter
     def name(self, value: str):
         """Set the name of the entity"""
-        pass
+        self._user.api_get(
+            "tree_tools/update_node",
+            nbid=self._root.id,
+            tree_id=self.id,
+            display_text=value,
+        )
+
+        self._name = value
 
     @property
     def id(self) -> str:
@@ -361,10 +397,6 @@ class NotebookTreeNode(
     def __iter__(self):
         self._ensure_populated()
         return iter(child.id for child in self._children)
-
-    @abstractmethod
-    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
-        pass
 
     @overload
     def __getitem__(self, key: str) -> NotebookNode:
@@ -512,10 +544,6 @@ class Notebook(NotebookTreeNode):
         self._children = self.get_tree("0")
 
     @override
-    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
-        raise RuntimeError("Notebook cannot be moved")
-
-    @override
     def create_page(self, name: str) -> NotebookPage:
         # TODO take into account whether can write in this directory
         create_tree = self._user.api_get(
@@ -636,27 +664,8 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
         return new_notebook
 
 
-class NotebookDirectory(NotebookEntity, NotebookTreeNode, MixinTreeCopy):
+class NotebookDirectory(NotebookEntity, NotebookTreeNode, _MixinTreeNodeOperations):
     """A directory in a notebook."""
-
-    @override
-    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
-        new_id = "0" if isinstance(new_parent, Notebook) else new_parent.id
-
-        self._user.api_get(
-            "tree_tools/update_node",
-            nbid=self._root.id,
-            tree_id=self.id,
-            parent_tree_id=new_id,
-        )
-        del self._parent._children[
-            self._parent._children.index(self)
-        ]  # This removes current node from old parent in-place
-        self._parent = new_parent
-        self._parent._children.append(
-            self
-        )  # This adds current node to new parent in-place
-        return self
 
     @override
     def create_page(self, name: str) -> NotebookPage:
@@ -703,6 +712,25 @@ class NotebookDirectory(NotebookEntity, NotebookTreeNode, MixinTreeCopy):
         self._children = self._root.get_tree(self)
 
     @override
+    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
+        new_id = "0" if isinstance(new_parent, Notebook) else new_parent.id
+
+        self._user.api_get(
+            "tree_tools/update_node",
+            nbid=self._root.id,
+            tree_id=self.id,
+            parent_tree_id=new_id,
+        )
+        del self._parent._children[
+            self._parent._children.index(self)
+        ]  # This removes current node from old parent in-place
+        self._parent = new_parent
+        self._parent._children.append(
+            self
+        )  # This adds current node to new parent in-place
+        return self
+
+    @override
     def copy_to(self, destination: Notebook | NotebookDirectory) -> NotebookNode:
         new_dir = destination.create_directory(self.name)
 
@@ -711,8 +739,25 @@ class NotebookDirectory(NotebookEntity, NotebookTreeNode, MixinTreeCopy):
 
         return new_dir
 
+    @override
+    def delete(self):
+        # TODO: should the creation of the deleted directory be singletoned by the Client
+        # on its instantiation into a Notebook?
+        api_deleted_items = self._root[Index.Name : "API Deleted Items"]
 
-class NotebookPage(NotebookEntity, MixinTreeCopy):
+        if len(api_deleted_items) == 0:
+            api_deleted_items = self._root.create_directory("API Deleted Items")
+        else:
+            api_deleted_items = api_deleted_items[0]
+            assert isinstance(api_deleted_items, NotebookDirectory)
+
+        self.name = (
+            f"{self.name} - Deleted at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        self.move_to(api_deleted_items)
+
+
+class NotebookPage(NotebookEntity, _MixinTreeNodeOperations):
     """A page in a notebook."""
 
     def __init__(
@@ -794,6 +839,47 @@ class NotebookPage(NotebookEntity, MixinTreeCopy):
 
         return new_page
 
+    @override
+    def delete(self):
+        # TODO: should the creation of the deleted directory be singletoned by the Client
+        # on its instantiation into a Notebook?
+        api_deleted_items = self._root[Index.Name : "API Deleted Items"]
+
+        if len(api_deleted_items) == 0:
+            api_deleted_items = self._root.create_directory("API Deleted Items")
+        else:
+            api_deleted_items = api_deleted_items[0]
+            assert isinstance(api_deleted_items, NotebookDirectory)
+
+        self.name = (
+            f"{self.name} - Deleted at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        self.move_to(api_deleted_items)
+
+    @override
+    def move_to(self, new_parent: NotebookDirectory | Notebook) -> Self:
+        new_id = "0" if isinstance(new_parent, Notebook) else new_parent.id
+
+        self._user.api_get(
+            "tree_tools/update_node",
+            nbid=self._root.id,
+            tree_id=self.id,
+            parent_tree_id=new_id,
+        )
+        del self._parent._children[  # pyright: ignore[reportPrivateUsage]
+            self._parent._children.index(self)  # pyright: ignore[reportPrivateUsage]
+        ]  # This removes current node from old parent in-place
+        self._parent = new_parent
+        self._parent._children.append(  # pyright: ignore[reportPrivateUsage]
+            self
+        )  # This adds current node to new parent in-place
+        return self
+
+
+type JsonData = (
+    Sequence[JsonData] | Mapping[str, JsonData] | str | bool | int | float | None
+)
+
 
 class Entries(Mapping[str, "Entry[Any]"]):
     """A collection of entries."""
@@ -852,6 +938,31 @@ class Entries(Mapping[str, "Entry[Any]"]):
     ) -> AttachmentEntry:
         pass
 
+    def create_json_entry(self, data: JsonData) -> Tuple[AttachmentEntry, TextEntry]:
+        name = f"uploaded_data_{datetime.now().timestamp():.0f}.json"
+
+        file_entry = self.create_entry(
+            "Attachment",
+            Attachment(
+                BytesIO(dumps(data).encode()),
+                "application/json",
+                name,
+                "Uploaded JSON file",
+            ),
+        )
+
+        text_entry = self.create_entry(
+            "text entry",
+            f"""
+<p>Reference Attachment: {name}</p>
+<p>Entry ID: {file_entry.id}</p>
+<pre>
+{dumps(data, indent=4)}
+</pre>
+""",
+        )
+        return file_entry, text_entry
+
     def create_entry(
         self,
         entry_type: Literal[
@@ -863,7 +974,7 @@ class Entries(Mapping[str, "Entry[Any]"]):
             assert isinstance(data, Attachment)
             entry_tree = self._user.api_post(
                 "entries/add_attachment",
-                data._backing, # pyright: ignore[reportPrivateUsage, reportArgumentType]
+                data._backing,  # pyright: ignore[reportPrivateUsage, reportArgumentType]
                 filename=data.filename,
                 caption=data.caption,
                 nbid=self._page.root.id,
@@ -974,6 +1085,12 @@ class Entry(ABC, Generic[T]):
         """The content of the entry."""
         raise NotImplementedError
 
+    @content.setter
+    @abstractmethod
+    def content(self, value: T) -> None:
+        """Setting the content of the entry"""
+        raise NotImplementedError
+
 
 class BaseTextEntry(Entry[str], ABC):
     def __init__(self, eid: str, data: str, user: User):
@@ -985,6 +1102,13 @@ class BaseTextEntry(Entry[str], ABC):
     def content(self) -> str:
         """The content of the entry."""
         return self._entry_data
+
+    @content.setter
+    @override
+    def content(self, value: str) -> None:
+        self._user.api_post("entries/update_entry", {"entry_data": value}, eid=self.id)
+
+        self._entry_data = value
 
 
 class TextEntry(BaseTextEntry):
@@ -1064,13 +1188,16 @@ class Attachment(BufferedIOBase):
     ):
         self._backing = backing
         if self._backing.seekable():
-            self._backing.seek(0)   
+            self._backing.seek(0)
 
         self._mime_type = mime_type
         self._filename = filename
         self._caption = caption
 
-    def __getattr__(self, attr: str): # FIXME This doesn't work to passthrough stuff for some reason
+    def __getattr__(self, attr: str):
+        # FIXME This doesn't work to passthrough stuff for some reason
+        # NOTE: I expect this is because BufferedIOBase defines implementations of its
+        # abstract functions :(
         return getattr(self._backing, attr)
 
     @property
@@ -1086,7 +1213,7 @@ class Attachment(BufferedIOBase):
         return self._caption
 
 
-class AttachmentEntry(Entry[BufferedIOBase]):
+class AttachmentEntry(Entry[Attachment]):
     def __init__(self, eid: str, caption: str, user: User):
         super().__init__(eid, user)
         self._caption = caption
@@ -1140,6 +1267,24 @@ class AttachmentEntry(Entry[BufferedIOBase]):
     def content(self) -> Attachment:
         """The content of the entry."""
         return self.get_attachment()
+
+    @content.setter
+    @override
+    def content(self, value: Attachment):
+        # NOTE: this implicitly invalidates all previous Attachments
+
+        self._user.api_post(
+            "entries/update_attachment",
+            value._backing,  # pyright: ignore[reportPrivateUsage, reportArgumentType]
+            filename=value.filename,
+            caption=value.caption,
+            eid=self.id,
+            change_description="File updated via API",
+        )
+
+        if self._data:
+            self._data.close()
+        self._data = None
 
     @property
     def caption(self) -> str:
@@ -1380,7 +1525,9 @@ class Client:
                 print("Open authentication URL in your browser:")
                 print(auth_url)
             case _:
-                print("WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal")
+                print(
+                    "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
+                )
                 print("Open authentication URL in your browser:")
                 print(auth_url)
 

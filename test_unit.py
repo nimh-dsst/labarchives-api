@@ -1,12 +1,9 @@
-from typing import override, Any, Sequence, Mapping, Callable
 from datetime import datetime, timedelta
-from urllib.parse import parse_qsl, urlsplit, urlunsplit, urlencode
-from dotenv import load_dotenv
-from os import getenv
-from random import randrange
+from typing import Any, Callable, Mapping, Sequence, override
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import pytest
-from json import dumps
+from dotenv import load_dotenv
 from lxml import etree
 
 import main as LA
