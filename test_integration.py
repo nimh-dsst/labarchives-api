@@ -11,18 +11,6 @@ type AnyDict = Mapping[str, AnyDict | str | bool | int | float]
 
 load_dotenv()
 
-def create_json_attachment(data: AnyDict, filename: str) -> LA.Attachment:
-    """Helper to wrap a dictionary into a LabArchives Attachment object."""
-    content = json.dumps(data).encode("utf-8")
-    # Using BytesIO to simulate a file-like object for on-the-fly JSON
-    backing = BytesIO(content)
-    return LA.Attachment(
-        backing=backing,
-        mime_type="text/json",
-        filename=filename,
-        caption=f"{filename}"
-    )
-
 @pytest.fixture(scope="session")
 def la_client():
     """Initializes the LabArchives API Client."""
@@ -79,22 +67,28 @@ def tests_dir(root_test_dir: LA.NotebookDirectory):
     return get_or_create_dir(root_test_dir, "tests")
 
 
-def get_or_create_page_with_attachment(
+def create_json_rich_text(data: dict) -> str:
+    """Formats a dictionary as a JSON string inside an HTML <pre> block."""
+    pretty_json = json.dumps(data, indent=4)
+    return f"<pre>{pretty_json}</pre>"
+
+def get_or_create_page_with_entry(
     parent: LA.NotebookDirectory, 
     name: str, 
-    attachment: LA.Attachment
+    entry_type: str, 
+    data: LA.Attachment | str
 ) -> LA.NotebookPage:
     """
     Finds a page by name. If it exists, returns it.
-    If not, creates the page and uploads the provided attachment.
+    If not, creates the page and adds the specified entry.
     """
     existing = parent[Index.Name:name]
     if len(existing) > 0:
         assert isinstance(existing[0], LA.NotebookPage)
-        return existing[0] # Assume entries exist if page exists
+        return existing[0]
     
     new_page = parent.create_page(name)
-    new_page.entries.create_entry("attachment", attachment)
+    new_page.entries.create_entry(entry_type, data) # type: ignore
     return new_page
 
 @pytest.fixture(scope="session")
@@ -102,11 +96,10 @@ def data_dir_structure(root_test_dir: LA.NotebookDirectory):
     data_dir = get_or_create_dir(root_test_dir, "data")
     m1_dir = get_or_create_dir(data_dir, "method_1")
     
-    # 1. method_1/meta.json
-    # We still create the Attachment object here, but only call create_entry if needed
-    get_or_create_page_with_attachment(
-        m1_dir, "meta.json",
-        create_json_attachment({"name": "", "description": ""}, "meta.json")
+    # 1. method_1/meta.json as Rich Text
+    get_or_create_page_with_entry(
+        m1_dir, "meta.json", "text entry",
+        create_json_rich_text({"name": "", "description": ""})
     )
     
     subjects_dir = get_or_create_dir(m1_dir, "subjects")
@@ -115,26 +108,25 @@ def data_dir_structure(root_test_dir: LA.NotebookDirectory):
         subj_name = f"subj_{i}"
         s_dir = get_or_create_dir(subjects_dir, subj_name)
         
-        # Subject meta.json
+        # Subject meta.json as Rich Text
         gender = "male" if i % 2 == 0 else "female"
-        get_or_create_page_with_attachment(
-            s_dir, "meta.json",
-            create_json_attachment({"id": f"test subject {i} id", "gender": gender}, "meta.json")
+        get_or_create_page_with_entry(
+            s_dir, "meta.json", "text entry",
+            create_json_rich_text({"id": f"test subject {i} id", "gender": gender})
         )
         
         sess_root = get_or_create_dir(s_dir, "sessions")
         sess_1 = get_or_create_dir(sess_root, "1")
         
-        # data.json from local file
-        # We only open the file if the page doesn't exist to save I/O
+        # data.json (Remains an Attachment for raw data)
         if not sess_1[Index.Name:"data.json"]:
             with open("test_entry.json", "rb") as f:
                 data_att = LA.Attachment.from_file(f)
-                get_or_create_page_with_attachment(sess_1, "data.json", data_att)
+                get_or_create_page_with_entry(sess_1, "data.json", "attachment", data_att)
         
-        # notes.txt
-        get_or_create_page_with_attachment(
-            sess_1, "notes.txt",
+        # notes.txt (Remains an Attachment)
+        get_or_create_page_with_entry(
+            sess_1, "notes.txt", "attachment",
             LA.Attachment(BytesIO(b""), "text/plain", "notes.txt", "Notes")
         )
 
