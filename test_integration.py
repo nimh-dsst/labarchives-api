@@ -18,7 +18,7 @@ def create_json_attachment(data: AnyDict, filename: str) -> LA.Attachment:
     backing = BytesIO(content)
     return LA.Attachment(
         backing=backing,
-        mime_type="application/json",
+        mime_type="text/json",
         filename=filename,
         caption=f"{filename}"
     )
@@ -121,7 +121,7 @@ def data_dir_structure(root_test_dir: LA.NotebookDirectory):
             # or wrap it manually to ensure correct mime_type
             data_attachment = LA.Attachment(
                 backing=f, 
-                mime_type="application/json",
+                mime_type="text/json",
                 filename="data.json",
                 caption="Main data file"
             )
