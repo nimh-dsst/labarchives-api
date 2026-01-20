@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from email.message import Message
 from enum import Enum
 from http.server import SimpleHTTPRequestHandler
-from io import BufferedIOBase, BufferedRandom, BufferedReader, BytesIO
+from io import BufferedIOBase, IOBase, BufferedRandom, BufferedReader, BytesIO
 from json import dumps
 from mimetypes import guess_file_type
 from operator import itemgetter
@@ -831,10 +831,11 @@ class NotebookPage(NotebookEntity, _MixinTreeNodeOperations):
         new_page = destination.create_page(self.name)
 
         for entry in self.entries.values():
+            # TODO might need to make a specific case for copying Attachments because LA freaks out and renames shit
             new_page.entries.create_entry(  # pyright: ignore[reportCallIssue]
                 # TODO add in the other create_entries so this doesn't explode
                 entry.content_type,  # pyright: ignore[reportArgumentType]
-                entry.content,  # FIXME content is not always the right output
+                entry.content,  
             )
 
         return new_page
@@ -1152,7 +1153,7 @@ class WidgetEntry(BaseTextEntry):
 ReadableBuffer: TypeAlias = Buffer  # stable
 
 
-class Attachment(BufferedIOBase):
+class Attachment:
     # TODO writes need explicit syncing with server
     # TODO update attachment without delete and re-add
 
