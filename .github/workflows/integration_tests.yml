@@ -1,0 +1,40 @@
+name: Integration Test Suite
+
+on:
+  workflow_dispatch:
+    inputs:
+      la_key:
+        description: LabArchives Authentication Token
+        required: true
+        type: string
+      la_email:
+        description: LabArchives Authentication la_email
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        version: "latest"
+
+    - name: Set up Python
+      run: uv python install 3.13
+
+    - name: Install dependencies
+      run: uv sync --all-extras --dev
+
+    - name: Run tests with pytest
+      env:
+        API_URL: ${{ secrets.API_URL }}
+        AUTH_KEY: ${{ github.event.inputs.la_key }}
+        AUTH_EMAIL: ${{ github.events.inputs.la_email }}
+      run: uv run pytest test_integration.py
