@@ -353,7 +353,7 @@ def test_delete_subject(test_env):
     
     # Check if any item in the deleted folder starts with the original name
     found_in_trash = any(
-        item.name.startswith("subj_3 - Deleted at") 
+        deleted_items_dir[0][item].name.startswith("subj_3 - Deleted at") 
         for item in deleted_items_dir[0]
     )
     assert found_in_trash
