@@ -917,27 +917,6 @@ class Entries(Mapping[str, "Entry[Any]"]):
 
     # TODO delete entries
 
-    @overload
-    def create_entry(self, entry_type: Literal["heading"], data: str) -> HeaderEntry:
-        pass
-
-    @overload
-    def create_entry(self, entry_type: Literal["text entry"], data: str) -> TextEntry:
-        pass
-
-    @overload
-    def create_entry(
-        self, entry_type: Literal["plain text entry"], data: str
-    ) -> PlainTextEntry:
-        pass
-
-    @overload
-    def create_entry(
-        self,
-        entry_type: Literal["attachment", "Attachment"],
-        data: Attachment,
-    ) -> AttachmentEntry:
-        pass
 
     def create_json_entry(self, data: JsonData) -> Tuple[AttachmentEntry, TextEntry]:
         name = f"uploaded_data_{datetime.now().timestamp():.0f}.json"
@@ -963,6 +942,28 @@ class Entries(Mapping[str, "Entry[Any]"]):
 """,
         )
         return file_entry, text_entry
+
+    @overload
+    def create_entry(self, entry_type: Literal["heading"], data: str) -> HeaderEntry:
+        pass
+
+    @overload
+    def create_entry(self, entry_type: Literal["text entry"], data: str) -> TextEntry:
+        pass
+
+    @overload
+    def create_entry(
+        self, entry_type: Literal["plain text entry"], data: str
+    ) -> PlainTextEntry:
+        pass
+
+    @overload
+    def create_entry(
+        self,
+        entry_type: Literal["attachment", "Attachment"],
+        data: Attachment,
+    ) -> AttachmentEntry:
+        pass
 
     def create_entry(
         self,
