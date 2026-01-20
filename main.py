@@ -837,6 +837,9 @@ class NotebookPage(NotebookEntity, _MixinTreeNodeOperations):
                 entry.content_type,  # pyright: ignore[reportArgumentType]
                 entry.content,  
             )
+            
+            if isinstance(entry.content, Attachment):
+                entry.content.close()
 
         return new_page
 
