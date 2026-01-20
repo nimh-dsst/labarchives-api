@@ -1062,6 +1062,9 @@ class Attachment(BufferedIOBase):
         caption: str,
     ):
         self._backing = backing
+        if self._backing.seekable():
+            self._backing.seek(0)   
+
         self._mime_type = mime_type
         self._filename = filename
         self._caption = caption
