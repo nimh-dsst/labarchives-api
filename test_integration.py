@@ -265,18 +265,22 @@ def test_upload_new_session(test_env):
 
 def test_fix_metadata(test_env):
     """Scenario: Correcting metadata by updating both the raw JSON and the rich text preview."""
-    add_readme(test_env, 
-               "Fix data", 
-               "Corrected gender field in Subject 1's meta.json by updating both entries in-place.")
+    add_readme(
+        test_env,
+        "Fix data",
+        "Corrected gender field in Subject 1's meta.json by updating both entries in-place.",
+    )
 
-    data_copy = test_env[Index.Name:"data"][0]
-    subj1 = data_copy[Index.Name:"method_1"][0][Index.Name:"subjects"][0][Index.Name:"subj_1"][0]
-    meta_page = subj1[Index.Name:"meta.json"][0]
-    
+    data_copy = test_env[Index.Name : "data"][0]
+    subj1 = data_copy[Index.Name : "method_1"][0][Index.Name : "subjects"][0][
+        Index.Name : "subj_1"
+    ][0]
+    meta_page = subj1[Index.Name : "meta.json"][0]
+
     # Identify the two parts of the JSON entry
     rich_text_entry = None
     attachment_entry = None
-    
+
     for entry in meta_page.entries.values():
         if isinstance(entry, LA.TextEntry):
             rich_text_entry = entry
@@ -289,14 +293,14 @@ def test_fix_metadata(test_env):
     # 1. Prepare new data
     new_data = {"id": "test subject 1 id", "gender": "male"}
     new_json_bytes = json.dumps(new_data).encode("utf-8")
-    
+
     # 2. Update the Raw Attachment in-place
     # We create a new Attachment object to pass to the setter
     new_file_content = LA.Attachment(
         backing=BytesIO(new_json_bytes),
         mime_type="application/json",
-        filename=attachment_entry.content.filename, # Keep existing filename
-        caption="Updated metadata file via API"
+        filename=attachment_entry.content.filename,  # Keep existing filename
+        caption="Updated metadata file via API",
     )
     # attachment_entry.content = new_file_content
 
@@ -309,51 +313,54 @@ def test_fix_metadata(test_env):
 {json.dumps(new_data, indent=4)}
 </pre>
 """
-    
+
     # Verification
     # Check rich text
     assert "male" in rich_text_entry.content
     # Check raw attachment content
     # updated_bytes = attachment_entry.content.read()
-    # assert b"male" in updated_bytes 
+    # assert b"male" in updated_bytes
+
 
 def test_delete_subject(test_env):
     """Scenario: Deleting a subject from the dataset."""
-    add_readme(test_env, 
-               "Delete subject 3", 
-               "Renamed and moved Subject 3 to the 'API Deleted Items' directory.")
+    add_readme(
+        test_env,
+        "Delete subject 3",
+        "Renamed and moved Subject 3 to the 'API Deleted Items' directory.",
+    )
 
     # 1. Navigate to Subject 3 within the isolated test environment
-    data_copy = test_env[Index.Name:"data"][0]
-    subjects_dir = data_copy[Index.Name:"method_1"][0][Index.Name:"subjects"][0]
-    
+    data_copy = test_env[Index.Name : "data"][0]
+    subjects_dir = data_copy[Index.Name : "method_1"][0][Index.Name : "subjects"][0]
+
     # Ensure subject 3 exists before deletion
-    subj3_list = subjects_dir[Index.Name:"subj_3"]
+    subj3_list = subjects_dir[Index.Name : "subj_3"]
     if not subj3_list:
         pytest.fail("Subject 3 not found in the test workspace.")
-    
+
     subj3 = subj3_list[0]
     assert isinstance(subj3, LA.NotebookDirectory)
 
     # 2. Execute the deletion
-    # This triggers the client logic: 
+    # This triggers the client logic:
     # - Renames to "subj_3 - Deleted at YYYY-MM-DD..."
     # - Moves to root/"API Deleted Items"
     subj3.delete()
 
     # 3. Verification
     # Subject 3 should no longer be in the subjects directory
-    subjects_dir._populated = False # Force refresh local children list
-    assert len(subjects_dir[Index.Name:"subj_3"]) == 0
+    subjects_dir._populated = False  # Force refresh local children list
+    assert len(subjects_dir[Index.Name : "subj_3"]) == 0
 
     # Verify it exists in the 'API Deleted Items' folder at the notebook root
     # Note: delete() moves it to self._root (the Notebook)
-    deleted_items_dir = test_env.root[Index.Name:"API Deleted Items"]
+    deleted_items_dir = test_env.root[Index.Name : "API Deleted Items"]
     assert len(deleted_items_dir) > 0
-    
+
     # Check if any item in the deleted folder starts with the original name
     found_in_trash = any(
-        deleted_items_dir[0][item].name.startswith("subj_3 - Deleted at") 
+        deleted_items_dir[0][item].name.startswith("subj_3 - Deleted at")
         for item in deleted_items_dir[0]
     )
     assert found_in_trash

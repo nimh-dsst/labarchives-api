@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from email.message import Message
 from enum import Enum
 from http.server import SimpleHTTPRequestHandler
-from io import BufferedIOBase, IOBase, BufferedRandom, BufferedReader, BytesIO
+from io import BufferedIOBase, BufferedRandom, BufferedReader, BytesIO
 from json import dumps
 from mimetypes import guess_file_type
 from operator import itemgetter
@@ -38,6 +38,7 @@ from lxml import etree
 from requests import Response, get, post
 from requests import codes as status_codes
 from typing_extensions import TYPE_CHECKING, Buffer
+import installed_browsers  # pyright: ignore[reportMissingTypeStubs]
 
 # TODO: refreshing data - currently the API assumes it's the only one touching the data during runtime
 #       this can cause its data to get out of date, needs fixing
@@ -46,7 +47,6 @@ from typing_extensions import TYPE_CHECKING, Buffer
 if TYPE_CHECKING:
     from tempfile import _TemporaryFileWrapper  # pyright: ignore[reportPrivateUsage]
 
-import installed_browsers  # pyright: ignore[reportMissingTypeStubs]
 
 browsers = [
     x
@@ -835,9 +835,9 @@ class NotebookPage(NotebookEntity, _MixinTreeNodeOperations):
             new_page.entries.create_entry(  # pyright: ignore[reportCallIssue]
                 # TODO add in the other create_entries so this doesn't explode
                 entry.content_type,  # pyright: ignore[reportArgumentType]
-                entry.content,  
+                entry.content,
             )
-            
+
             if isinstance(entry.content, Attachment):
                 entry.content.close()
 
@@ -919,7 +919,6 @@ class Entries(Mapping[str, "Entry[Any]"]):
         return self._entries.keys()
 
     # TODO delete entries
-
 
     def create_json_entry(self, data: JsonData) -> Tuple[AttachmentEntry, TextEntry]:
         name = f"uploaded_data_{datetime.now().timestamp():.0f}.json"
