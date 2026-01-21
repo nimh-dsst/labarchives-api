@@ -1033,12 +1033,14 @@ class Entry(ABC, Generic[T]):
 
     @overload
     @staticmethod
-    def get_entry(part_type: Literal["attachment"], *args: Any) -> AttachmentEntry:
+    def get_entry(
+        part_type: Literal["attachment", "Attachment"], *args: Any
+    ) -> AttachmentEntry:
         pass
 
     @overload
     @staticmethod
-    def get_entry(part_type: Literal["widget"], *args: Any) -> WidgetEntry:
+    def get_entry(part_type: Literal["widget entry"], *args: Any) -> WidgetEntry:
         pass
 
     @overload
@@ -1057,7 +1059,7 @@ class Entry(ABC, Generic[T]):
                 return HeaderEntry(*args)
             case "attachment":
                 return AttachmentEntry(*args)
-            case "widget":
+            case "widget entry":
                 return WidgetEntry(*args)
             case _:
                 raise NotImplementedError
@@ -1144,7 +1146,7 @@ class WidgetEntry(BaseTextEntry):
     @override
     def content_type(self):
         """The content type of the entry."""
-        return "widget"
+        return "widget entry"
 
 
 # NOTE: from Pylance
