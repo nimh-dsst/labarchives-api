@@ -302,7 +302,7 @@ def test_fix_metadata(test_env):
         filename=attachment_entry.content.filename,  # Keep existing filename
         caption="Updated metadata file via API",
     )
-    # attachment_entry.content = new_file_content
+    attachment_entry.content = new_file_content
 
     # 3. Update the Rich Text Preview in-place
     # We reuse the formatting logic from create_json_entry
@@ -318,8 +318,8 @@ def test_fix_metadata(test_env):
     # Check rich text
     assert "male" in rich_text_entry.content
     # Check raw attachment content
-    # updated_bytes = attachment_entry.content.read()
-    # assert b"male" in updated_bytes
+    updated_bytes = attachment_entry.content.read()
+    assert b"male" in updated_bytes
 
 
 def test_delete_subject(test_env):
