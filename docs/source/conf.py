@@ -12,8 +12,8 @@ sys.path.insert(0, os.path.abspath("../../src"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "labapi"
-copyright = "2026, Your Name"
-author = "Your Name"
+copyright = "2026, NIMH Data Science and Sharing Team"
+author = "Christoph Li"
 
 version = "0.1.0"
 release = "0.1.0"
@@ -23,11 +23,10 @@ release = "0.1.0"
 
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
 ]
 
-autodoc_mock_imports = ["installed_browsers"]
+autodoc_mock_imports = ["installed_browsers", "selenium"]
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -37,5 +36,4 @@ language = "en"
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "alabaster"
 html_static_path = ["_static"]
