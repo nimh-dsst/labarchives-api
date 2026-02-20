@@ -1,10 +1,3 @@
-from typing import Mapping, Sequence, overload, override
-
-from util.index import IdOrNameIndex, Index
-from util.notebookinit import NotebookInit
-from user import User
-
-
 class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
     """A collection of notebooks."""
 

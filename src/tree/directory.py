@@ -1,15 +1,17 @@
-from typing import Self, override
-from tree.mixins import TreeDeleteMixin, TreeRenameMixin, ITreeContainer, ITreeCopy
+from typing import override
+from tree.mixins import AbstractTreeContainer, AbstractTreeNode
 
 
-class NotebookDirectory(ITreeContainer, ITreeCopy, TreeDeleteMixin, TreeRenameMixin):
+class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):
     @override
-    def copy_to(self, destination: ITreeContainer) -> Self:
-        raise NotImplementedError
+    def copy_to(self, destination: AbstractTreeContainer) -> NotebookDirectory:
+        new_dir = destination.create_directory(self.name)
+
+        for child in self.children:
+            child.copy_to(new_dir)
+
+        return new_dir
 
     @property
     def id(self) -> str:
         return super().id
-
-    def _ensure_populated(self) -> None:
-        raise NotImplementedError

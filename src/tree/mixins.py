@@ -1,9 +1,10 @@
 from typing import Self, MutableSequence, Mapping, Sequence, Iterator, overload
 from abc import ABC, abstractmethod
 from util.index import Index, IdOrNameIndex, IdIndex, NameIndex
-from util.extract import extract_etree
+from util.extract import extract_etree, to_bool
 import tree.page
 import tree.directory
+from datetime import datetime
 
 from typing_extensions import TYPE_CHECKING
 
@@ -28,13 +29,13 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         self,
         tree_id: str,
         name: str,
-        root: "ITreeContainer",
-        parent: "ITreeContainer",
+        root: "AbstractTreeContainer",
+        parent: "AbstractTreeContainer",
         user: User,
     ):
         super().__init__(name)
-        self._root: ITreeContainer = root
-        self._parent: ITreeContainer = parent
+        self._root: AbstractTreeContainer = root
+        self._parent: AbstractTreeContainer = parent
         self._tree_id: str = tree_id
         self._user = user
 
@@ -58,9 +59,57 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
     @property
     def tree_id(self):
         return self._tree_id
+    
+class AbstractTreeNode(AbstractBaseTreeNode):
+    @HasNameMixin.name.setter
+    def name(self, value: str):
+        self.user.api_get(
+            "tree_tools/update_node",
+            nbid=self.root.id,
+            tree_id=self.tree_id,
+            display_text=value,
+        )
 
+        self._name = value
 
-class ITreeContainer(
+    @abstractmethod
+    def copy_to(self, destination: AbstractTreeContainer) -> Self:
+        pass
+
+    def move_to(self, destination: AbstractTreeContainer) -> Self:
+        self._user.api_get(
+            "tree_tools/update_node",
+            nbid=self.root.id,
+            tree_id=self.tree_id,
+            parent_tree_id=destination.tree_id,
+        )
+        del self.parent.children[
+            self.parent.children.index(self)
+        ]  # This removes current node from old parent in-place
+        self._parent = destination
+        self.parent.children.append(self)  
+        # This adds current node to new parent in-place
+        return self
+    
+    def delete(self) -> Self:
+        # TODO: should the creation of the deleted directory be singletoned by the Client
+        # on its instantiation into a Notebook?
+        api_deleted_items = self.root[Index.Name : "API Deleted Items"]
+
+        if len(api_deleted_items) == 0:
+            api_deleted_items = self.root.create_directory("API Deleted Items")
+        else:
+            api_deleted_items = api_deleted_items[0]
+            assert isinstance(api_deleted_items, AbstractTreeContainer)
+
+        self.name = (
+            f"{self.name} - Deleted at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        self.move_to(api_deleted_items)
+
+        return self
+
+class AbstractTreeContainer(
     AbstractBaseTreeNode,
     Mapping[IdOrNameIndex, AbstractBaseTreeNode | Sequence[AbstractBaseTreeNode]],
 ):
@@ -68,20 +117,61 @@ class ITreeContainer(
         self,
         tree_id: str,
         name: str,
-        root: "ITreeContainer",
-        parent: "ITreeContainer",
+        root: "AbstractTreeContainer",
+        parent: "AbstractTreeContainer",
         user: User,
     ):
         super().__init__(tree_id, name, root, parent, user)
-        self._children: MutableSequence[TreeMoveMixin] = []
+        self._children: MutableSequence[AbstractTreeNode] = []
 
     @property
     def children(self):
         return self._children
 
-    @abstractmethod
     def _ensure_populated(self) -> None:
-        raise NotImplementedError
+        if len(self.children) == 0:
+            xml_tree = self.user.api_get(
+                "tree_tools/get_tree_level",
+                nbid=self.root.id,
+                parent_tree_id=self.parent.tree_id,
+            )
+
+            nodes: list[AbstractTreeNode] = []
+
+            for subtree in xml_tree.iterfind(".//level-node"):
+                node = extract_etree(
+                    subtree,
+                    {
+                        "is-page": to_bool,
+                        "tree-id": str,
+                        "display-text": str,
+                        # "user-access": {
+                        #     "can-read": to_bool,
+                        #     "can-write": to_bool,
+                        #     "can-read-comments": to_bool,
+                        #     "can-write-comments": to_bool,
+                        # },
+                    },
+                )  # TODO do we want to handle errors here?
+
+                args = (
+                    node["tree-id"],
+                    node["display-text"],
+                    self.root,
+                    self,
+                    # node["can-read-comments"],
+                    # node["can-write-comments"],
+                    # node["can-read"],
+                    # node["can-write"],
+                    self._user,
+                )
+
+                if node["is-page"]:
+                    nodes.append(tree.page.NotebookPage(*args))
+                else:
+                    nodes.append(tree.directory.NotebookDirectory(*args))
+
+            self._children = nodes
 
     def __len__(self) -> int:
         self._ensure_populated()
@@ -120,6 +210,10 @@ class ITreeContainer(
                     if node.name == key:
                         return node
                 raise KeyError(f'Node with name "{key}" not found')
+            
+    # TODO 
+    # FIXME
+    # need an indexing by relative url thing
 
     def create_page(self, name: str) -> NotebookPage:
         # TODO take into account whether can write in this directory
@@ -153,55 +247,3 @@ class ITreeContainer(
         self._children.append(new_dir)
         return new_dir
 
-
-class ITreeCopy(AbstractBaseTreeNode):
-    @abstractmethod
-    def copy_to(self, destination: ITreeContainer) -> Self:
-        pass
-
-
-class TreeMoveMixin(AbstractBaseTreeNode):
-    def move_to(self, destination: ITreeContainer) -> Self:
-        self._user.api_get(
-            "tree_tools/update_node",
-            nbid=self.root.id,
-            tree_id=self.tree_id,
-            parent_tree_id=destination.tree_id,
-        )
-        del self.parent.children[
-            self.parent.children.index(self)
-        ]  # This removes current node from old parent in-place
-        self._parent = destination
-        self.parent.children.append(
-            self
-        )  # This adds current node to new parent in-place
-        return self
-
-
-class TreeDeleteMixin(TreeMoveMixin):
-    def delete(self) -> Self:
-        api_deleted_items = self.root[Index.Name : "API Deleted Items"]
-
-        if len(api_deleted_items) == 0:
-            api_deleted_items = self.root.create_directory("API Deleted Items")
-        else:
-            api_deleted_items = api_deleted_items[0]
-            assert isinstance(api_deleted_items, ITreeContainer)
-
-        # TODO rename?
-        self.move_to(api_deleted_items)
-
-        return self
-
-
-class TreeRenameMixin(AbstractBaseTreeNode):
-    @HasNameMixin.name.setter
-    def name(self, value: str):
-        self.user.api_get(
-            "tree_tools/update_node",
-            nbid=self.root.id,
-            tree_id=self.tree_id,
-            display_text=value,
-        )
-
-        self._name = value

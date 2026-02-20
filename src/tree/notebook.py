@@ -1,14 +1,11 @@
 from typing import override
-from tree.mixins import ITreeContainer, HasNameMixin, AbstractBaseTreeNode
+from tree.mixins import AbstractTreeContainer, HasNameMixin
 from user import User
 from util.notebookinit import NotebookInit
 from util.extract import extract_etree, to_bool
 
-from tree.directory import NotebookDirectory
-from tree.page import NotebookPage
 
-
-class Notebook(ITreeContainer):
+class Notebook(AbstractTreeContainer):
     def __init__(self, init: NotebookInit, user: User, notebooks: Notebooks):
         super().__init__("0", init.name, self, self, user)
         self._id = init.id
@@ -43,51 +40,3 @@ class Notebook(ITreeContainer):
             )["add-entry-to-page-top"]
 
         return self._inserts_from_bottom
-
-    def get_tree(self, parent: ITreeContainer):
-        """Gets the tree of a notebook.
-
-        Args:
-            parent: The parent of the tree.
-
-        Returns:
-            The tree of the notebook.
-        """
-        xml_tree = self._user.api_get(
-            "tree_tools/get_tree_level",
-            nbid=self.id,
-            parent_tree_id=parent.tree_id,
-        )
-
-        nodes: list[AbstractBaseTreeNode] = []
-
-        for subtree in xml_tree.iterfind(".//level-node"):
-            node = extract_etree(
-                subtree,
-                {
-                    "is-page": to_bool,
-                    "tree-id": str,
-                    "display-text": str,
-                    # "user-access": {
-                    #     "can-read": to_bool,
-                    #     "can-write": to_bool,
-                    #     "can-read-comments": to_bool,
-                    #     "can-write-comments": to_bool,
-                    # },
-                },
-            )  # TODO do we want to handle errors here?
-
-            args = (
-                node["tree-id"],
-                node["display-text"],
-                self,
-                parent,
-                self.user,
-            )
-
-            if node["is-page"]:
-                nodes.append(NotebookPage(*args))
-            else:
-                nodes.append(NotebookDirectory(*args))
-
-        return nodes
