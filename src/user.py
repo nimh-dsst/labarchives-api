@@ -1,3 +1,4 @@
+from __future__ import annotations
 from io import BufferedIOBase
 from typing import Any, Mapping, Sequence
 from warnings import deprecated

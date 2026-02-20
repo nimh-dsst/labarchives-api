@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from io import BufferedRandom, BufferedReader, BytesIO
+from io import BufferedRandom, BytesIO
 from mimetypes import guess_file_type
-from typing import overload, TypeAlias
+from typing import TypeAlias
 from typing_extensions import Buffer, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from tempfile import _TemporaryFileWrapper
+    from tempfile import _TemporaryFileWrapper # pyright: ignore[reportPrivateUsage]
 
 # NOTE: from Pylance
 # Unfortunately PEP 688 does not allow us to distinguish read-only
@@ -22,18 +22,18 @@ class Attachment:
     # TODO writes need explicit syncing with server
     # NOTE or we just disable them that probly works
 
-    @overload
-    @staticmethod
-    def from_file(file: BufferedReader) -> Attachment:
-        pass
+    # @overload
+    # @staticmethod
+    # def from_file(file: BufferedReader) -> Attachment:
+    #     pass
 
-    @overload
+    # @overload
     @staticmethod
     def from_file(file: BufferedRandom) -> Attachment:
-        pass
+        # pass
 
-    @staticmethod
-    def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
+    # @staticmethod
+    # def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
         mime_type = guess_file_type(file.name)[0] or "application/octet-stream"
         return Attachment(
             file,  # pyright: ignore[reportUnknownVariableType, reportArgumentType]
@@ -45,7 +45,7 @@ class Attachment:
     def __init__(
         self,
         backing: BufferedRandom
-        | BufferedReader
+        # | BufferedReader
         | BytesIO
         | _TemporaryFileWrapper[bytes],
         mime_type: str,

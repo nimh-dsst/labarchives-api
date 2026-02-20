@@ -3,13 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import (
-    Any,
-    Generic,
-    Literal,
-    TypeVar,
-    overload,
-)
+from typing import Any, Generic, Literal, TypeVar, overload
 from typing_extensions import TYPE_CHECKING
 
 if TYPE_CHECKING:

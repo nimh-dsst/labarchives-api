@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Self, MutableSequence, Mapping, Sequence, Iterator, overload
 from abc import ABC, abstractmethod
 from util.index import Index, IdOrNameIndex, IdIndex, NameIndex

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import override
 from tree.mixins import AbstractTreeContainer, HasNameMixin
 from user import User

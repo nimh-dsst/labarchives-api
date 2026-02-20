@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, override, TYPE_CHECKING
 from src.tree.mixins import AbstractTreeContainer, AbstractTreeNode
-from src.util.extract import extract_etree as _extract_etree
+from src.util.extract import extract_etree as extract_etree
 from src.entry.collection import Entries
 from src.entry.entries import Entry
 from src.entry.attachment import Attachment
@@ -40,7 +40,7 @@ class NotebookPage(AbstractTreeNode):
                 entry_data=True,
             )
             for entry in entries_tree.iterfind(".//entry"):
-                entry_data = _extract_etree(
+                entry_data = extract_etree(
                     entry,
                     {
                         "eid": str,

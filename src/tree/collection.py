@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Mapping, Sequence, overload, override, Literal
 from tree.notebook import Notebook
 from util.index import IdOrNameIndex, Index

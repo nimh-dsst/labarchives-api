@@ -1,3 +1,4 @@
+from __future__ import annotations
 from lxml.etree import Element
 from typing import Mapping, Callable, Any
 

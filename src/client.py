@@ -1,3 +1,4 @@
+from __future__ import annotations
 from operator import itemgetter
 from typing import Any, Generator, Mapping, Sequence, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit

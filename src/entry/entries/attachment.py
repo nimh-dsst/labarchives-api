@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from email.message import Message
-from io import BytesIO, TemporaryFile
+from io import BytesIO
+from tempfile import TemporaryFile
 from typing import TYPE_CHECKING
 from typing_extensions import override
 

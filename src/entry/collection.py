@@ -6,18 +6,12 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime
 from io import BytesIO
 from json import dumps
-from typing import (
-    Any,
-    Literal,
-    Tuple,
-    overload,
-    override,
-)
+from typing import Any, Literal, Tuple, overload, override
 from typing_extensions import TYPE_CHECKING
 
-from src.util.extract import extract_etree as _extract_etree
+from src.util.extract import extract_etree
 from src.entry.attachment import Attachment
-from src.entry.entries import Entry, HeaderEntry, TextEntry, PlainTextEntry, WidgetEntry, AttachmentEntry
+from src.entry.entries import Entry, HeaderEntry, TextEntry, PlainTextEntry, AttachmentEntry
 
 if TYPE_CHECKING:
     from src.user import User
@@ -126,7 +120,7 @@ class Entries(Mapping[str, "Entry[Any]"]):
                 change_description="File uploaded via API",
             )
 
-            id = _extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
+            id = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
             entry = Entry.get_entry("attachment", id, data.caption, self._user)
 
         else:
@@ -139,7 +133,7 @@ class Entries(Mapping[str, "Entry[Any]"]):
                 nbid=self._page.root.id,
             )
 
-            id = _extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
+            id = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
             entry = Entry.get_entry(entry_type, id, data, self._user)
 
         self._entries[id] = entry
