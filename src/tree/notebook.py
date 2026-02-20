@@ -3,6 +3,10 @@ from tree.mixins import AbstractTreeContainer, HasNameMixin
 from user import User
 from util.notebookinit import NotebookInit
 from util.extract import extract_etree, to_bool
+from typing_extensions import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from tree.notebooks import Notebooks
 
 
 class Notebook(AbstractTreeContainer):

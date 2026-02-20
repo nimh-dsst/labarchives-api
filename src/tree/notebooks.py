@@ -1,3 +1,10 @@
+from typing import Mapping, Sequence, overload, override, Literal
+from tree.notebook import Notebook
+from util.index import IdOrNameIndex, Index
+from util.notebookinit import NotebookInit
+from util.extract import extract_etree
+from user import User
+
 class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
     """A collection of notebooks."""
 
@@ -57,7 +64,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
         Returns:
             The new notebook.
         """
-        nbid = _extract_etree(
+        nbid = extract_etree(
             self._user.api_get(
                 "notebooks/create_notebook", name=name, initial_folders="Empty"
             ),
