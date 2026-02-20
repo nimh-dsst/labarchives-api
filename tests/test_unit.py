@@ -558,3 +558,59 @@ def test_tree_traversal(notebook: LA.Notebook, notebook_tree: LA.NotebookDirecto
     k = list(k.values())[0]
     assert isinstance(k, LA.NotebookDirectory)
     assert len(k) == 0
+
+
+def test_list_directories(notebook_tree: LA.Notebook):
+    dirs = notebook_tree.list_directories()
+    assert dirs == ["Test Folder A", "Test Folder B"]
+
+
+def test_list_directories_as_dict(notebook_tree: LA.Notebook):
+    dirs = notebook_tree.list_directories(as_dict=True)
+    assert set(dirs.keys()) == {"Test Folder A", "Test Folder B"}
+    assert isinstance(dirs["Test Folder A"], LA.NotebookDirectory)
+
+
+def test_list_directories_recursive(notebook_tree: LA.Notebook):
+    dirs = notebook_tree.list_directories(recursive=True)
+    assert "Test Folder A" in dirs
+    assert "Test Folder B" in dirs
+    assert "Test Folder B/Dir2 Subfolder A" in dirs
+    assert "Test Folder B/Dir2 Subfolder B" in dirs
+    assert "Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder" in dirs
+    assert len(dirs) == 5
+
+
+def test_list_directories_recursive_as_dict(notebook_tree: LA.Notebook):
+    dirs = notebook_tree.list_directories(recursive=True, as_dict=True)
+    assert len(dirs) == 5
+    assert isinstance(
+        dirs["Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"],
+        LA.NotebookDirectory,
+    )
+
+
+def test_list_pages(notebook_tree: LA.Notebook):
+    pages = notebook_tree.list_pages()
+    assert pages == ["Test Page 1"]
+
+
+def test_list_pages_as_dict(notebook_tree: LA.Notebook):
+    pages = notebook_tree.list_pages(as_dict=True)
+    assert set(pages.keys()) == {"Test Page 1"}
+    assert isinstance(pages["Test Page 1"], LA.NotebookPage)
+
+
+def test_list_pages_recursive(notebook_tree: LA.Notebook):
+    pages = notebook_tree.list_pages(recursive=True)
+    assert "Test Page 1" in pages
+    assert "Test Folder A/Dir1 Test Page A" in pages
+    assert "Test Folder A/Dir1 Test Page B" in pages
+    assert "Test Folder B/Dir2 Test Page" in pages
+    assert len(pages) == 4
+
+
+def test_list_pages_recursive_as_dict(notebook_tree: LA.Notebook):
+    pages = notebook_tree.list_pages(recursive=True, as_dict=True)
+    assert len(pages) == 4
+    assert isinstance(pages["Test Folder A/Dir1 Test Page A"], LA.NotebookPage)

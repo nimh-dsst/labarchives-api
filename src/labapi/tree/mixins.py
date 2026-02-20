@@ -10,7 +10,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, MutableSequence, Sequence, ValuesView
 from datetime import datetime
-from typing import TYPE_CHECKING, Self, overload, override
+from time import monotonic
+from typing import TYPE_CHECKING, Literal, Self, overload, override
 
 from labapi.util import IdIndex, IdOrNameIndex, Index, NameIndex, extract_etree, to_bool
 
@@ -258,6 +259,7 @@ class AbstractTreeContainer(
         """
         super().__init__(tree_id, name, root, parent, user)
         self._children: MutableSequence[AbstractTreeNode] = []
+        self._populated: bool = False
 
     @property
     def children(self) -> Sequence[AbstractTreeNode]:
@@ -277,7 +279,7 @@ class AbstractTreeContainer(
         """
         from . import directory, page
 
-        if len(self.children) == 0:
+        if not self._populated:
             xml_tree = self.user.api_get(
                 "tree_tools/get_tree_level",
                 nbid=self.root.id,
@@ -310,6 +312,7 @@ class AbstractTreeContainer(
                     nodes.append(directory.NotebookDirectory(*args))
 
             self._children = nodes
+            self._populated = True
 
     def __len__(self) -> int:
         self._ensure_populated()
@@ -369,6 +372,136 @@ class AbstractTreeContainer(
     # TODO
     # FIXME
     # need an indexing by relative url thing
+
+    @overload
+    def list_directories(
+        self,
+        *,
+        recursive: bool = False,
+        as_dict: Literal[False] = False,
+        timeout: float | None = None,
+    ) -> list[str]: ...
+
+    @overload
+    def list_directories(
+        self,
+        *,
+        recursive: bool = False,
+        as_dict: Literal[True],
+        timeout: float | None = None,
+    ) -> dict[str, NotebookDirectory]: ...
+
+    def list_directories(
+        self,
+        *,
+        recursive: bool = False,
+        as_dict: bool = False,
+        timeout: float | None = None,
+        _deadline: float | None = None,
+    ) -> list[str] | dict[str, NotebookDirectory]:
+        """Lists subdirectories within this container.
+
+        :param recursive: If True, includes all subdirectories at every level.
+                          Recursive entries are keyed/named with their full relative path.
+        :type recursive: bool
+        :param as_dict: If True, returns a dict mapping names to directory objects.
+                        If False, returns a list of names.
+        :type as_dict: bool
+        :param timeout: Maximum seconds allowed for recursive traversal.
+                        Defaults to 10 when recursive is True, ignored otherwise.
+        :type timeout: float or None
+        :returns: A list of directory names or a dict of ``{name: NotebookDirectory}``.
+        :rtype: list[str] or dict[str, NotebookDirectory]
+        :raises TimeoutError: If the recursive traversal exceeds the timeout.
+        """
+        if recursive and _deadline is None:
+            _deadline = monotonic() + (timeout if timeout is not None else 10)
+
+        self._ensure_populated()
+
+        results: dict[str, NotebookDirectory] = {}
+
+        for child in self.children:
+            if child.is_dir():
+                results[child.name] = child  # type: ignore[assignment]
+                if recursive and isinstance(child, AbstractTreeContainer):
+                    if _deadline is not None and monotonic() > _deadline:
+                        raise TimeoutError(
+                            "list_directories recursive traversal timed out"
+                        )
+                    for sub_name, sub_dir in child.list_directories(
+                        recursive=True, as_dict=True, _deadline=_deadline
+                    ).items():
+                        results[f"{child.name}/{sub_name}"] = sub_dir
+
+        if as_dict:
+            return results
+        return list(results.keys())
+
+    @overload
+    def list_pages(
+        self,
+        *,
+        recursive: bool = False,
+        as_dict: Literal[False] = False,
+        timeout: float | None = None,
+    ) -> list[str]: ...
+
+    @overload
+    def list_pages(
+        self,
+        *,
+        recursive: bool = False,
+        as_dict: Literal[True],
+        timeout: float | None = None,
+    ) -> dict[str, NotebookPage]: ...
+
+    def list_pages(
+        self,
+        *,
+        recursive: bool = False,
+        as_dict: bool = False,
+        timeout: float | None = None,
+        _deadline: float | None = None,
+    ) -> list[str] | dict[str, NotebookPage]:
+        """Lists pages within this container.
+
+        :param recursive: If True, includes pages from all subdirectories.
+                          Recursive entries are keyed/named with their full relative path.
+        :type recursive: bool
+        :param as_dict: If True, returns a dict mapping names to page objects.
+                        If False, returns a list of names.
+        :type as_dict: bool
+        :param timeout: Maximum seconds allowed for recursive traversal.
+                        Defaults to 10 when recursive is True, ignored otherwise.
+        :type timeout: float or None
+        :returns: A list of page names or a dict of ``{name: NotebookPage}``.
+        :rtype: list[str] or dict[str, NotebookPage]
+        :raises TimeoutError: If the recursive traversal exceeds the timeout.
+        """
+        if recursive and _deadline is None:
+            _deadline = monotonic() + (timeout if timeout is not None else 10)
+
+        self._ensure_populated()
+
+        results: dict[str, NotebookPage] = {}
+
+        for child in self.children:
+            if not child.is_dir():
+                results[child.name] = child  # type: ignore[assignment]
+            elif recursive and isinstance(child, AbstractTreeContainer):
+                if _deadline is not None and monotonic() > _deadline:
+                    raise TimeoutError(
+                        "list_pages recursive traversal timed out"
+                    )
+                for sub_name, sub_page in child.list_pages(
+                    recursive=True, as_dict=True, _deadline=_deadline
+                ).items():
+                    results[f"{child.name}/{sub_name}"] = sub_page
+
+        if as_dict:
+            return results
+        return list(results.keys())
 
     def create_page(self, name: str) -> NotebookPage:
         """Creates a new page within this container.
