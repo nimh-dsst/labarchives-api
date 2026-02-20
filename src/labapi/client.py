@@ -28,6 +28,8 @@ from base64 import b64encode
 from datetime import datetime, timedelta
 from socketserver import TCPServer
 from http.server import SimpleHTTPRequestHandler
+from dotenv import load_dotenv
+from os import getenv
 
 import selenium.webdriver as webdriver
 
@@ -82,9 +84,6 @@ class Client:
         super().__init__()
 
         if base_url is None or akid is None or akpass is None:
-            from dotenv import load_dotenv
-            from os import getenv
-
             load_dotenv()
 
             if base_url is None:
