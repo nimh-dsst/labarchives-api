@@ -25,14 +25,16 @@ dependencies = [
     "selenium>=4.39.0",
     "types-lxml>=2026.1.1",
     "python-dotenv>=1.2.1",
+    "sphinx>=9.1.0",
 ]
 
 [dependency-groups]
-dev = [ 
+dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
     "ruff>=0.14.11",
     "pre-commit>=4.5.1",
+    "sphinx>=9.1.0",
 ]
 
 [tool.setuptools.packages.find]
