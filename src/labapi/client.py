@@ -53,6 +53,24 @@ class Client:
     It also manages the authentication flow, including OAuth.
     """
 
+    @staticmethod
+    def from_env() -> Client:
+        from dotenv import load_dotenv
+        from os import getenv
+
+        load_dotenv()
+
+        api_url = getenv("API_URL", "https://api.labarchives.com")
+        akid = getenv("ACCESS_KEYID")
+        akpass = getenv("ACCESS_PWD")
+
+        if not akid or not akpass:
+            raise RuntimeError(
+                "ACCESS_KEYID or ACCESS_PWD environment variables not set."
+            )
+
+        return Client(api_url, akid, akpass)
+
     def __init__(self, base_url: str, akid: str, akpass: bytes | str):
         """
         Initializes a new LabArchives API client.
