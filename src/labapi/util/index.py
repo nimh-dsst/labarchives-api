@@ -21,17 +21,17 @@ class Index(Enum):
     Name = "name"
 
 
-type IdIndex = slice[Literal[Index.Id], str, None]
+type IdIndex = "slice[Literal[Index.Id], str, None]"
 """
 Type alias for indexing by item ID.
 
-Example: ``Index.Id["some_id"]``
+Example: ``Index.Id:"some_id"``
 """
-type NameIndex = slice[Literal[Index.Name], str, None]
+type NameIndex = "slice[Literal[Index.Name], str, None]"
 """
 Type alias for indexing by item name.
 
-Example: ``Index.Name["some_name"]``
+Example: ``Index.Name:"some_name"``
 """
 
 type IdOrNameIndex = str | IdIndex | NameIndex

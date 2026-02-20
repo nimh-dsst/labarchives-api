@@ -113,7 +113,7 @@ class User:
 
     # @deprecated("LabArchives Auth Refreshing is unstable and inconsistent")
     def refresh(self, *, user_requested: bool = False) -> None:
-        """.. unstable::
+        """.. deprecated::
            LabArchives Auth Refreshing is unstable and inconsistent.
 
         Refreshes the user's session information from the LabArchives API.
