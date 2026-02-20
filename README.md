@@ -52,6 +52,22 @@ for notebook in notebooks:
     print(f"Notebook: {notebook.name} ({notebook.id})")
 ```
 
+## SSL Certificate Issues
+
+Some networks (e.g. corporate or institutional environments) use custom root certificates for TLS inspection. Python's `requests` library relies on the `certifi` package for its CA bundle, which does not include these certificates. This causes `SSLCertVerificationError` when connecting to the LabArchives API.
+
+To fix this, append your network's root certificate(s) to the `certifi` CA bundle:
+
+```bash
+# Find the certifi CA bundle path
+python -c "import certifi; print(certifi.where())"
+
+# Append your root certificate (PEM format) to the bundle
+cat /path/to/your/root-cert.pem >> $(python -c "import certifi; print(certifi.where())")
+```
+
+> **Note:** This must be repeated whenever the `certifi` package is updated, as updates overwrite the CA bundle.
+
 ## Running Tests
 
 To run tests using `pytest`:
