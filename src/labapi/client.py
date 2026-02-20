@@ -53,36 +53,52 @@ class Client:
     It also manages the authentication flow, including OAuth.
     """
 
-    @staticmethod
-    def from_env() -> Client:
-        from dotenv import load_dotenv
-        from os import getenv
+    def __init__(
+        self,
+        base_url: str | None = None,
+        akid: str | None = None,
+        akpass: bytes | str | None = None,
+    ):
+        """
+        Initializes a new LabArchives API client.
 
-        load_dotenv()
+        If any parameter is None, the client will attempt to load values from
+        a ``.env`` file using ``python-dotenv``. The environment variables used are:
 
-        api_url = getenv("API_URL", "https://api.labarchives.com")
-        akid = getenv("ACCESS_KEYID")
-        akpass = getenv("ACCESS_PWD")
+        - ``API_URL``: The base URL (defaults to ``https://api.labarchives.com``).
+        - ``ACCESS_KEYID``: The Access Key ID.
+        - ``ACCESS_PWD``: The Access Key Password.
+
+        :param base_url: The base URL of the LabArchives API (e.g., "https://mynotebook.labarchives.com").
+                         If None, loaded from the ``API_URL`` environment variable.
+        :type base_url: str or None
+        :param akid: The Access Key ID for API authentication.
+                     If None, loaded from the ``ACCESS_KEYID`` environment variable.
+        :type akid: str or None
+        :param akpass: The Access Key Password for HMAC-SHA512 signing.
+                       If None, loaded from the ``ACCESS_PWD`` environment variable.
+        :type akpass: bytes, str, or None
+        """
+        super().__init__()
+
+        if base_url is None or akid is None or akpass is None:
+            from dotenv import load_dotenv
+            from os import getenv
+
+            load_dotenv()
+
+            if base_url is None:
+                base_url = getenv("API_URL", "https://api.labarchives.com")
+            if akid is None:
+                akid = getenv("ACCESS_KEYID")
+            if akpass is None:
+                akpass = getenv("ACCESS_PWD")
 
         if not akid or not akpass:
             raise RuntimeError(
                 "ACCESS_KEYID or ACCESS_PWD environment variables not set."
             )
 
-        return Client(api_url, akid, akpass)
-
-    def __init__(self, base_url: str, akid: str, akpass: bytes | str):
-        """
-        Initializes a new LabArchives API client.
-
-        :param base_url: The base URL of the LabArchives API (e.g., "https://mynotebook.labarchives.com").
-        :type base_url: str
-        :param akid: The Access Key ID for API authentication.
-        :type akid: str
-        :param akpass: The Access Key Password for HMAC-SHA512 signing.
-        :type akpass: bytes or str
-        """
-        super().__init__()
         self._base_url = urlsplit(base_url).geturl()
         self._akid = akid
         self._hmac = HMAC(

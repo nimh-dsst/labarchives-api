@@ -17,15 +17,8 @@ load_dotenv()
 
 @pytest.fixture(scope="session")
 def la_client():
-    """Initializes the LabArchives API Client."""
-    api_url = os.getenv("API_URL", "https://api.labarchives.com")
-    akid = os.getenv("ACCESS_KEYID")
-    akpass = os.getenv("ACCESS_PWD")
-
-    if not akid or not akpass:
-        pytest.fail("ACCESS_KEYID or ACCESS_PWD environment variables not set.")
-
-    return LA.Client(base_url=api_url, akid=akid, akpass=akpass)
+    """Initializes the LabArchives API Client from .env file."""
+    return LA.Client()
 
 
 @pytest.fixture(scope="session")
