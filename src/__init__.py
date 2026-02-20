@@ -3,7 +3,7 @@ from src.user import User
 from src.tree.notebook import Notebook
 from src.tree.page import NotebookPage
 from src.tree.directory import NotebookDirectory
-from src.tree.notebooks import Notebooks
+from src.tree.collection import Notebooks
 from src.tree.mixins import AbstractTreeNode as NotebookTreeNode
 from src.util.index import Index
 from src.entry.attachment import Attachment

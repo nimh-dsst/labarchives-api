@@ -6,7 +6,7 @@ from util.extract import extract_etree, to_bool
 from typing_extensions import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from tree.notebooks import Notebooks
+    from src.tree.collection import Notebooks
 
 
 class Notebook(AbstractTreeContainer):
