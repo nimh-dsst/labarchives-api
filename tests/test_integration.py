@@ -1,8 +1,8 @@
 import json
 import os
-from datetime import datetime, timezone
+from collections.abc import Mapping
+from datetime import UTC, datetime
 from io import BytesIO
-from typing import Mapping
 
 import pytest
 from dotenv import load_dotenv
@@ -90,10 +90,12 @@ def create_json_rich_text(data: dict) -> str:
 
 
 def get_or_create_page_with_entry(
-    parent: LA.NotebookDirectory, name: str, entry_type: str, data: LA.Attachment | str
+    parent: LA.NotebookDirectory,
+    name: str,
+    entry_type: str,
+    data: LA.Attachment | str,
 ) -> LA.NotebookPage:
-    """
-    Finds a page by name. If it exists, returns it.
+    """Finds a page by name. If it exists, returns it.
     If not, creates the page and adds the specified entry.
     """
     existing = parent[Index.Name : name]
@@ -109,8 +111,7 @@ def get_or_create_page_with_entry(
 def get_or_create_page_with_json(
     parent: LA.NotebookDirectory, name: str, data: dict
 ) -> LA.NotebookPage:
-    """
-    Finds a page by name. If it exists, returns it.
+    """Finds a page by name. If it exists, returns it.
     If not, creates the page and uses the new dual-entry JSON system.
     """
     existing = parent[Index.Name : name]
@@ -149,6 +150,7 @@ def data_dir_structure(root_test_dir: LA.NotebookDirectory):
         # data.json (Raw experimental data remains a standard attachment)
         if not sess_1[Index.Name : "data.json"]:
             from pathlib import Path
+
             with open(Path(__file__).parent / "test_entry.json", "rb") as f:
                 data_att = LA.Attachment.from_file(f)
                 sess_1.create_page("data.json").entries.create_entry(
@@ -172,11 +174,10 @@ def test_env(
     tests_dir: LA.NotebookDirectory,
     data_dir_structure: LA.NotebookDirectory,
 ):
-    """
-    Creates a timestamped directory for the specific test,
+    """Creates a timestamped directory for the specific test,
     copies the data structure into it, and returns the workspace.
     """
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
     test_folder_name = f"test: {request.node.name} {timestamp}"  # pyright: ignore[reportUnknownMemberType]
 
     # Create the isolated workspace

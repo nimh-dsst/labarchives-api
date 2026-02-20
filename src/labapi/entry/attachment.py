@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from io import BufferedRandom, BytesIO
-from mimetypes import guess_file_type
-from typing import TypeAlias
-from typing_extensions import Buffer, TYPE_CHECKING
+from collections.abc import Buffer
+from mimetypes import guess_type
+from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
-    from tempfile import _TemporaryFileWrapper # pyright: ignore[reportPrivateUsage]
+    from io import BufferedRandom, BytesIO
+    from tempfile import _TemporaryFileWrapper  # pyright: ignore[reportPrivateUsage]
 
 # NOTE: from Pylance
 # Unfortunately PEP 688 does not allow us to distinguish read-only
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 # distinguish these cases in the type system.
 # Same as WriteableBuffer, but also includes read-only buffer types (like bytes).
 ReadableBuffer: TypeAlias = Buffer  # stable
+
 
 class Attachment:
     # TODO writes need explicit syncing with server
@@ -32,9 +33,9 @@ class Attachment:
     def from_file(file: BufferedRandom) -> Attachment:
         # pass
 
-    # @staticmethod
-    # def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
-        mime_type = guess_file_type(file.name)[0] or "application/octet-stream"
+        # @staticmethod
+        # def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
+        mime_type = guess_type(file.name)[0] or "application/octet-stream"
         return Attachment(
             file,  # pyright: ignore[reportUnknownVariableType, reportArgumentType]
             mime_type,

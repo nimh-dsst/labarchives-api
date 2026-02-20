@@ -1,16 +1,21 @@
-"""The entries package."""
+"""LabArchives Entry Types Package.
 
-from .base import Entry
-from .text import BaseTextEntry, HeaderEntry, TextEntry, PlainTextEntry
-from .widget import WidgetEntry
+This package defines various types of entries that can exist on a LabArchives page,
+including a base entry class and specific implementations for text, widget,
+and attachment entries.
+"""
+
 from .attachment import AttachmentEntry
+from .base import Entry
+from .text import BaseTextEntry, HeaderEntry, PlainTextEntry, TextEntry
+from .widget import WidgetEntry
 
 __all__ = [
-    "Entry",
-    "BaseTextEntry",
-    "HeaderEntry",
-    "TextEntry",
-    "PlainTextEntry",
-    "WidgetEntry",
     "AttachmentEntry",
+    "BaseTextEntry",
+    "Entry",
+    "HeaderEntry",
+    "PlainTextEntry",
+    "TextEntry",
+    "WidgetEntry",
 ]

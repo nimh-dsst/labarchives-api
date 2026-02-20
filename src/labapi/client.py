@@ -1,34 +1,55 @@
+"""LabArchives API Client.
+
+This module provides the core client for interacting with the LabArchives API,
+handling authentication, request signing, and various API call methods.
+"""
+
 from __future__ import annotations
+
+from base64 import b64encode
+from datetime import datetime, timedelta
+from http.server import SimpleHTTPRequestHandler
 from operator import itemgetter
-from typing import Any, Generator, Mapping, Sequence, override
+from socketserver import TCPServer
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.hazmat.primitives.hmac import HMAC
+from lxml.etree import _Element as Element
+from lxml.etree import fromstring
 from requests import Response, get, post
 from requests import codes as status_codes
+from selenium import webdriver
 
+from .browser import default_browser
 from .user import User
 from .util.extract import extract_etree, to_bool
 from .util.notebookinit import NotebookInit
 
-from io import BufferedIOBase
-
-from lxml.etree import Element, fromstring
-from base64 import b64encode
-from datetime import datetime, timedelta
-from socketserver import TCPServer
-from http.server import SimpleHTTPRequestHandler
-
-import selenium.webdriver as webdriver
-
-from .browser import default_browser
+if TYPE_CHECKING:
+    from collections.abc import Generator, Mapping, Sequence
+    from io import BufferedIOBase
 
 
 class Client:
-    """A client for the LabArchives API."""
+    """A client for the LabArchives API.
+
+    This class handles the connection to the LabArchives API, including request signing
+    using HMAC-SHA512, and provides methods for making authenticated API calls.
+    It also manages the authentication flow, including OAuth.
+    """
 
     def __init__(self, base_url: str, akid: str, akpass: bytes | str):
+        """Initializes a new LabArchives API client.
+
+        :param base_url: The base URL of the LabArchives API (e.g., "https://mynotebook.labarchives.com").
+        :type base_url: str
+        :param akid: The Access Key ID for API authentication.
+        :type akid: str
+        :param akpass: The Access Key Password for HMAC-SHA512 signing.
+        :type akpass: bytes or str
+        """
         super().__init__()
         self._base_url = urlsplit(base_url).geturl()
         self._akid = akid
@@ -37,13 +58,16 @@ class Client:
         )
 
     def generate_auth_url(self, redirect_url: str) -> str:
-        """Generates a URL for authentication.
+        """Generates a URL for authenticating with the LabArchives API.
 
-        Args:
-            redirect_url: The URL to redirect to after authentication.
+        This URL is used to initiate the OAuth 2.0 authorization code flow,
+        redirecting the user to LabArchives to grant permissions.
 
-        Returns:
-            The authentication URL.
+        :param redirect_url: The URL to which LabArchives will redirect the user
+                             after successful authentication, containing the authorization code.
+        :type redirect_url: str
+        :returns: The full authentication URL.
+        :rtype: str
         """
         return self.construct_url(
             "api_user_login",
@@ -52,15 +76,19 @@ class Client:
             signature_method=redirect_url,
         )
 
-    def login_authcode(self, user_email: str, auth_code: str):
-        """Logs in a user with an authentication code.
+    def login_authcode(self, user_email: str, auth_code: str) -> User:
+        """Logs in a user using an authentication code obtained from the OAuth flow.
 
-        Args:
-            user_email: The user's email address.
-            auth_code: The authentication code.
+        This method exchanges the authorization code for user access information,
+        including their user ID and available notebooks.
 
-        Returns:
-            A User object.
+        :param user_email: The email address of the authenticating user.
+        :type user_email: str
+        :param auth_code: The authorization code received from LabArchives after
+                          the user grants permission.
+        :type auth_code: str
+        :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
+        :rtype: labapi.user.User
         """
         uid_tree = self.api_get(
             "users/user_access_info", login_or_email=user_email, password=auth_code
@@ -76,7 +104,7 @@ class Client:
                     "id": str,
                     # "auto-login-allowed": to_bool
                 },
-            )
+            ),
         )
 
         notebooks: list[NotebookInit] = []
@@ -84,7 +112,11 @@ class Client:
         for notebook in uid_tree.iterfind(".//notebook"):
             notebook_id, notebook_name, is_default = itemgetter(
                 "id", "name", "is-default"
-            )(extract_etree(notebook, {"id": str, "name": str, "is-default": to_bool}))
+            )(
+                extract_etree(
+                    notebook, {"id": str, "name": str, "is-default": to_bool}
+                ),
+            )
 
             # TODO error or warning when id/name are failed?
 
@@ -96,23 +128,36 @@ class Client:
 
     @staticmethod
     def _handle_request_status(response: Response) -> None:
+        """Handles the HTTP response status, raising an error for unsuccessful requests.
+
+        :param response: The HTTP response object from the requests library.
+        :type response: requests.Response
+        :raises RuntimeError: If the HTTP status code is not 200 (OK).
+        """
         if response.status_code != status_codes.ok:
             raise RuntimeError(  # TODO make this more useful
-                f"API request failed with status code {response.status_code}: {response.text}"
+                f"API request failed with status code {response.status_code}: {response.text}",
             )
             # See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
 
     def stream_api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any
     ) -> Generator[bytes, None, Response]:
-        """Makes a GET request to the LabArchives API.
+        """Makes a GET request to the LabArchives API and returns the response as a byte stream.
 
-        Args:
-            api_method_uri: The API method to call.
-            **kwargs: Additional arguments to pass to the API method.
+        This is useful for downloading large files or when the response content
+        needs to be processed incrementally.
 
-        Returns:
-            The response from the API as a stream of bytes.
+        :param api_method_uri: The API method URI (e.g., "get_file_attachment").
+                               Can be a string or a sequence of strings representing path segments.
+        :type api_method_uri: str or Sequence[str]
+        :param kwargs: Additional query parameters to pass to the API method.
+        :type kwargs: Any
+        :yields: Chunks of bytes from the API response.
+        :ytype: bytes
+        :returns: The full requests.Response object after the stream has been consumed.
+        :rtype: requests.Response
+        :raises RuntimeError: If the API request fails.
         """
         with get(
             self.construct_url(api_method_uri, query=kwargs), stream=True
@@ -130,14 +175,23 @@ class Client:
         body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ) -> Generator[bytes, None, Response]:
-        """Makes a POST request to the LabArchives API.
+        """Makes a POST request to the LabArchives API and returns the response as a byte stream.
 
-        Args:
-            api_method_uri: The API method to call.
-            **kwargs: Additional arguments to pass to the API method.
+        This is useful for uploading large files or when the response content
+        needs to be processed incrementally.
 
-        Returns:
-            The response from the API as a stream of bytes.
+        :param api_method_uri: The API method URI (e.g., "upload_file_attachment").
+                               Can be a string or a sequence of strings representing path segments.
+        :type api_method_uri: str or Sequence[str]
+        :param body: The request body, which can be a mapping of form data or a file-like object.
+        :type body: Mapping[str, str] or BufferedIOBase
+        :param kwargs: Additional query parameters to pass to the API method.
+        :type kwargs: Any
+        :yields: Chunks of bytes from the API response.
+        :ytype: bytes
+        :returns: The full requests.Response object after the stream has been consumed.
+        :rtype: requests.Response
+        :raises RuntimeError: If the API request fails.
         """
         with post(
             self.construct_url(api_method_uri, query=kwargs), data=body, stream=True
@@ -152,14 +206,20 @@ class Client:
     def raw_api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any
     ) -> Response:
-        """Makes a GET request to the LabArchives API.
+        """Makes a GET request to the LabArchives API and returns the raw requests.Response object.
 
-        Args:
-            api_method_uri: The API method to call.
-            **kwargs: Additional arguments to pass to the API method.
+        This method is suitable for API calls where the full HTTP response,
+        including headers and status code, is needed, and the content is not
+        expected to be streamed.
 
-        Returns:
-            The response from the API.
+        :param api_method_uri: The API method URI (e.g., "get_entry_data").
+                               Can be a string or a sequence of strings representing path segments.
+        :type api_method_uri: str or Sequence[str]
+        :param kwargs: Additional query parameters to pass to the API method.
+        :type kwargs: Any
+        :returns: The requests.Response object containing the API response.
+        :rtype: requests.Response
+        :raises RuntimeError: If the API request fails.
         """
         request = get(self.construct_url(api_method_uri, query=kwargs))
         Client._handle_request_status(request)
@@ -172,14 +232,22 @@ class Client:
         body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ) -> Response:
-        """Makes a POST request to the LabArchives API.
+        """Makes a POST request to the LabArchives API and returns the raw requests.Response object.
 
-        Args:
-            api_method_uri: The API method to call.
-            **kwargs: Additional arguments to pass to the API method.
+        This method is suitable for API calls where the full HTTP response,
+        including headers and status code, is needed, and the content is not
+        expected to be streamed.
 
-        Returns:
-            The response from the API.
+        :param api_method_uri: The API method URI (e.g., "create_entry").
+                               Can be a string or a sequence of strings representing path segments.
+        :type api_method_uri: str or Sequence[str]
+        :param body: The request body, which can be a mapping of form data or a file-like object.
+        :type body: Mapping[str, str] or BufferedIOBase
+        :param kwargs: Additional query parameters to pass to the API method.
+        :type kwargs: Any
+        :returns: The requests.Response object containing the API response.
+        :rtype: requests.Response
+        :raises RuntimeError: If the API request fails.
         """
         request = post(self.construct_url(api_method_uri, query=kwargs), data=body)
         Client._handle_request_status(request)
@@ -187,16 +255,19 @@ class Client:
         return request
 
     def api_get(self, api_method_uri: str | Sequence[str], **kwargs: Any) -> Element:
-        """Makes a GET request to the LabArchives API.
+        """Makes a GET request to the LabArchives API and parses the XML response into an lxml Element.
 
-        Args:
-            api_method_uri: The API method to call.
-            **kwargs: Additional arguments to pass to the API method.
+        This is the primary method for retrieving structured data from the API.
 
-        Returns:
-            The response from the API as an etree element.
+        :param api_method_uri: The API method URI (e.g., "get_notebook_info").
+                               Can be a string or a sequence of strings representing path segments.
+        :type api_method_uri: str or Sequence[str]
+        :param kwargs: Additional query parameters to pass to the API method.
+        :type kwargs: Any
+        :returns: An lxml Element representing the root of the XML response.
+        :rtype: lxml.etree.Element
+        :raises RuntimeError: If the API request fails or the response is not valid XML.
         """
-
         return fromstring(
             bytes(self.raw_api_get(api_method_uri, **kwargs).text, encoding="utf-8")
         )
@@ -207,16 +278,22 @@ class Client:
         body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ) -> Element:
-        """Makes a POST request to the LabArchives API.
+        """Makes a POST request to the LabArchives API and parses the XML response into an lxml Element.
 
-        Args:
-            api_method_uri: The API method to call.
-            **kwargs: Additional arguments to pass to the API method.
+        This is the primary method for sending data to the API and receiving
+        structured XML responses.
 
-        Returns:
-            The response from the API as an etree element.
+        :param api_method_uri: The API method URI (e.g., "create_entry").
+                               Can be a string or a sequence of strings representing path segments.
+        :type api_method_uri: str or Sequence[str]
+        :param body: The request body, which can be a mapping of form data or a file-like object.
+        :type body: Mapping[str, str] or BufferedIOBase
+        :param kwargs: Additional query parameters to pass to the API method.
+        :type kwargs: Any
+        :returns: An lxml Element representing the root of the XML response.
+        :rtype: lxml.etree.Element
+        :raises RuntimeError: If the API request fails or the response is not valid XML.
         """
-
         return fromstring(
             bytes(
                 self.raw_api_post(api_method_uri, body, **kwargs).text, encoding="utf-8"
@@ -224,10 +301,18 @@ class Client:
         )
 
     def default_authenticate(self) -> User:
-        """Authenticates a user using the default browser and localhost server.
+        """Authenticates a user using a default browser (Chrome, Firefox, or Edge)
+        and a local HTTP server to capture the authentication code.
 
-        Returns:
-            An authenticated user.
+        This method opens a browser window, directs the user to the LabArchives
+        authentication page, and then listens on `http://localhost:8089/` for
+        the redirect containing the authorization code. If no compatible browser
+        is detected, it falls back to printing the authentication URL to the terminal,
+        requiring the user to manually open it.
+
+        :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
+        :rtype: labapi.user.User
+        :raises RuntimeError: If authentication fails.
         """
         auth_url = self.generate_auth_url("http://localhost:8089/")
 
@@ -269,12 +354,16 @@ class Client:
         return user
 
     def collect_auth_response(self) -> User:
-        """Launches default localhost server at 8089 to collect LabArchives Authentication Response.
+        """Launches a local HTTP server to capture the authentication response from LabArchives.
 
-        Returns:
-            An authenticated user.
+        This server listens on `http://localhost:8089/` for the redirect from
+        LabArchives containing the authorization code and user email after
+        successful authentication.
+
+        :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
+        :rtype: labapi.user.User
+        :raises KeyError: If the authentication code or email is not received.
         """
-
         auth_info: dict[str, str] = {}
 
         class AuthRequestHandler(SimpleHTTPRequestHandler):
@@ -314,18 +403,31 @@ class Client:
         *,
         should_prefix_api: bool = True,
         signature_method: str | None = None,
-    ):
-        """Constructs a URL for the LabArchives API.
+    ) -> str:
+        """Constructs a fully qualified and signed URL for a LabArchives API method.
 
-        Args:
-            api_method_uri: The API method to call.
-            query: The query string parameters.
-            expires_in: The expiration time for the URL.
-            should_prefix_api: Whether to prefix the API method with "api".
-            signature_method: The signature method to use.
+        This method handles the assembly of the base URL, API method path,
+        query parameters, and the HMAC-SHA512 signature required by the LabArchives API.
 
-        Returns:
-            The constructed URL.
+        :param api_method_uri: The API method URI (e.g., "get_notebook_info").
+                               Can be a string or a sequence of strings representing path segments.
+        :type api_method_uri: str or Sequence[str]
+        :param query: A dictionary of query parameters to include in the URL.
+        :type query: Mapping[str, Any]
+        :param expires_in: The duration for which the URL should be valid. Can be a
+                           `timedelta` object or a specific `datetime` object. If None,
+                           defaults to 60 seconds from now.
+        :type expires_in: timedelta or datetime or None
+        :param should_prefix_api: If True, ensures the API method path starts with "api/".
+                                  Defaults to True.
+        :type should_prefix_api: bool
+        :param signature_method: An optional string to use as the API method for
+                                 signature generation, overriding `api_method_uri`.
+                                 Useful for methods like `api_user_login` where the
+                                 actual method name differs from the URI path.
+        :type signature_method: str or None
+        :returns: The fully constructed and signed URL.
+        :rtype: str
         """
         if isinstance(api_method_uri, str):
             api_method_uri = api_method_uri.split("/")
@@ -335,9 +437,8 @@ class Client:
         if should_prefix_api:
             if method_parts[0] != "api":
                 method_parts = ["api", *method_parts]
-        else:
-            if method_parts[0] == "api":
-                method_parts = method_parts[1:]
+        elif method_parts[0] == "api":
+            method_parts = method_parts[1:]
 
         api_method = method_parts[-1] if signature_method is None else signature_method
 
@@ -352,10 +453,21 @@ class Client:
 
         if expires_in:
             return self._sign_url(url, api_method, expires_in)
-        else:
-            return self._sign_url(url, api_method)
+        return self._sign_url(url, api_method)
 
     def _signature(self, api_method: str, expiry: int) -> str:
+        """Generates the HMAC-SHA512 signature for a LabArchives API request.
+
+        This private method is used internally by `_sign_url` to create the
+        cryptographic signature based on the Access Key ID, API method, and expiry.
+
+        :param api_method: The specific API method name used in the signature calculation.
+        :type api_method: str
+        :param expiry: The expiration timestamp (in milliseconds since epoch) for the request.
+        :type expiry: int
+        :returns: The base64-encoded HMAC-SHA512 signature.
+        :rtype: str
+        """
         hmac = self._hmac.copy()
 
         hmac.update(f"{self._akid}{api_method}{expiry}".encode())
@@ -370,6 +482,22 @@ class Client:
         api_method: str,
         expires_in: timedelta | datetime = timedelta(seconds=60),
     ) -> str:
+        """Signs a given URL with the HMAC-SHA512 signature and adds necessary query parameters.
+
+        This private method appends the Access Key ID, expiration timestamp, and
+        the generated signature to the URL's query string.
+
+        :param url: The unsigned URL to be signed.
+        :type url: str
+        :param api_method: The specific API method name used for signature generation.
+        :type api_method: str
+        :param expires_in: The duration for which the URL should be valid. Can be a
+                           `timedelta` object or a specific `datetime` object. Defaults
+                           to 60 seconds from the current time.
+        :type expires_in: timedelta or datetime
+        :returns: The fully signed URL.
+        :rtype: str
+        """
         scheme, netloc, path, querystring, _f = urlsplit(url)
         query = dict(parse_qsl(querystring))
 

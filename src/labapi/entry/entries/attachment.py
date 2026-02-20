@@ -1,22 +1,41 @@
-"""Attachment entry class."""
+"""Attachment Entry Module.
+
+This module defines the :class:`~labapi.entry.entries.attachment.AttachmentEntry` class,
+which represents an attachment entry within a LabArchives page.
+"""
 
 from __future__ import annotations
 
 from email.message import Message
 from io import BytesIO
 from tempfile import TemporaryFile
-from typing import TYPE_CHECKING
-from typing_extensions import override
+from typing import TYPE_CHECKING, override
+
+from labapi.entry.attachment import Attachment
 
 from .base import Entry
-from ..attachment import Attachment
 
 if TYPE_CHECKING:
-    from ...user import User
+    from labapi.user import User
 
 
 class AttachmentEntry(Entry[Attachment]):
+    """Represents an attachment entry on a LabArchives page.
+
+    This class handles the retrieval and updating of file attachments,
+    providing access to the attachment's content, filename, and caption.
+    """
+
     def __init__(self, eid: str, caption: str, user: User):
+        """Initializes an AttachmentEntry object.
+
+        :param eid: The unique ID of the entry.
+        :type eid: str
+        :param caption: The caption associated with the attachment.
+        :type caption: str
+        :param user: The authenticated user.
+        :type user: labapi.user.User
+        """
         super().__init__(eid, user)
         self._caption = caption
         self._data = None
@@ -25,11 +44,27 @@ class AttachmentEntry(Entry[Attachment]):
 
     @property
     @override
-    def content_type(self):
-        """The content type of the entry."""
+    def content_type(self) -> str:
+        """The content type identifier for an attachment entry.
+
+        :returns: The string "Attachment".
+        :rtype: str
+        """
         return "Attachment"
 
     def get_attachment(self, use_tempfile: bool = False) -> Attachment:
+        """Retrieves the attachment data.
+
+        The attachment data is fetched from the LabArchives API and cached.
+        Subsequent calls will return the cached data.
+
+        :param use_tempfile: If True, the attachment data will be stored in a
+                             temporary file; otherwise, in an in-memory BytesIO object.
+                             Defaults to False.
+        :type use_tempfile: bool
+        :returns: An :class:`~labapi.entry.attachment.Attachment` object containing the file data and metadata.
+        :rtype: labapi.entry.attachment.Attachment
+        """
         # BUG: currently the implementation means that the backing buffer can be used while a reference is maintained
         #      to it
         if self._data is None or self._data.closed:
@@ -67,12 +102,26 @@ class AttachmentEntry(Entry[Attachment]):
     @property
     @override
     def content(self) -> Attachment:
-        """The content of the entry."""
+        """The attachment content as an :class:`~labapi.entry.attachment.Attachment` object.
+
+        This property retrieves the attachment data, caching it for subsequent access.
+
+        :returns: The attachment object.
+        :rtype: labapi.entry.attachment.Attachment
+        """
         return self.get_attachment()
 
     @content.setter
     @override
     def content(self, value: Attachment):
+        """Sets the attachment content.
+
+        This operation updates the attachment in LabArchives via an API call
+        and invalidates any previously cached attachment data.
+
+        :param value: The new attachment object to upload.
+        :type value: labapi.entry.attachment.Attachment
+        """
         # NOTE: this implicitly invalidates all previous Attachments
 
         self._user.api_post(
@@ -90,4 +139,9 @@ class AttachmentEntry(Entry[Attachment]):
 
     @property
     def caption(self) -> str:
+        """The caption associated with the attachment.
+
+        :returns: The caption string.
+        :rtype: str
+        """
         return self._caption

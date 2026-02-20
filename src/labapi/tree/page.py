@@ -1,14 +1,32 @@
+"""Notebook Page Module.
+
+This module defines the :class:`~labapi.tree.page.NotebookPage` class,
+representing a page within a LabArchives notebook. It extends
+:class:`~labapi.tree.mixins.AbstractTreeNode` and provides access to the
+entries contained within the page.
+"""
+
 from __future__ import annotations
 
-from typing import Any, override, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, override
+
+from labapi.entry import Attachment, Entries, Entry
+from labapi.util import extract_etree
+
 from .mixins import AbstractTreeContainer, AbstractTreeNode
-from ..util.extract import extract_etree
-from ..entry import Entries, Entry, Attachment
 
 if TYPE_CHECKING:
-    from ..user import User
+    from labapi.user import User
+
 
 class NotebookPage(AbstractTreeNode):
+    """Represents a single page within a LabArchives notebook.
+
+    A `NotebookPage` is a leaf node in the tree structure and contains
+    a collection of :class:`~labapi.entry.Entry` objects. It provides
+    functionalities to access and manage these entries.
+    """
+
     def __init__(
         self,
         tree_id: str,
@@ -17,17 +35,42 @@ class NotebookPage(AbstractTreeNode):
         parent: AbstractTreeContainer,
         user: User,
     ):
+        """Initializes a NotebookPage object.
+
+        :param tree_id: The unique ID of the page.
+        :type tree_id: str
+        :param name: The name of the page.
+        :type name: str
+        :param root: The root node of the tree (the Notebook).
+        :type root: AbstractTreeContainer
+        :param parent: The parent node of this page (a Directory or Notebook).
+        :type parent: AbstractTreeContainer
+        :param user: The authenticated user.
+        :type user: labapi.user.User
+        """
         super().__init__(tree_id, name, root, parent, user)
         self._entries: Entries | None = None
 
     @property
     @override
     def id(self) -> str:
+        """The unique ID of the page.
+
+        :returns: The page's ID.
+        :rtype: str
+        """
         return super().id
 
     @property
     def entries(self) -> Entries:
-        """The entries on the page."""
+        """The collection of entries contained within this page.
+
+        This property lazily loads the entries from the LabArchives API if they
+        have not been loaded yet.
+
+        :returns: An :class:`~labapi.entry.Entries` object managing the page's entries.
+        :rtype: labapi.entry.Entries
+        """
         if self._entries is None:
             entries: list[Entry[Any]] = []
 
@@ -59,7 +102,7 @@ class NotebookPage(AbstractTreeNode):
                         entry_data["eid"],
                         entry_data["entry-data"],
                         self._user,
-                    )
+                    ),
                 )
 
             self._entries = Entries(entries, self._user, self)
@@ -68,6 +111,13 @@ class NotebookPage(AbstractTreeNode):
 
     @override
     def copy_to(self, destination: AbstractTreeContainer) -> NotebookPage:
+        """Copies this page and its entries to a specified destination container.
+
+        :param destination: The target container to copy the page to.
+        :type destination: AbstractTreeContainer
+        :returns: A new instance of the copied page in the destination.
+        :rtype: NotebookPage
+        """
         new_page = destination.create_page(self.name)
 
         for entry in self.entries:
@@ -79,8 +129,17 @@ class NotebookPage(AbstractTreeNode):
             )
 
             if isinstance(entry.content, Attachment):
-                # Attachment doesn't have a close method in the current implementation, 
+                # Attachment doesn't have a close method in the current implementation,
                 # but the original code had it. I'll check src/entry/attachment.py.
                 pass
 
         return new_page
+
+    @override
+    def is_dir(self) -> bool:
+        """Indicates that this node is not a directory.
+
+        :returns: Always False.
+        :rtype: bool
+        """
+        return False

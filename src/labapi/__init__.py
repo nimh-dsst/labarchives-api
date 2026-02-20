@@ -1,41 +1,48 @@
+"""LabArchives API Client Library.
+
+This package provides a Python client for interacting with the LabArchives API.
+It offers an object-oriented interface to manage notebooks, folders, pages,
+and various entry types, along with authentication and utility functions.
+
+Key components include:
+
+- :class:`~labapi.client.Client`: The main API client for connection and authentication.
+- :class:`~labapi.user.User`: Represents an authenticated user session.
+- :mod:`~labapi.tree`: Modules for managing the hierarchical tree structure (notebooks, directories, pages).
+- :mod:`~labapi.entry`: Modules for handling different types of entries within pages.
+- :mod:`~labapi.util`: General utility functions and data structures.
+"""
+
 from .client import Client
-from .user import User
-from .tree import (
-    Notebook,
-    NotebookPage,
-    NotebookDirectory,
-    Notebooks,
-    AbstractTreeNode as NotebookTreeNode,
-)
-from .util import Index
 from .entry import (
     Attachment,
-    Entries,
-    Entry,
-    TextEntry,
     AttachmentEntry,
+    Entry,
     HeaderEntry,
     PlainTextEntry,
+    TextEntry,
     WidgetEntry,
-    Comment,
 )
+from .tree import (
+    Notebook,
+    NotebookDirectory,
+    NotebookPage,
+)
+from .user import User
+from .util import Index
 
 __all__ = [
-    "Client",
-    "User",
-    "Notebook",
-    "NotebookPage",
-    "NotebookDirectory",
-    "Notebooks",
-    "NotebookTreeNode",
-    "Index",
     "Attachment",
-    "Entries",
-    "Entry",
-    "TextEntry",
     "AttachmentEntry",
+    "Client",
+    "Entry",
     "HeaderEntry",
+    "Index",
+    "Notebook",
+    "NotebookDirectory",
+    "NotebookPage",
     "PlainTextEntry",
+    "TextEntry",
+    "User",
     "WidgetEntry",
-    "Comment",
 ]

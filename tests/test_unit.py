@@ -1,14 +1,30 @@
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime, timedelta
-from typing import Any, Callable, Mapping, Sequence, override
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import pytest
+import requests
 from dotenv import load_dotenv
 from lxml import etree
 
 import labapi as LA
+from labapi.util.extract import _flatten_dict, to_bool
 
 load_dotenv()
+
+if TYPE_CHECKING:
+    from io import BufferedIOBase
+
+
+class MockNotebooks:
+    # This mock is minimal, add methods/properties as needed by tests
+
+    @property
+    def _user(self):
+        return None  # Or a mock user if needed
 
 
 class MockClient(LA.Client):
@@ -60,7 +76,9 @@ class MockClient(LA.Client):
 
     @override
     def api_get(
-        self, api_method_uri: str | Sequence[str], **kwargs: Any
+        self,
+        api_method_uri: str | Sequence[str],
+        **kwargs: Any,
     ) -> etree.Element:  # XXX need ability to assert what this was called with
         self._api_logs.append((api_method_uri, kwargs))
 
@@ -74,6 +92,30 @@ class MockClient(LA.Client):
             raise api_response
 
         return api_response
+
+    @override
+    def raw_api_post(
+        self,
+        api_method_uri: str | Sequence[str],
+        body: Mapping[str, str] | BufferedIOBase,
+        **kwargs: Any,
+    ) -> requests.Response:
+        self._api_logs.append((api_method_uri, kwargs))
+
+        assert len(self._api_response) != 0, (
+            "Invalid Mock Client State: Did not load API Response"
+        )
+
+        api_response = self._api_response.pop(0)
+
+        if isinstance(api_response, Exception):
+            raise api_response
+
+        # Create a mock requests.Response object
+        mock_response = requests.Response()
+        mock_response.status_code = 200
+        mock_response._content = etree.tostring(api_response)
+        return mock_response
 
 
 @pytest.fixture
@@ -125,7 +167,7 @@ def notebooks(user: LA.User):
 
 @pytest.fixture
 def notebook(notebooks: LA.Notebooks):
-    return notebooks["testnb1"]
+    return notebooks[LA.Index.Id : "testnb1"]
 
 
 @pytest.fixture
@@ -142,17 +184,17 @@ def new_notebook(client: MockClient, notebooks: LA.Notebooks):
     return notebook
 
 
-def traverse_populate(node: LA.NotebookTreeNode):
-    for _node in node.values():
+def traverse_populate(node: LA.NotebookTreeNode | LA.Notebook):
+    for _node in node.keys():
         if isinstance(_node, Sequence):
             raise ValueError("Iter did not return iterator over ids")
 
-        if isinstance(_node, LA.NotebookTreeNode):
+        if isinstance(_node, LA.NotebookTreeNode | LA.Notebook):
             traverse_populate(_node)
 
 
 @pytest.fixture
-def notebook_tree(client: MockClient, notebook: LA.Notebook) -> LA.NotebookTreeNode:
+def notebook_tree(client: MockClient, notebook: LA.Notebook) -> LA.Notebook:
     # Level 0
     client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
     <tree-tools>
@@ -338,9 +380,11 @@ def notebook_tree(client: MockClient, notebook: LA.Notebook) -> LA.NotebookTreeN
     ],
 )
 def test_flatten_dict_success(
-    val: LA.EtreeExtractorDict, prefix: str, expected: dict[str, Callable[[Any], Any]]
+    val: LA.util.extract.EtreeExtractorDict,
+    prefix: str,
+    expected: dict[str, Callable[[Any], Any]],
 ):
-    assert LA._flatten_dict(val, prefix) == expected  # pyright: ignore[reportPrivateUsage]
+    assert _flatten_dict(val, prefix) == expected  # pyright: ignore[reportPrivateUsage]
 
 
 @pytest.mark.parametrize(
@@ -349,9 +393,9 @@ def test_flatten_dict_success(
         ({"": {"b": int}}, ""),  # Empty key
     ],
 )
-def test_flatten_dict_value_error(val: LA.EtreeExtractorDict, prefix: str):
+def test_flatten_dict_value_error(val: LA.util.extract.EtreeExtractorDict, prefix: str):
     with pytest.raises(ValueError):
-        LA._flatten_dict(val, prefix)  # pyright: ignore[reportPrivateUsage]
+        _flatten_dict(val, prefix)  # pyright: ignore[reportPrivateUsage]
 
 
 @pytest.mark.parametrize(
@@ -368,7 +412,7 @@ def test_flatten_dict_value_error(val: LA.EtreeExtractorDict, prefix: str):
     ],
 )
 def test_to_bool_success(s: str, expected: bool):
-    assert LA.to_bool(s) is expected
+    assert to_bool(s) is expected
 
 
 @pytest.mark.parametrize(
@@ -387,7 +431,7 @@ def test_to_bool_success(s: str, expected: bool):
 )
 def test_to_bool_invalid_raises(s: str):
     with pytest.raises(ValueError, match=r"Cannot convert '.*' to bool"):
-        LA.to_bool(s)
+        to_bool(s)
 
 
 @pytest.mark.parametrize(
@@ -439,11 +483,11 @@ def test_notebooks_initialize(notebooks: LA.Notebooks):
 
 def test_notebooks__indexing(notebooks: LA.Notebooks):
     assert notebooks[LA.Index.Name : "Test Notebook 1"] == [
-        notebooks["testnb1"],
+        notebooks[LA.Index.Id : "testnb1"],
     ]
     assert notebooks[LA.Index.Name : "Test Notebook 3"] == [
-        notebooks["testnb2"],
-        notebooks["testnb3"],
+        notebooks[LA.Index.Id : "testnb2"],
+        notebooks[LA.Index.Id : "testnb3"],
     ]
     assert notebooks[LA.Index.Name : "Test Notebook 3"] == [
         notebooks[LA.Index.Id : "testnb2"],
@@ -500,82 +544,17 @@ def test_notebook__inserts_from_bottom(client: MockClient, notebook: LA.Notebook
     assert client.api_log[0] == "notebooks/notebook_info"
 
 
-def test_tree_traversal(notebook: LA.Notebook, notebook_tree: LA.NotebookTreeNode):
-    k = notebook_tree["dir-1"]
+def test_tree_traversal(notebook: LA.Notebook, notebook_tree: LA.NotebookDirectory):
+    k = notebook_tree[LA.Index.Id : "dir-1"]
     assert isinstance(k, LA.NotebookDirectory)
-    assert isinstance(k["page-1-1"], LA.NotebookPage)
+    assert isinstance(k[LA.Index.Id : "page-1-1"], LA.NotebookPage)
     assert k.parent == notebook
 
     k = notebook_tree[LA.Index.Name : "Test Folder B"][0]
     assert isinstance(k, LA.NotebookDirectory)
 
+    print(k.values())
+
     k = list(k.values())[0]
     assert isinstance(k, LA.NotebookDirectory)
     assert len(k) == 0
-
-
-# @pytest.mark.is_interactive
-# def test_integration_suite():
-#     api_url = getenv("api_url", "https://api.labarchives.com")
-#     access_key_id = getenv("access_key_id")
-#     access_password = getenv("access_password")
-
-#     if access_key_id is None or access_password is None:
-#         raise ValueError("access key id and access password must be set")
-
-#     client = LA.Client(api_url, access_key_id, access_password)
-
-#     user = client.default_authenticate()
-
-#     notebook = user.notebooks[LA.Index.Name : "DSST Test Notebook"][0]
-
-#     if len(notebook[LA.Index.Name : "LabArchives API Test"]) == 0:
-#         tests_dir = notebook.create_directory("LabArchives API Test")
-#     else:
-#         tests_dir = notebook[LA.Index.Name : "LabArchives API Test"][0]
-
-#     assert isinstance(tests_dir, LA.NotebookDirectory)
-
-#     test_id = str(randrange(0, 100_000_000))  # TODO datetime
-#     test_dir = tests_dir.create_directory(test_id)
-#     page = test_dir.create_page("Test Page A")
-
-#     test_page = test_dir[LA.Index.Name : "Test Page A"][0]
-#     assert isinstance(test_page, LA.NotebookPage)
-
-#     for entry in test_page.entries.values():
-#         print(entry.content)
-#     e1 = page.entries.create_entry("heading", "It's a Test!")  # noqa: F841
-#     e2 = page.entries.create_entry(  # noqa: F841
-#         "plain text entry", "This is some cool info for a test to have!"
-#     )
-#     e3 = page.entries.create_entry("heading", "time for some JSON")  # noqa: F841
-#     e4 = page.entries.create_entry(  # noqa: F841
-#         "plain text entry",
-#         dumps(
-#             {  # TODO replace this a note that Dustin would be interested in seeing
-#                 # attach a JSON file that looks like something that would be in an ELN
-#                 # fMRI group flavored
-#                 "test object": [1, 2, 3, 4],
-#                 "hooray": {"wow, what a test": ":)", "yep": True},
-#             },
-#             indent=4,
-#         ),
-#     )
-
-#     notebook._populated = False  # pyright: ignore[reportPrivateUsage]
-
-#     tests_dir = notebook[LA.Index.Name : "LabArchives API Test"][0]
-#     assert isinstance(tests_dir, LA.NotebookDirectory)
-
-#     test_dir = tests_dir[LA.Index.Name : test_id][0]
-#     assert isinstance(test_dir, LA.NotebookDirectory)
-
-#     test_page = test_dir[LA.Index.Name : "Test Page A"][0]
-#     assert isinstance(test_page, LA.NotebookPage)
-#     assert page.id == test_page.id
-
-#     for entry in test_page.entries.values():
-#         print(entry.content)
-#         if entry.content_type == "header":
-#             print("-----------------------------------")

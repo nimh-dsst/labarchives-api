@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, Literal, TypeVar, overload
-from typing_extensions import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, overload
 
 if TYPE_CHECKING:
-    from ...user import User
-    from ..text import HeaderEntry, TextEntry, PlainTextEntry
-    from ..widget import WidgetEntry
-    from ..attachment import AttachmentEntry
+    from labapi.user import User
+
+    from .attachment import AttachmentEntry
+    from .text import HeaderEntry, PlainTextEntry, TextEntry
+    from .widget import WidgetEntry
 
 
 T = TypeVar("T")
@@ -53,9 +53,9 @@ class Entry(ABC, Generic[T]):
 
     @staticmethod
     def get_entry(part_type: str, *args: Any) -> Entry[Any]:  # pyright: ignore[reportInvalidTypeVarUse]
-        from ..text import TextEntry, HeaderEntry, PlainTextEntry
-        from ..widget import WidgetEntry
-        from ..attachment import AttachmentEntry
+        from .attachment import AttachmentEntry
+        from .text import HeaderEntry, PlainTextEntry, TextEntry
+        from .widget import WidgetEntry
 
         match part_type.lower().strip():
             case "plain text entry" | "sketch entry":

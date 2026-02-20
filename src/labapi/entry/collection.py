@@ -6,17 +6,18 @@ from collections.abc import Sequence
 from datetime import datetime
 from io import BytesIO
 from json import dumps
-from typing import Any, Literal, Tuple, overload, override
-from typing_extensions import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal, overload, override
 
-from ..util.extract import extract_etree
+from labapi.util import extract_etree
+
 from .attachment import Attachment
-from .entries import Entry, HeaderEntry, TextEntry, PlainTextEntry, AttachmentEntry
+from .entries import AttachmentEntry, Entry, HeaderEntry, PlainTextEntry, TextEntry
 
 if TYPE_CHECKING:
-    from ..user import User
+    from labapi.tree import NotebookPage
+    from labapi.user import User
+
     from .json_data import JsonData
-    from ..tree.page import NotebookPage
 
 
 class Entries(Sequence["Entry[Any]"]):
@@ -50,7 +51,7 @@ class Entries(Sequence["Entry[Any]"]):
 
     # TODO delete entries
 
-    def create_json_entry(self, data: JsonData) -> Tuple[AttachmentEntry, TextEntry]:
+    def create_json_entry(self, data: JsonData) -> tuple[AttachmentEntry, TextEntry]:
         name = f"uploaded_data_{datetime.now().timestamp():.0f}.json"
 
         file_entry = self.create_entry(

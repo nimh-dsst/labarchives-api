@@ -1,35 +1,77 @@
-from __future__ import annotations
-from typing import Self, MutableSequence, Mapping, Sequence, Iterator, overload
-from abc import ABC, abstractmethod
-from ..util.index import Index, IdOrNameIndex, IdIndex, NameIndex
-from ..util.extract import extract_etree, to_bool
-from datetime import datetime
+"""Tree Mixins Module.
 
-from typing_extensions import TYPE_CHECKING
+This module defines abstract base classes and mixins that form the hierarchical
+structure of LabArchives notebooks, directories, and pages. These classes
+provide common functionalities and properties for tree nodes and containers.
+"""
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from collections.abc import Iterator, Mapping, MutableSequence, Sequence, ValuesView
+from datetime import datetime
+from typing import TYPE_CHECKING, Self, overload, override
+
+from labapi.util import IdIndex, IdOrNameIndex, Index, NameIndex, extract_etree, to_bool
 
 if TYPE_CHECKING:
+    from labapi.user import User
+
     from .directory import NotebookDirectory
     from .page import NotebookPage
-    from ..user import User
 
 
 class HasNameMixin:
+    """A mixin class that provides a `name` attribute for tree nodes.
+
+    Classes inheriting from this mixin are expected to have a `_name` instance
+    variable.
+    """
+
     def __init__(self, name: str):
+        """Initializes the HasNameMixin with a given name.
+
+        :param name: The name of the tree node.
+        :type name: str
+        """
         super().__init__()
         self._name = name
 
     @property
-    def name(self):
+    def name(self) -> str:
+        """The name of the tree node.
+
+        :returns: The name of the node.
+        :rtype: str
+        """
         return self._name
 
 
 class AbstractBaseTreeNode(ABC, HasNameMixin):
+    """Abstract base class for any node within the LabArchives tree structure.
+
+    This class provides fundamental properties and methods common to all
+    tree nodes, such as ID, name, references to parent and root, and the
+    associated user.
+
+    :param tree_id: The unique identifier for this node within the LabArchives tree.
+    :type tree_id: str
+    :param name: The display name of the node.
+    :type name: str
+    :param root: The root node of the tree (e.g., the Notebook).
+    :type root: AbstractTreeContainer
+    :param parent: The parent node of this node in the tree.
+    :type parent: AbstractTreeContainer
+    :param user: The authenticated user associated with this node.
+    :type user: labapi.user.User
+    """
+
     def __init__(
         self,
         tree_id: str,
         name: str,
-        root: "AbstractTreeContainer",
-        parent: "AbstractTreeContainer",
+        root: AbstractTreeContainer,
+        parent: AbstractTreeContainer,
         user: User,
     ):
         super().__init__(name)
@@ -39,29 +81,78 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         self._user = user
 
     @property
-    def root(self):
+    def root(self) -> AbstractTreeContainer:
+        """The root node of the tree (e.g., the Notebook).
+
+        :returns: The root tree container.
+        :rtype: AbstractTreeContainer
+        """
         return self._root
 
     @property
-    def parent(self):
+    def parent(self) -> AbstractTreeContainer:
+        """The parent node of this node in the tree.
+
+        :returns: The parent tree container.
+        :rtype: AbstractTreeContainer
+        """
         return self._parent
 
     @property
-    def user(self):
+    def user(self) -> User:
+        """The authenticated user associated with this node.
+
+        :returns: The user object.
+        :rtype: labapi.user.User
+        """
         return self._user
 
     @property
     @abstractmethod
     def id(self) -> str:
+        """The unique identifier of the node.
+
+        :returns: The node's ID.
+        :rtype: str
+        """
         return self.tree_id
 
     @property
-    def tree_id(self):
+    def tree_id(self) -> str:
+        """The unique identifier for this node within the LabArchives tree.
+
+        This is often the same as `id` but can be used to distinguish if needed.
+
+        :returns: The tree ID of the node.
+        :rtype: str
+        """
         return self._tree_id
-    
+
+    @abstractmethod
+    def is_dir(self) -> bool:
+        """Method to determine if the node is a directory.
+
+        :returns: True if the node is a directory, False otherwise.
+        :rtype: bool
+        """
+
+
 class AbstractTreeNode(AbstractBaseTreeNode):
+    """Abstract base class for a non-container node within the LabArchives tree structure.
+
+    This class extends :class:`AbstractBaseTreeNode` with functionalities for
+    modifying the node's name, copying, moving, and deleting the node.
+    """
+
     @HasNameMixin.name.setter
     def name(self, value: str):
+        """Sets the name of the tree node.
+
+        This operation updates the node's name in LabArchives via an API call.
+
+        :param value: The new name for the node.
+        :type value: str
+        """
         self.user.api_get(
             "tree_tools/update_node",
             nbid=self.root.id,
@@ -73,24 +164,48 @@ class AbstractTreeNode(AbstractBaseTreeNode):
 
     @abstractmethod
     def copy_to(self, destination: AbstractTreeContainer) -> Self:
-        pass
+        """Method to copy this node to a specified destination container.
+
+        :param destination: The target container to copy the node to.
+        :type destination: AbstractTreeContainer
+        :returns: A new instance of the copied node in the destination.
+        :rtype: Self
+        """
 
     def move_to(self, destination: AbstractTreeContainer) -> Self:
+        """Moves this node to a specified destination container.
+
+        This operation updates the node's parent in LabArchives via an API call
+        and updates the local tree structure.
+
+        :param destination: The target container to move the node to.
+        :type destination: AbstractTreeContainer
+        :returns: The instance of the moved node.
+        :rtype: Self
+        """
         self._user.api_get(
             "tree_tools/update_node",
             nbid=self.root.id,
             tree_id=self.tree_id,
             parent_tree_id=destination.tree_id,
         )
-        del self.parent.children[
+        del self.parent._children[  # pyright: ignore[reportPrivateUsage]
             self.parent.children.index(self)
         ]  # This removes current node from old parent in-place
         self._parent = destination
-        self.parent.children.append(self)  
+        self.parent._children.append(self)  # pyright: ignore[reportPrivateUsage]
         # This adds current node to new parent in-place
         return self
-    
+
     def delete(self) -> Self:
+        """Deletes this node by moving it to a special "API Deleted Items" directory.
+
+        If the "API Deleted Items" directory does not exist, it will be created.
+        The node's name will be updated to reflect its deletion time.
+
+        :returns: The instance of the deleted node.
+        :rtype: Self
+        """
         # TODO: should the creation of the deleted directory be singletoned by the Client
         # on its instantiation into a Notebook?
         api_deleted_items = self.root[Index.Name : "API Deleted Items"]
@@ -108,32 +223,65 @@ class AbstractTreeNode(AbstractBaseTreeNode):
 
         return self
 
+
 class AbstractTreeContainer(
     AbstractBaseTreeNode,
     Mapping[IdOrNameIndex, AbstractBaseTreeNode | Sequence[AbstractBaseTreeNode]],
 ):
+    """Abstract base class for a tree node that can contain other tree nodes (e.g., Notebooks, Directories).
+
+    This class extends :class:`AbstractBaseTreeNode` and implements `collections.abc.Mapping`
+    to allow access to its children by ID or name. It provides methods for managing
+    its children, such as creating new pages or directories.
+    """
+
     def __init__(
         self,
         tree_id: str,
         name: str,
-        root: "AbstractTreeContainer",
-        parent: "AbstractTreeContainer",
+        root: AbstractTreeContainer,
+        parent: AbstractTreeContainer,
         user: User,
     ):
+        """Initializes an AbstractTreeContainer.
+
+        :param tree_id: The unique identifier for this container within the LabArchives tree.
+        :type tree_id: str
+        :param name: The display name of the container.
+        :type name: str
+        :param root: The root node of the tree (e.g., the Notebook).
+        :type root: AbstractTreeContainer
+        :param parent: The parent node of this container in the tree.
+        :type parent: AbstractTreeContainer
+        :param user: The authenticated user associated with this container.
+        :type user: labapi.user.User
+        """
         super().__init__(tree_id, name, root, parent, user)
         self._children: MutableSequence[AbstractTreeNode] = []
 
     @property
-    def children(self):
+    def children(self) -> Sequence[AbstractTreeNode]:
+        """A sequence of the direct children nodes within this container.
+
+        :returns: A sequence of :class:`AbstractTreeNode` objects.
+        :rtype: Sequence[AbstractTreeNode]
+        """
         return self._children
 
     def _ensure_populated(self) -> None:
-        from . import page, directory
+        """Ensures that the children of this container have been loaded from the API.
+
+        If the children list is empty, it makes an API call to retrieve the
+        tree level and populates the `_children` list with :class:`NotebookPage`
+        or :class:`NotebookDirectory` objects.
+        """
+        from . import directory, page
+
         if len(self.children) == 0:
             xml_tree = self.user.api_get(
                 "tree_tools/get_tree_level",
                 nbid=self.root.id,
-                parent_tree_id=self.parent.tree_id,
+                parent_tree_id=self.tree_id,
             )
 
             nodes: list[AbstractTreeNode] = []
@@ -145,12 +293,6 @@ class AbstractTreeContainer(
                         "is-page": to_bool,
                         "tree-id": str,
                         "display-text": str,
-                        # "user-access": {
-                        #     "can-read": to_bool,
-                        #     "can-write": to_bool,
-                        #     "can-read-comments": to_bool,
-                        #     "can-write-comments": to_bool,
-                        # },
                     },
                 )  # TODO do we want to handle errors here?
 
@@ -159,10 +301,6 @@ class AbstractTreeContainer(
                     node["display-text"],
                     self.root,
                     self,
-                    # node["can-read-comments"],
-                    # node["can-write-comments"],
-                    # node["can-read"],
-                    # node["can-write"],
                     self._user,
                 )
 
@@ -181,20 +319,33 @@ class AbstractTreeContainer(
         return iter(node.name for node in self.children)
 
     @overload
-    def __getitem__(self, key: str) -> AbstractBaseTreeNode:
-        pass
+    def __getitem__(self, key: str) -> AbstractBaseTreeNode: ...
 
     @overload
-    def __getitem__(self, key: IdIndex) -> AbstractBaseTreeNode:
-        pass
+    def __getitem__(self, key: IdIndex) -> AbstractBaseTreeNode: ...
 
     @overload
-    def __getitem__(self, key: NameIndex) -> Sequence[AbstractBaseTreeNode]:
-        pass
+    def __getitem__(self, key: NameIndex) -> Sequence[AbstractBaseTreeNode]: ...
 
     def __getitem__(
         self, key: IdOrNameIndex
     ) -> AbstractBaseTreeNode | Sequence[AbstractBaseTreeNode]:
+        """Allows accessing child nodes by their ID or name.
+
+        - If `key` is a string, it attempts to find a single child with that name.
+        - If `key` is a slice with start of :class:`~labapi.util.index.IdIndex` (e.g., ``Index.Id:"some_id"``),
+          it returns the child with the matching ID.
+        - If `key` is a slice with start of :class:`~labapi.util.index.NameIndex` (e.g., ``Index.Name:"some_name"``),
+          it returns a list of all children with the matching name (as names are not unique).
+
+        This method ensures the children are populated before attempting to access them.
+
+        :param key: The index to use for accessing children.
+        :type key: IdOrNameIndex
+        :returns: A single :class:`AbstractBaseTreeNode` or a sequence of :class:`AbstractBaseTreeNode`.
+        :rtype: AbstractBaseTreeNode or Sequence[AbstractBaseTreeNode]
+        :raises KeyError: If a single node is requested by ID or unique name and not found.
+        """
         self._ensure_populated()
 
         match key:
@@ -210,13 +361,26 @@ class AbstractTreeContainer(
                     if node.name == key:
                         return node
                 raise KeyError(f'Node with name "{key}" not found')
-            
-    # TODO 
+
+    @override
+    def values(self) -> ValuesView[AbstractBaseTreeNode]:
+        return super().values()  # pyright: ignore[reportReturnType]
+
+    # TODO
     # FIXME
     # need an indexing by relative url thing
 
     def create_page(self, name: str) -> NotebookPage:
+        """Creates a new page within this container.
+
+        :param name: The name of the new page.
+        :type name: str
+        :returns: The newly created :class:`~labapi.tree.page.NotebookPage` object.
+        :rtype: NotebookPage
+        :raises RuntimeError: If the API call to create the page fails.
+        """
         from . import page
+
         # TODO take into account whether can write in this directory
         create_tree = self.user.api_get(
             "tree_tools/insert_node",
@@ -232,7 +396,16 @@ class AbstractTreeContainer(
         return new_page
 
     def create_directory(self, name: str) -> NotebookDirectory:
+        """Creates a new directory within this container.
+
+        :param name: The name of the new directory.
+        :type name: str
+        :returns: The newly created :class:`~labapi.tree.directory.NotebookDirectory` object.
+        :rtype: NotebookDirectory
+        :raises RuntimeError: If the API call to create the directory fails.
+        """
         from . import directory
+
         # TODO take into account whether can write in this directory
         create_tree = self._user.api_get(
             "tree_tools/insert_node",
@@ -243,9 +416,15 @@ class AbstractTreeContainer(
         )
         tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
 
-        new_dir = directory.NotebookDirectory(
-            tree_id, name, self, self.root, self.user
-        )
+        new_dir = directory.NotebookDirectory(tree_id, name, self, self.root, self.user)
         self._children.append(new_dir)
         return new_dir
 
+    @override
+    def is_dir(self) -> bool:
+        """Indicates that this node is a directory (container).
+
+        :returns: Always True.
+        :rtype: bool
+        """
+        return True
