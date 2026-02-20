@@ -1,23 +1,44 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "labapi"
 version = "0.1.0"
 description = "A Python client for the LabArchives API."
 readme = "README.md"
 requires-python = ">=3.13"
+license = { text = "MIT" }
+authors = [
+  { name = "Your Name", email = "your.email@example.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "cryptography>=46.0.3",
     "installed-browsers>=0.1.5",
     "lxml>=6.0.2",
-    "pre-commit>=4.5.1",
-    "pytest>=9.0.2",
-    "pytest-cov>=7.0.0",
-    "python-dotenv>=1.2.1",
     "requests>=2.32.5",
     "selenium>=4.39.0",
     "types-lxml>=2026.1.1",
+    "python-dotenv>=1.2.1",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
     "ruff>=0.14.11",
+    "pre-commit>=4.5.1",
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+testpaths = ["tests"]
+addopts = "--cov=labapi --cov-report=term-missing"

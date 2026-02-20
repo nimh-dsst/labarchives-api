@@ -31,18 +31,16 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
     @override
     def __getitem__(self, key: IdOrNameIndex) -> Notebook | list[Notebook]:
-        if isinstance(key, slice):
-            key_type = key.start
-            key_value = key.stop
-        else:
-            key_type = Index.Id
-            key_value = key
-
-        match key_type:
-            case Index.Id:
-                return self._notebooks_by_id[key_value]
-            case Index.Name:
-                return [k for k in self._notebooks if k.name == key_value]
+        match key:
+            case slice(start=Index.Id, stop=val):
+                return self._notebooks_by_id[val]
+            case slice(start=Index.Name, stop=val):
+                return [node for node in self._notebooks if node.name == val]
+            case str():
+                for node in self._notebooks:
+                    if node.name == key:
+                        return node
+                raise KeyError(f'Notebook with name "{key}" not found')
 
     @override
     def __iter__(self):

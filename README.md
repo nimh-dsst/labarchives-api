@@ -1,19 +1,32 @@
-# LabArchives API Client
+# LabArchives API Client (`labapi`)
 
-A Python client for the LabArchives API.
+A Python client library for the LabArchives API.
 
 ## Installation
 
+This project is configured as a standard Python package.
+
+### Using `uv` (Recommended)
+
+If you have `uv` installed:
+
 ```bash
-uv venv
 uv sync
-. .venv/bin/activate
+source .venv/bin/activate
+```
+
+### Using `pip`
+
+You can install the package in editable mode:
+
+```bash
+pip install -e .
 ```
 
 ## Usage
 
 ```python
-from labarchives_api import Client
+from labapi import Client
 
 # Replace with your actual base URL, AKID, and password
 base_url = "https://mynotebook.labarchives.com"
@@ -37,18 +50,24 @@ user = client.login_authcode(user_email, auth_code)
 notebooks = user.notebooks
 for notebook in notebooks:
     print(f"Notebook: {notebook.name} ({notebook.id})")
-
 ```
 
-## API Coverage
+## Running Tests
 
-This client is a work in progress and does not yet cover the entire LabArchives API. The following features are currently implemented:
+To run tests using `pytest`:
 
-*   Authentication
-*   Listing notebooks
-*   Creating notebooks
-*   Getting notebook information
-*   Getting the notebook tree
-*   Getting page entries
+```bash
+pytest
+```
 
-Contributions are welcome!
+Note: Integration tests require environment variables `LA_KEY` and `LA_EMAIL` to be set.
+
+## Project Structure
+
+*   `src/labapi/`: Source code package.
+*   `tests/`: Unit and integration tests.
+*   `pyproject.toml`: Project configuration and dependencies.
+
+## License
+
+MIT

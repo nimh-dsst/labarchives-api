@@ -6,7 +6,7 @@ import pytest
 from dotenv import load_dotenv
 from lxml import etree
 
-import main as LA
+import labapi as LA
 
 load_dotenv()
 

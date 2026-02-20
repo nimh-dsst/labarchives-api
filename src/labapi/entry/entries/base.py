@@ -8,9 +8,9 @@ from typing_extensions import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...user import User
-    from src.entry.entries.text import HeaderEntry, TextEntry, PlainTextEntry
-    from src.entry.entries.widget import WidgetEntry
-    from src.entry.entries.attachment import AttachmentEntry
+    from ..text import HeaderEntry, TextEntry, PlainTextEntry
+    from ..widget import WidgetEntry
+    from ..attachment import AttachmentEntry
 
 
 T = TypeVar("T")
@@ -53,9 +53,9 @@ class Entry(ABC, Generic[T]):
 
     @staticmethod
     def get_entry(part_type: str, *args: Any) -> Entry[Any]:  # pyright: ignore[reportInvalidTypeVarUse]
-        from src.entry.entries.text import TextEntry, HeaderEntry, PlainTextEntry
-        from src.entry.entries.widget import WidgetEntry
-        from src.entry.entries.attachment import AttachmentEntry
+        from ..text import TextEntry, HeaderEntry, PlainTextEntry
+        from ..widget import WidgetEntry
+        from ..attachment import AttachmentEntry
 
         match part_type.lower().strip():
             case "plain text entry" | "sketch entry":

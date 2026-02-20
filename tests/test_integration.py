@@ -7,8 +7,8 @@ from typing import Mapping
 import pytest
 from dotenv import load_dotenv
 
-import main as LA
-from main import Index
+import labapi as LA
+from labapi import Index
 
 type AnyDict = Mapping[str, AnyDict | str | bool | int | float]
 
@@ -148,7 +148,8 @@ def data_dir_structure(root_test_dir: LA.NotebookDirectory):
 
         # data.json (Raw experimental data remains a standard attachment)
         if not sess_1[Index.Name : "data.json"]:
-            with open("test_entry.json", "rb") as f:
+            from pathlib import Path
+            with open(Path(__file__).parent / "test_entry.json", "rb") as f:
                 data_att = LA.Attachment.from_file(f)
                 sess_1.create_page("data.json").entries.create_entry(
                     "attachment", data_att
