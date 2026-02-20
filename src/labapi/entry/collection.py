@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 from io import BytesIO
 from json import dumps
@@ -19,18 +19,26 @@ if TYPE_CHECKING:
     from ..tree.page import NotebookPage
 
 
-class Entries(Mapping[str, "Entry[Any]"]):
+class Entries(Sequence["Entry[Any]"]):
     """A collection of entries."""
 
     def __init__(self, entries: Sequence[Entry[Any]], user: User, page: NotebookPage):
         super().__init__()
         self._user = user
         self._page = page
-        self._entries = {entry.id: entry for entry in entries}
+        self._entries: list[Entry[Any]] = list(entries)
+
+    @overload
+    def __getitem__(self, index: int) -> Entry[Any]:
+        pass
+
+    @overload
+    def __getitem__(self, index: slice) -> Sequence[Entry[Any]]:
+        pass
 
     @override
-    def __getitem__(self, key: str):
-        return self._entries[key]
+    def __getitem__(self, index: int | slice) -> Entry[Any] | Sequence[Entry[Any]]:
+        return self._entries[index]
 
     @override
     def __iter__(self):
@@ -39,18 +47,6 @@ class Entries(Mapping[str, "Entry[Any]"]):
     @override
     def __len__(self):
         return len(self._entries)
-
-    @override
-    def values(self):
-        return self._entries.values()
-
-    @override
-    def items(self):
-        return self._entries.items()
-
-    @override
-    def keys(self):
-        return self._entries.keys()
 
     # TODO delete entries
 
@@ -136,7 +132,7 @@ class Entries(Mapping[str, "Entry[Any]"]):
             id = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
             entry = Entry.get_entry(entry_type, id, data, self._user)
 
-        self._entries[id] = entry
+        self._entries.append(entry)
         return entry  # pyright: ignore[reportReturnType]
         # XXX the python typechecker here does not understand that entry_type is constrained
         #     and so picks a nonsense overload which tries to return too wide of a type

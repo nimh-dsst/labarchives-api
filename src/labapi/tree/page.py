@@ -70,7 +70,7 @@ class NotebookPage(AbstractTreeNode):
     def copy_to(self, destination: AbstractTreeContainer) -> NotebookPage:
         new_page = destination.create_page(self.name)
 
-        for entry in self.entries.values():
+        for entry in self.entries:
             # TODO might need to make a specific case for copying Attachments because LA freaks out and renames shit
             new_page.entries.create_entry(  # pyright: ignore[reportCallIssue]
                 # TODO add in the other create_entries so this doesn't explode

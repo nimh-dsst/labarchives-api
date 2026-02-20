@@ -211,7 +211,7 @@ def test_add_session_notes(test_env):
     # Add the plain text entry
     notes_page.entries.create_entry("plain text entry", "fell asleep during test")
 
-    assert any("fell asleep" in str(e.content) for e in notes_page.entries.values())
+    assert any("fell asleep" in str(e.content) for e in notes_page.entries)
 
 
 def test_move_and_merge_sessions(test_env):
@@ -282,7 +282,7 @@ def test_fix_metadata(test_env):
     rich_text_entry = None
     attachment_entry = None
 
-    for entry in meta_page.entries.values():
+    for entry in meta_page.entries:
         if isinstance(entry, LA.TextEntry):
             rich_text_entry = entry
         elif isinstance(entry, LA.AttachmentEntry):
