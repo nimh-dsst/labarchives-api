@@ -10,15 +10,15 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, MutableSequence, Sequence, ValuesView
 from datetime import datetime
-from typing import TYPE_CHECKING, Self, overload, override
+from typing import TYPE_CHECKING, Self, overload, override, Literal
 
 from labapi.util import IdIndex, IdOrNameIndex, Index, NameIndex, extract_etree, to_bool
 
 if TYPE_CHECKING:
     from labapi.user import User
 
-    from .directory import NotebookDirectory
-    from .page import NotebookPage
+    from labapi.tree.directory import NotebookDirectory
+    from labapi.tree.page import NotebookPage
 
 
 class HasNameMixin:
@@ -366,10 +366,6 @@ class AbstractTreeContainer(
     def values(self) -> ValuesView[AbstractBaseTreeNode]:
         return super().values()  # pyright: ignore[reportReturnType]
 
-    # TODO
-    # FIXME
-    # need an indexing by relative url thing
-
     def create_page(self, name: str) -> NotebookPage:
         """Creates a new page within this container.
 
@@ -420,8 +416,46 @@ class AbstractTreeContainer(
         self._children.append(new_dir)
         return new_dir
 
+    def traverse(self, path: str) -> AbstractBaseTreeNode:
+        """Traverses the notebook's tree structure to find a node by its path.
+
+        The path segments should be separated by '/'. Each segment is treated
+        as a name to look up in the current container.
+
+        :param path: The slash-separated path to the desired node (e.g., "My Folder/My Page").
+        :type path: str
+        :returns: The :class:`AbstractTreeContainer` or :class:`AbstractTreeNode` found at the specified path.
+        :rtype: AbstractTreeContainer or AbstractTreeNode
+        :raises RuntimeError: If a segment in the path does not lead to a directory.
+        :raises KeyError: If a node at any segment of the path is not found.
+        """
+        path = path.strip()
+
+        rooted = False
+        curr = self
+        if path.startswith("/"):
+            rooted = True
+            curr = self.root
+
+        segments = path.strip().lstrip("/.").split("/")
+
+        parsed_segments: list[str] = []
+
+        for segment in segments:
+            parsed_segments.append(segment)
+            if segment == "..":
+                curr = curr.parent
+            elif isinstance(curr, AbstractTreeContainer):
+                curr = curr[segment]
+            else:
+                raise RuntimeError(
+                    f"{'/' if rooted else './'}{'/'.join(parsed_segments)} is not a directory"
+                )
+
+        return curr
+
     @override
-    def is_dir(self) -> bool:
+    def is_dir(self) -> Literal[True]:
         """Indicates that this node is a directory (container).
 
         :returns: Always True.

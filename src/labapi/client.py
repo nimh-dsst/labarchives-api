@@ -6,32 +6,30 @@ handling authentication, request signing, and various API call methods.
 """
 
 from __future__ import annotations
+
+import ssl
+from base64 import b64encode
+from datetime import datetime, timedelta
+from http.server import SimpleHTTPRequestHandler
+from io import BufferedIOBase
 from operator import itemgetter
+from os import getenv
+from socketserver import TCPServer
 from typing import Any, Generator, Mapping, Sequence, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+import selenium.webdriver as webdriver
 from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.hazmat.primitives.hmac import HMAC
-from requests import Response
+from dotenv import load_dotenv
+from lxml.etree import Element, fromstring
+from requests import Response, Session
 from requests import codes as status_codes
 from requests.adapters import HTTPAdapter
-from requests import Session
-import ssl
 
-from .user import User
-from .util import extract_etree, to_bool, NotebookInit
-
-from io import BufferedIOBase
-
-from lxml.etree import Element, fromstring
-from base64 import b64encode
-from datetime import datetime, timedelta
-from socketserver import TCPServer
-from http.server import SimpleHTTPRequestHandler
-
-import selenium.webdriver as webdriver
-
-from .browser import default_browser
+from labapi.browser import default_browser
+from labapi.user import User
+from labapi.util import NotebookInit, extract_etree, to_bool
 
 context = ssl.create_default_context()
 
@@ -69,22 +67,19 @@ class Client:
         - ``ACCESS_KEYID``: The Access Key ID.
         - ``ACCESS_PWD``: The Access Key Password.
 
-        :param base_url: The base URL of the LabArchives API (e.g., "https://mynotebook.labarchives.com").
+        :param base_url: The base URL of the LabArchives API (e.g., "https://api.labarchives.com").
                          If None, loaded from the ``API_URL`` environment variable.
         :type base_url: str or None
         :param akid: The Access Key ID for API authentication.
                      If None, loaded from the ``ACCESS_KEYID`` environment variable.
         :type akid: str or None
-        :param akpass: The Access Key Password for HMAC-SHA512 signing.
+        :param akpass: The Access Key Password for API authentication.
                        If None, loaded from the ``ACCESS_PWD`` environment variable.
         :type akpass: bytes, str, or None
         """
         super().__init__()
 
         if base_url is None or akid is None or akpass is None:
-            from dotenv import load_dotenv
-            from os import getenv
-
             load_dotenv()
 
             if base_url is None:
@@ -111,7 +106,7 @@ class Client:
         """
         Generates a URL for authenticating with the LabArchives API.
 
-        This URL is used to initiate the OAuth 2.0 authorization code flow,
+        This URL is used to initiate the OAuth-like authorization code flow,
         redirecting the user to LabArchives to grant permissions.
 
         :param redirect_url: The URL to which LabArchives will redirect the user

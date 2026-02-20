@@ -12,13 +12,13 @@ from typing import TYPE_CHECKING, override
 
 from labapi.util import extract_etree, to_bool
 
-from .mixins import AbstractBaseTreeNode, AbstractTreeContainer, HasNameMixin
+from labapi.tree.mixins import AbstractTreeContainer, HasNameMixin
 
 if TYPE_CHECKING:
     from labapi.user import User
     from labapi.util import NotebookInit
 
-    from .collection import Notebooks
+    from labapi.tree.collection import Notebooks
 
 
 class Notebook(AbstractTreeContainer):
@@ -96,30 +96,3 @@ class Notebook(AbstractTreeContainer):
             )["add-entry-to-page-top"]
 
         return self._inserts_from_bottom
-
-    def traverse(self, path: str) -> AbstractBaseTreeNode:
-        """Traverses the notebook's tree structure to find a node by its path.
-
-        The path segments should be separated by '/'. Each segment is treated
-        as a name to look up in the current container.
-
-        :param path: The slash-separated path to the desired node (e.g., "My Folder/My Page").
-        :type path: str
-        :returns: The :class:`AbstractTreeContainer` or :class:`AbstractTreeNode` found at the specified path.
-        :rtype: AbstractTreeContainer or AbstractTreeNode
-        :raises RuntimeError: If a segment in the path does not lead to a directory.
-        :raises KeyError: If a node at any segment of the path is not found.
-        """
-        segments = path.split("/")
-
-        curr = self
-        parsed_segments: list[str] = []
-
-        for segment in segments:
-            parsed_segments.append(segment)
-            if isinstance(curr, AbstractTreeContainer):
-                curr = curr[segment]
-            else:
-                raise RuntimeError(f"{'/'.join(parsed_segments)} is not a directory")
-
-        return curr

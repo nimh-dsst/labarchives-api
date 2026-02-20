@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import override
 
-from .mixins import AbstractTreeContainer, AbstractTreeNode
+from labapi.tree.mixins import AbstractTreeContainer, AbstractTreeNode
 
 
 class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):
@@ -49,12 +49,3 @@ class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):
         :rtype: str
         """
         return super().id
-
-    @override
-    def is_dir(self) -> bool:
-        """Indicates that this node is a directory.
-
-        :returns: Always True.
-        :rtype: bool
-        """
-        return True

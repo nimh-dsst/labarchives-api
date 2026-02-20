@@ -1,10 +1,10 @@
 # LabArchives API Client credentials
-API_URL=https://api.labarchives.com
-ACCESS_KEYID=your_access_key_id_here
-ACCESS_PWD=your_access_password_here
+API_URL="https://api.labarchives.com"
+ACCESS_KEYID="your_access_key_id_here"
+ACCESS_PWD="your_access_password_here"
 
 # Integration test settings
-AUTH_EMAIL=your_email@example.com
-AUTH_KEY=your_auth_key_here
-AUTH_INTERACTIVE=false
-NOTEBOOK=My Test Notebook
+AUTH_EMAIL="your_email@example.com"
+AUTH_KEY="your_auth_key_here"
+AUTH_INTERACTIVE="false"
+NOTEBOOK="My Test Notebook"

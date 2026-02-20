@@ -8,12 +8,12 @@ entries contained within the page.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, override, Literal
 
 from labapi.entry import Attachment, Entries, Entry
 from labapi.util import extract_etree
 
-from .mixins import AbstractTreeContainer, AbstractTreeNode
+from labapi.tree.mixins import AbstractTreeContainer, AbstractTreeNode
 
 if TYPE_CHECKING:
     from labapi.user import User
@@ -136,7 +136,7 @@ class NotebookPage(AbstractTreeNode):
         return new_page
 
     @override
-    def is_dir(self) -> bool:
+    def is_dir(self) -> Literal[False]:
         """Indicates that this node is not a directory.
 
         :returns: Always False.

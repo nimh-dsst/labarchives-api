@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, overload
 if TYPE_CHECKING:
     from labapi.user import User
 
-    from .attachment import AttachmentEntry
-    from .text import HeaderEntry, PlainTextEntry, TextEntry
-    from .widget import WidgetEntry
+    from labapi.entry.entries.attachment import AttachmentEntry
+    from labapi.entry.entries.text import HeaderEntry, PlainTextEntry, TextEntry
+    from labapi.entry.entries.widget import WidgetEntry
 
 
 T = TypeVar("T")

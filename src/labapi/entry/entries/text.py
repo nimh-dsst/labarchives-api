@@ -10,7 +10,7 @@ from __future__ import annotations
 from abc import ABC
 from typing import TYPE_CHECKING, override
 
-from .base import Entry
+from labapi.entry.entries.base import Entry
 
 if TYPE_CHECKING:
     from labapi.user import User

@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Literal, overload, override
 
 from labapi.util import IdOrNameIndex, Index, NotebookInit, extract_etree
 
-from .notebook import Notebook
+from labapi.tree.notebook import Notebook
 
 if TYPE_CHECKING:
     from labapi.user import User

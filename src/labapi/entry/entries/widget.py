@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import override
 
-from .text import BaseTextEntry
+from labapi.entry.entries.text import BaseTextEntry
 
 
 class WidgetEntry(BaseTextEntry):

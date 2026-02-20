@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from labapi.util import NotebookInit, extract_etree
 
-    from .client import Client
+    from labapi.client import Client
 
 
 class User:
