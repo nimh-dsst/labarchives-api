@@ -1,18 +1,16 @@
 from __future__ import annotations
 from typing import Self, MutableSequence, Mapping, Sequence, Iterator, overload
 from abc import ABC, abstractmethod
-from util.index import Index, IdOrNameIndex, IdIndex, NameIndex
-from util.extract import extract_etree, to_bool
-import tree.page
-import tree.directory
+from ..util.index import Index, IdOrNameIndex, IdIndex, NameIndex
+from ..util.extract import extract_etree, to_bool
 from datetime import datetime
 
 from typing_extensions import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from tree.directory import NotebookDirectory
-    from tree.page import NotebookPage
-    from user import User
+    from .directory import NotebookDirectory
+    from .page import NotebookPage
+    from ..user import User
 
 
 class HasNameMixin:
@@ -130,6 +128,7 @@ class AbstractTreeContainer(
         return self._children
 
     def _ensure_populated(self) -> None:
+        from . import page, directory
         if len(self.children) == 0:
             xml_tree = self.user.api_get(
                 "tree_tools/get_tree_level",
@@ -168,9 +167,9 @@ class AbstractTreeContainer(
                 )
 
                 if node["is-page"]:
-                    nodes.append(tree.page.NotebookPage(*args))
+                    nodes.append(page.NotebookPage(*args))
                 else:
-                    nodes.append(tree.directory.NotebookDirectory(*args))
+                    nodes.append(directory.NotebookDirectory(*args))
 
             self._children = nodes
 
@@ -217,6 +216,7 @@ class AbstractTreeContainer(
     # need an indexing by relative url thing
 
     def create_page(self, name: str) -> NotebookPage:
+        from . import page
         # TODO take into account whether can write in this directory
         create_tree = self.user.api_get(
             "tree_tools/insert_node",
@@ -227,11 +227,12 @@ class AbstractTreeContainer(
         )
         tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
 
-        new_page = tree.page.NotebookPage(tree_id, name, self, self.root, self.user)
+        new_page = page.NotebookPage(tree_id, name, self, self.root, self.user)
         self._children.append(new_page)
         return new_page
 
     def create_directory(self, name: str) -> NotebookDirectory:
+        from . import directory
         # TODO take into account whether can write in this directory
         create_tree = self._user.api_get(
             "tree_tools/insert_node",
@@ -242,7 +243,7 @@ class AbstractTreeContainer(
         )
         tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
 
-        new_dir = tree.directory.NotebookDirectory(
+        new_dir = directory.NotebookDirectory(
             tree_id, name, self, self.root, self.user
         )
         self._children.append(new_dir)

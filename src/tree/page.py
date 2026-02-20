@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 from typing import Any, override, TYPE_CHECKING
-from src.tree.mixins import AbstractTreeContainer, AbstractTreeNode
-from src.util.extract import extract_etree as extract_etree
-from src.entry.collection import Entries
-from src.entry.entries import Entry
-from src.entry.attachment import Attachment
+from .mixins import AbstractTreeContainer, AbstractTreeNode
+from ..util.extract import extract_etree
+from ..entry import Entries, Entry, Attachment
 
 if TYPE_CHECKING:
-    from src.user import User
+    from ..user import User
 
 class NotebookPage(AbstractTreeNode):
     def __init__(

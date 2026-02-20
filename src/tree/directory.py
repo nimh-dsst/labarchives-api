@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import override
-from tree.mixins import AbstractTreeContainer, AbstractTreeNode
+from .mixins import AbstractTreeContainer, AbstractTreeNode
 
 
 class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):

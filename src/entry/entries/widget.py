@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from src.entry.entries.text import BaseTextEntry
+from .text import BaseTextEntry
 
 
 class WidgetEntry(BaseTextEntry):

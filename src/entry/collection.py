@@ -9,14 +9,14 @@ from json import dumps
 from typing import Any, Literal, Tuple, overload, override
 from typing_extensions import TYPE_CHECKING
 
-from src.util.extract import extract_etree
-from src.entry.attachment import Attachment
-from src.entry.entries import Entry, HeaderEntry, TextEntry, PlainTextEntry, AttachmentEntry
+from ..util.extract import extract_etree
+from .attachment import Attachment
+from .entries import Entry, HeaderEntry, TextEntry, PlainTextEntry, AttachmentEntry
 
 if TYPE_CHECKING:
-    from src.user import User
-    from src.entry.json_data import JsonData
-    from src.tree.page import NotebookPage
+    from ..user import User
+    from .json_data import JsonData
+    from ..tree.page import NotebookPage
 
 
 class Entries(Mapping[str, "Entry[Any]"]):

@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import Mapping, Sequence, overload, override, Literal
-from tree.notebook import Notebook
-from util.index import IdOrNameIndex, Index
-from util.notebookinit import NotebookInit
-from util.extract import extract_etree
-from user import User
+from .notebook import Notebook
+from ..util.index import IdOrNameIndex, Index
+from ..util.notebookinit import NotebookInit
+from ..util.extract import extract_etree
+from ..user import User
 
 class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
     """A collection of notebooks."""

@@ -1,13 +1,13 @@
 from __future__ import annotations
 from typing import override
-from tree.mixins import AbstractTreeContainer, HasNameMixin
-from user import User
-from util.notebookinit import NotebookInit
-from util.extract import extract_etree, to_bool
+from .mixins import AbstractTreeContainer, HasNameMixin
+from ..user import User
+from ..util.notebookinit import NotebookInit
+from ..util.extract import extract_etree, to_bool
 from typing_extensions import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.tree.collection import Notebooks
+    from .collection import Notebooks
 
 
 class Notebook(AbstractTreeContainer):

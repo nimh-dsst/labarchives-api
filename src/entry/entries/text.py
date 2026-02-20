@@ -6,10 +6,10 @@ from abc import ABC
 from typing import TYPE_CHECKING
 from typing_extensions import override
 
-from src.entry.entries.base import Entry
+from .base import Entry
 
 if TYPE_CHECKING:
-    from src.user import User
+    from ...user import User
 
 
 class BaseTextEntry(Entry[str], ABC):

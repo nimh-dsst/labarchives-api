@@ -7,7 +7,7 @@ from typing import Any, Generic, Literal, TypeVar, overload
 from typing_extensions import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.user import User
+    from ...user import User
     from src.entry.entries.text import HeaderEntry, TextEntry, PlainTextEntry
     from src.entry.entries.widget import WidgetEntry
     from src.entry.entries.attachment import AttachmentEntry

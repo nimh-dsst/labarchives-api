@@ -8,9 +8,9 @@ from cryptography.hazmat.primitives.hmac import HMAC
 from requests import Response, get, post
 from requests import codes as status_codes
 
-from user import User
-from util.extract import extract_etree, to_bool
-from util.notebookinit import NotebookInit
+from .user import User
+from .util.extract import extract_etree, to_bool
+from .util.notebookinit import NotebookInit
 
 from io import BufferedIOBase
 
@@ -22,7 +22,7 @@ from http.server import SimpleHTTPRequestHandler
 
 import selenium.webdriver as webdriver
 
-from browser import default_browser
+from .browser import default_browser
 
 
 class Client:

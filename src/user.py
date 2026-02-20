@@ -1,12 +1,13 @@
 from __future__ import annotations
 from io import BufferedIOBase
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping, Sequence, TYPE_CHECKING
 from warnings import deprecated
 
-from client import Client
-from util.notebookinit import NotebookInit
+if TYPE_CHECKING:
+    from .client import Client
+from .util.notebookinit import NotebookInit
 
-from util.extract import extract_etree
+from .util.extract import extract_etree
 
 
 class User:

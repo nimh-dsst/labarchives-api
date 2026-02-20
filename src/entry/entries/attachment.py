@@ -8,11 +8,11 @@ from tempfile import TemporaryFile
 from typing import TYPE_CHECKING
 from typing_extensions import override
 
-from src.entry.entries.base import Entry
-from src.entry.attachment import Attachment
+from .base import Entry
+from ..attachment import Attachment
 
 if TYPE_CHECKING:
-    from src.user import User
+    from ...user import User
 
 
 class AttachmentEntry(Entry[Attachment]):
