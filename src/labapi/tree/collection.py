@@ -107,8 +107,8 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
             {"nbid": str},
         )["nbid"]
 
-        # TODO check that the notebook with same id does not already exist
-        #      why though? that should never happen unless their api is broken
+        if nbid in self._notebooks_by_id:
+            raise RuntimeError(f"API returned an existing notebook ID: {nbid}")
 
         new_notebook = Notebook(NotebookInit(nbid, name, False), self._user, self)
 

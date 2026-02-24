@@ -478,7 +478,7 @@ def test_user__get_max_upload_size(client: MockClient, user: LA.User):
 def test_notebooks_initialize(notebooks: LA.Notebooks):
     assert len(notebooks) == 3, "Did not Initialize right number of notebooks"
     for i in notebooks:
-        assert i in ("testnb1", "testnb2", "testnb3")
+        assert i in ("Test Notebook 1", "Test Notebook 3")
 
 
 def test_notebooks__indexing(notebooks: LA.Notebooks):

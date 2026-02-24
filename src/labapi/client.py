@@ -6,12 +6,7 @@ handling authentication, request signing, and various API call methods.
 """
 
 from __future__ import annotations
-
-import ssl
-from base64 import b64encode
-from datetime import datetime, timedelta
-from http.server import SimpleHTTPRequestHandler
-from io import BufferedIOBase
+import warnings
 from operator import itemgetter
 from os import getenv
 from socketserver import TCPServer
@@ -157,11 +152,13 @@ class Client:
         notebooks: list[NotebookInit] = []
 
         for notebook in uid_tree.iterfind(".//notebook"):
-            notebook_id, notebook_name, is_default = itemgetter(
-                "id", "name", "is-default"
-            )(extract_etree(notebook, {"id": str, "name": str, "is-default": to_bool}))
-
-            # TODO error or warning when id/name are failed?
+            try:
+                notebook_id, notebook_name, is_default = itemgetter(
+                    "id", "name", "is-default"
+                )(extract_etree(notebook, {"id": str, "name": str, "is-default": to_bool}))
+            except ValueError as e:
+                warnings.warn(f"Failed to parse notebook entry: {e}")
+                continue
 
             notebooks.append(NotebookInit(notebook_id, notebook_name, is_default))
 
@@ -179,8 +176,9 @@ class Client:
         :raises RuntimeError: If the HTTP status code is not 200 (OK).
         """
         if response.status_code != status_codes.ok:
-            raise RuntimeError(  # TODO make this more useful
-                f"API request failed with status code {response.status_code}: {response.text}"
+            raise RuntimeError(
+                f"API request failed with status code {response.status_code} "
+                f"for URL {response.url}: {response.text}"
             )
             # See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
 

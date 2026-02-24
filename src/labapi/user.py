@@ -11,12 +11,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from labapi.tree.collection import Notebooks
+from labapi.util import extract_etree
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
     from io import BufferedIOBase
 
-    from labapi.util import NotebookInit, extract_etree
+    from labapi.util import NotebookInit
 
     from labapi.client import Client
 
@@ -132,7 +133,7 @@ class User:
             raise RuntimeError("User session cannot be automatically refreshed")
 
         uid_tree = self.api_get("users/user_info_via_id", authenticated=user_requested)
-        self._id = uid_tree.findtext(".//users/id")  # pyright: ignore[reportAttributeAccessIssue] # TODO extract etree
+        self._id = extract_etree(uid_tree, {"id": str})["id"]
         # XXX should we refresh ability to auto_login and notebooks here?
 
         # TODO fill in rest of function
