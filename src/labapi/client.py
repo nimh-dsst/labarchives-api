@@ -22,9 +22,18 @@ from requests import Response, Session
 from requests import codes as status_codes
 from requests.adapters import HTTPAdapter
 
-from labapi.browser import default_browser
-from labapi.user import User
-from labapi.util import NotebookInit, extract_etree, to_bool
+from .user import User
+from .util import extract_etree, to_bool, NotebookInit
+
+from io import BufferedIOBase
+
+from lxml.etree import Element, fromstring
+from base64 import b64encode
+from datetime import datetime, timedelta
+from socketserver import TCPServer
+from http.server import SimpleHTTPRequestHandler
+
+from .browser import default_browser
 
 context = ssl.create_default_context()
 
@@ -356,48 +365,62 @@ class Client:
         is detected, it falls back to printing the authentication URL to the terminal,
         requiring the user to manually open it.
 
+        .. note::
+           This method requires the ``selenium`` package for automatic browser control.
+           Install it with: ``pip install selenium``
+
         :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
         :rtype: labapi.user.User
+        :raises ImportError: If selenium is not installed.
         :raises RuntimeError: If authentication fails.
         """
         auth_url = self.generate_auth_url("http://localhost:8089/")
 
         driver = None
         options = None
+        try:
+            match default_browser:
+                case "chrome":
+                    import selenium.webdriver as webdriver
+                    options = webdriver.ChromeOptions()
+                    driver = webdriver.Chrome(options=options)
+                    print("Opening Chrome for authentication...")
+                case "firefox":
+                    import selenium.webdriver as webdriver
+                    options = webdriver.FirefoxOptions()
+                    driver = webdriver.Firefox(options=options)
+                    print("Opening Firefox for authentication...")
+                case "edge":
+                    import selenium.webdriver as webdriver
+                    options = webdriver.EdgeOptions()
+                    driver = webdriver.Edge(options=options)
+                    print("Opening Edge for authentication...")
+                case "terminal":
+                    print("Open authentication URL in your browser:")
+                    print(auth_url)
+                case _:
+                    print(
+                        "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
+                    )
+                    print("Open authentication URL in your browser:")
+                    print(auth_url)
 
-        match default_browser:
-            case "chrome":
-                options = webdriver.ChromeOptions()
-                driver = webdriver.Chrome(options=options)
-                print("Opening Chrome for authentication...")
-            case "firefox":
-                options = webdriver.FirefoxOptions()
-                driver = webdriver.Firefox(options=options)
-                print("Opening Firefox for authentication...")
-            case "edge":
-                options = webdriver.EdgeOptions()
-                driver = webdriver.Edge(options=options)
-                print("Opening Edge for authentication...")
-            case "terminal":
-                print("Open authentication URL in your browser:")
-                print(auth_url)
-            case _:
-                print(
-                    "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
-                )
-                print("Open authentication URL in your browser:")
-                print(auth_url)
+            if driver is not None:
+                driver.get(auth_url)
+                print("Please complete the authentication in the opened browser window...")
 
-        if driver is not None:
-            driver.get(auth_url)
-            print("Please complete the authentication in the opened browser window...")
+            user = self.collect_auth_response()
 
-        user = self.collect_auth_response()
+            if driver is not None:
+                driver.quit()
 
-        if driver is not None:
-            driver.quit()
-
-        return user
+            return user
+        except ImportError as e:
+            raise ImportError(
+                "Selenium is required for automatic browser-based authentication. "
+                "Install it with: pip install selenium\n"
+                "Alternatively, use manual authentication with LA_AUTH_BROWSER=terminal."
+            ) from e
 
     def collect_auth_response(self) -> User:
         """

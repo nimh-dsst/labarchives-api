@@ -44,6 +44,10 @@ try:
                     default_browser = choice
                     break
 
+        # TODO the way this is written we'll never *NOT* have a compatible 'browser'
+        # because `terminal` is registered in default_authenticate as a real value
+        # the warning for No compatible browser never triggers
+
         if default_browser == "terminal":
             if len(browsers) > 0:
                 browser_name = browsers[0]["name"].lower()
@@ -58,3 +62,4 @@ try:
                         break
 except ImportError:
     default_browser = "terminal"
+    # TODO give warning when this is accessed without installed browsers
