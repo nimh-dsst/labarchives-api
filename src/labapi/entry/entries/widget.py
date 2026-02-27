@@ -25,6 +25,5 @@ class WidgetEntry(BaseTextEntry):
         """The content type identifier for a widget entry.
 
         :returns: The string "widget entry".
-        :rtype: str
         """
         return "widget entry"

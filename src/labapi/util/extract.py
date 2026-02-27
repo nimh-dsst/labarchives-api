@@ -33,27 +33,10 @@ def _flatten_dict(
     extractor, separated by '/'.
 
     :param val: The nested dictionary to flatten.
-    :type val: EtreeExtractorDict
     :param prefix: The current prefix for keys during recursion. Defaults to an empty string.
-    :type prefix: str
     :returns: A flattened dictionary where keys are paths and values are callable extractors.
-    :rtype: dict[str, Callable[[Any], Any]]
     :raises ValueError: If an empty string is used as a key in the input dictionary.
     """
-    items: dict[str, Callable[[Any], Any]] = {}
-
-    for _key, value in val.items():
-        if len(_key) == 0:
-            raise ValueError("Key cannot be empty string")
-
-        key = f"{prefix}/{_key}"
-
-        if callable(value):
-            items[key] = value
-        else:
-            items.update(_flatten_dict(value, key))
-
-    return items
     items: dict[str, Callable[[Any], Any]] = {}
 
     for _key, value in val.items():
@@ -76,9 +59,7 @@ def to_bool(s: str) -> bool:
     Recognizes "true" (case-insensitive) as True and "false" (case-insensitive) as False.
 
     :param s: The string to convert.
-    :type s: str
     :returns: The boolean representation of the string.
-    :rtype: bool
     :raises ValueError: If the string cannot be converted to a boolean.
     """
     match s.lower():
@@ -97,13 +78,10 @@ def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]
     and applies callable extractors to the text content of the found elements.
 
     :param _etree: The `lxml.etree.Element` from which to extract data.
-    :type _etree: lxml.etree.Element
     :param format: A dictionary defining the structure and extraction logic.
                    Keys are XML element tags (or paths), and values are either
                    nested `EtreeExtractorDict` or callable functions to process the text.
-    :type format: EtreeExtractorDict
     :returns: A dictionary containing the extracted and processed data.
-    :rtype: dict[str, Any]
     :raises ValueError: If an element specified in the format is not found in the etree,
                         or if a callable extractor fails to process a value.
     """

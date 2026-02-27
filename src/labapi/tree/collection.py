@@ -31,9 +31,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
         :param notebooks: A sequence of :class:`~labapi.util.notebookinit.NotebookInit` objects
                           containing initial data for the notebooks.
-        :type notebooks: Sequence[labapi.util.notebookinit.NotebookInit]
         :param user: The authenticated :class:`~labapi.user.User` associated with these notebooks.
-        :type user: labapi.user.User
         """
         super().__init__()
         self._user = user
@@ -63,9 +61,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
         :param key: The index to use for accessing notebooks. Can be a string (for name lookup),
                     or a slice with :attr:`~labapi.util.index.Index.Id` or :attr:`~labapi.util.index.Index.Name`.
-        :type key: IdOrNameIndex
         :returns: A single :class:`~labapi.tree.notebook.Notebook` object or a list of them.
-        :rtype: Notebook or list[Notebook]
         :raises KeyError: If a single notebook is requested by ID or unique name and not found.
         """
         match key:
@@ -95,9 +91,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
         """Creates a new notebook in LabArchives.
 
         :param name: The name of the new notebook.
-        :type name: str
         :returns: The newly created :class:`~labapi.tree.notebook.Notebook` object.
-        :rtype: Notebook
         :raises RuntimeError: If the API call to create the notebook fails.
         """
         nbid = extract_etree(

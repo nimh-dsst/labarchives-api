@@ -29,9 +29,7 @@ class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):
         This operation recursively copies all child directories and pages.
 
         :param destination: The target container to copy the directory to.
-        :type destination: AbstractTreeContainer
         :returns: A new instance of the copied directory in the destination.
-        :rtype: NotebookDirectory
         """
         new_dir = destination.create_directory(self.name)
 
@@ -46,6 +44,13 @@ class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):
         """The unique ID of the directory.
 
         :returns: The directory's ID.
-        :rtype: str
         """
         return super().id
+
+    @override
+    def is_dir(self) -> bool:
+        """Indicates that this node is a directory.
+
+        :returns: Always True.
+        """
+        return True

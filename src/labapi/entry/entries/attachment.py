@@ -30,11 +30,8 @@ class AttachmentEntry(Entry[Attachment]):
         """Initializes an AttachmentEntry object.
 
         :param eid: The unique ID of the entry.
-        :type eid: str
         :param caption: The caption associated with the attachment.
-        :type caption: str
         :param user: The authenticated user.
-        :type user: labapi.user.User
         """
         super().__init__(eid, user)
         self._caption = caption
@@ -48,7 +45,6 @@ class AttachmentEntry(Entry[Attachment]):
         """The content type identifier for an attachment entry.
 
         :returns: The string "Attachment".
-        :rtype: str
         """
         return "Attachment"
 
@@ -61,9 +57,7 @@ class AttachmentEntry(Entry[Attachment]):
         :param use_tempfile: If True, the attachment data will be stored in a
                              temporary file; otherwise, in an in-memory BytesIO object.
                              Defaults to False.
-        :type use_tempfile: bool
         :returns: An :class:`~labapi.entry.attachment.Attachment` object containing the file data and metadata.
-        :rtype: labapi.entry.attachment.Attachment
         """
         # BUG: currently the implementation means that the backing buffer can be used while a reference is maintained
         #      to it
@@ -107,7 +101,6 @@ class AttachmentEntry(Entry[Attachment]):
         This property retrieves the attachment data, caching it for subsequent access.
 
         :returns: The attachment object.
-        :rtype: labapi.entry.attachment.Attachment
         """
         return self.get_attachment()
 
@@ -120,7 +113,6 @@ class AttachmentEntry(Entry[Attachment]):
         and invalidates any previously cached attachment data.
 
         :param value: The new attachment object to upload.
-        :type value: labapi.entry.attachment.Attachment
         """
         # NOTE: this implicitly invalidates all previous Attachments
         # BUG: currently returns 4999
@@ -143,6 +135,5 @@ class AttachmentEntry(Entry[Attachment]):
         """The caption associated with the attachment.
 
         :returns: The caption string.
-        :rtype: str
         """
         return self._caption

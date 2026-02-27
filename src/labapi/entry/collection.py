@@ -21,9 +21,19 @@ if TYPE_CHECKING:
 
 
 class Entries(Sequence["Entry[Any]"]):
-    """A collection of entries."""
+    """A collection of entries on a LabArchives page.
+
+    This class provides a sequence-like interface for managing entries within
+    a page, including methods for creating new entries of various types.
+    """
 
     def __init__(self, entries: Sequence[Entry[Any]], user: User, page: NotebookPage):
+        """Initializes an Entries collection.
+
+        :param entries: A sequence of :class:`~labapi.entry.Entry` objects.
+        :param user: The authenticated user.
+        :param page: The page that this collection belongs to.
+        """
         super().__init__()
         self._user = user
         self._page = page
@@ -52,6 +62,15 @@ class Entries(Sequence["Entry[Any]"]):
     # TODO delete entries
 
     def create_json_entry(self, data: JsonData) -> tuple[AttachmentEntry, TextEntry]:
+        """Creates a JSON data entry consisting of an attachment and a reference text entry.
+
+        This method uploads JSON data as an attachment file and creates a
+        companion text entry that references the attachment and displays
+        a formatted preview of the JSON data.
+
+        :param data: The JSON-serializable data to upload.
+        :returns: A tuple containing the attachment entry and the text entry.
+        """
         name = f"uploaded_data_{datetime.now().timestamp():.0f}.json"
 
         file_entry = self.create_entry(
@@ -105,6 +124,19 @@ class Entries(Sequence["Entry[Any]"]):
         ],
         data: str | Attachment,
     ) -> HeaderEntry | TextEntry | PlainTextEntry | AttachmentEntry:
+        """Creates a new entry on the page.
+
+        This method supports creating various types of entries including headers,
+        text entries, plain text entries, and attachments. The created entry is
+        automatically added to the collection.
+
+        :param entry_type: The type of entry to create. Can be "heading", "text entry",
+                          "plain text entry", "attachment", or "Attachment".
+        :param data: The content of the entry. For text-based entries, this should be a string.
+                    For attachment entries, this should be an :class:`~labapi.entry.Attachment` object.
+        :returns: The newly created entry object of the appropriate type.
+        :raises RuntimeError: If the API call to create the entry fails.
+        """
         if entry_type == "Attachment" or entry_type == "attachment":
             assert isinstance(data, Attachment)
             entry_tree = self._user.api_post(
@@ -118,8 +150,8 @@ class Entries(Sequence["Entry[Any]"]):
             )
             # TODO client_ip should be the end user ip (allow this to be set?)
 
-            id = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
-            entry = Entry.get_entry("attachment", id, data.caption, self._user)
+            eid = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
+            entry = Entry.from_part_type("attachment", eid, data.caption, self._user)
 
         else:
             assert isinstance(data, str)
@@ -131,8 +163,8 @@ class Entries(Sequence["Entry[Any]"]):
                 nbid=self._page.root.id,
             )
 
-            id = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
-            entry = Entry.get_entry(entry_type, id, data, self._user)
+            eid = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
+            entry = Entry.from_part_type(entry_type, eid, data, self._user)
 
         self._entries.append(entry)
         return entry  # pyright: ignore[reportReturnType]

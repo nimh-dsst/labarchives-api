@@ -64,9 +64,7 @@ def get_normalized_part_type(part_type: str) -> str:
     :func:`is_valid_part_type` if the input may have mixed case or whitespace.
 
     :param part_type: The raw part type string from the API or user input.
-    :type part_type: str
     :returns: The normalized part type (lowercase, stripped).
-    :rtype: str
 
     Example:
         >>> get_normalized_part_type("  Attachment  ")
@@ -93,9 +91,7 @@ def is_part_type(
        Use :func:`get_normalized_part_type` first if the input may have mixed case.
 
     :param part_type: The normalized part type string to check.
-    :type part_type: str
     :returns: True if the part type is recognized, False otherwise.
-    :rtype: TypeGuard[PartType]
 
     Example:
         >>> is_part_type("attachment")
@@ -124,9 +120,7 @@ def is_valid_part_type(part_type: str) -> TypeGuard[ImplementedPartType]:
        Use :func:`get_normalized_part_type` first if the input may have mixed case.
 
     :param part_type: The normalized part type string to check.
-    :type part_type: str
     :returns: True if the part type is recognized and implemented, False otherwise.
-    :rtype: TypeGuard[ImplementedPartType]
 
     Example:
         >>> is_valid_part_type("attachment")
@@ -149,9 +143,7 @@ def serialize_part_type(part_type: str) -> str:
     the mapping table.
 
     :param part_type: The part type string (normalized or raw).
-    :type part_type: str
     :returns: The serialized part type string suitable for API requests.
-    :rtype: str
 
     Example:
         >>> serialize_part_type("attachment")

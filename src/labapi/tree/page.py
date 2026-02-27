@@ -12,7 +12,12 @@ import warnings
 from typing import TYPE_CHECKING, Any, cast, override
 
 from labapi.entry import Attachment, Entries, Entry
-from labapi.util import extract_etree, is_part_type, is_valid_part_type, get_normalized_part_type
+from labapi.util import (
+    extract_etree,
+    is_part_type,
+    is_valid_part_type,
+    get_normalized_part_type,
+)
 
 from labapi.tree.mixins import AbstractTreeContainer, AbstractTreeNode
 
@@ -39,15 +44,10 @@ class NotebookPage(AbstractTreeNode):
         """Initializes a NotebookPage object.
 
         :param tree_id: The unique ID of the page.
-        :type tree_id: str
         :param name: The name of the page.
-        :type name: str
         :param root: The root node of the tree (the Notebook).
-        :type root: AbstractTreeContainer
         :param parent: The parent node of this page (a Directory or Notebook).
-        :type parent: AbstractTreeContainer
         :param user: The authenticated user.
-        :type user: labapi.user.User
         """
         super().__init__(tree_id, name, root, parent, user)
         self._entries: Entries | None = None
@@ -58,7 +58,6 @@ class NotebookPage(AbstractTreeNode):
         """The unique ID of the page.
 
         :returns: The page's ID.
-        :rtype: str
         """
         return super().id
 
@@ -70,7 +69,6 @@ class NotebookPage(AbstractTreeNode):
         have not been loaded yet.
 
         :returns: An :class:`~labapi.entry.Entries` object managing the page's entries.
-        :rtype: labapi.entry.Entries
         """
         if self._entries is None:
             entries: list[Entry[Any]] = []
@@ -99,7 +97,7 @@ class NotebookPage(AbstractTreeNode):
                     if is_valid_part_type(part_type):
                         # Cast extracted string values to ensure type checker knows they're not None
                         entries.append(
-                            Entry.get_entry(
+                            Entry.from_part_type(
                                 part_type,
                                 cast(str, entry_data["eid"]),
                                 cast(str, entry_data["entry-data"]),
@@ -143,9 +141,7 @@ class NotebookPage(AbstractTreeNode):
            Implement create_entry methods for all entry types to prevent failures
 
         :param destination: The target container to copy the page to.
-        :type destination: AbstractTreeContainer
         :returns: A new instance of the copied page in the destination.
-        :rtype: NotebookPage
         :raises AttributeError: If an unsupported entry type is encountered
         """
         new_page = destination.create_page(self.name)
@@ -167,7 +163,6 @@ class NotebookPage(AbstractTreeNode):
         """Indicates that this node is not a directory.
 
         :returns: Always False.
-        :rtype: bool
         """
         return False
 
@@ -181,8 +176,6 @@ class NotebookPage(AbstractTreeNode):
         .. note::
            Currently only clears the entries cache. Future implementation should
            properly invalidate all entry objects before clearing.
-
-        :rtype: None
         """
         # TODO: Properly invalidate all entry objects before clearing
         self._entries = None
