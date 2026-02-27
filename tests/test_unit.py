@@ -152,7 +152,7 @@ def user(client: MockClient):
         </notebooks>
     </users>
     """
-    result = client.login_authcode("test_email@test.test", "test_authcode")
+    result = client.login("test_email@test.test", "test_authcode")
     assert client.api_log == (
         "users/user_access_info",
         {"login_or_email": "test_email@test.test", "password": "test_authcode"},

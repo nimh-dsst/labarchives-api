@@ -136,6 +136,18 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         :rtype: bool
         """
 
+    @abstractmethod
+    def refresh(self) -> None:
+        """Refreshes the node's data from the LabArchives API.
+
+        This method updates the node's properties (such as name, ID, and children)
+        by fetching the latest data from the server. This is useful when the
+        node's state may have changed externally.
+
+        :rtype: None
+        """
+        raise NotImplementedError()
+
 
 class AbstractTreeNode(AbstractBaseTreeNode):
     """Abstract base class for a non-container node within the LabArchives tree structure.
@@ -206,7 +218,7 @@ class AbstractTreeNode(AbstractBaseTreeNode):
         :returns: The instance of the deleted node.
         :rtype: Self
         """
-        # TODO: should the creation of the deleted directory be singletoned by the Client
+        # XXX: should the creation of the deleted directory be singletoned by the Client
         # on its instantiation into a Notebook?
         api_deleted_items = self.root[Index.Name : "API Deleted Items"]
 
@@ -366,10 +378,6 @@ class AbstractTreeContainer(
     def values(self) -> ValuesView[AbstractBaseTreeNode]:
         return super().values()  # pyright: ignore[reportReturnType]
 
-    # TODO
-    # FIXME
-    # need an indexing by relative url thing
-
     def create_page(self, name: str) -> NotebookPage:
         """Creates a new page within this container.
 
@@ -428,3 +436,19 @@ class AbstractTreeContainer(
         :rtype: bool
         """
         return True
+
+    @override
+    def refresh(self) -> None:
+        """Refreshes the container by clearing its cached children.
+
+        This method clears the internal children cache, forcing the container
+        to re-fetch its children from the LabArchives API on the next access.
+
+        .. note::
+           Currently only clears the children list. Future implementation should
+           invalidate all children before clearing.
+
+        :rtype: None
+        """
+        # TODO invalidate all children first
+        self._children = []

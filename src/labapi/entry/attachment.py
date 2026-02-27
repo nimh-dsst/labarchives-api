@@ -24,14 +24,11 @@ class Attachment:
     # NOTE or we just disable them that probly works
 
     # @overload
-    # @staticmethod
-    # def from_file(file: BufferedReader) -> Attachment:
-    #     pass
-
-    # @overload
     @staticmethod
     def from_file(file: BufferedRandom) -> Attachment:
-        # pass
+        # TODO rewrite this to clone the bufferedrandom into
+        #   a tempfile or memory buffer and use that as a backing
+        #   then we can use a BufferedReader as well
 
         # @staticmethod
         # def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
@@ -65,6 +62,7 @@ class Attachment:
         # FIXME This doesn't work to passthrough stuff for some reason
         # NOTE: I expect this is because BufferedIOBase defines implementations of its
         # abstract functions :(
+        # maybe we can comply with a Protocol?
         return getattr(self._backing, attr)
 
     @property

@@ -51,7 +51,7 @@ class Client:
 
     This class handles the connection to the LabArchives API, including request signing
     using HMAC-SHA512, and provides methods for making authenticated API calls.
-    It also manages the authentication flow, including OAuth.
+    It also manages the authentication flow.
     """
 
     def __init__(
@@ -112,7 +112,7 @@ class Client:
         """
         Generates a URL for authenticating with the LabArchives API.
 
-        This URL is used to initiate the OAuth 2.0 authorization code flow,
+        This URL is used to initiate the authorization code flow,
         redirecting the user to LabArchives to grant permissions.
 
         :param redirect_url: The URL to which LabArchives will redirect the user
@@ -128,9 +128,9 @@ class Client:
             signature_method=redirect_url,
         )
 
-    def login_authcode(self, user_email: str, auth_code: str) -> User:
+    def login(self, user_email: str, auth_code: str) -> User:
         """
-        Logs in a user using an authentication code obtained from the OAuth flow.
+        Logs in a user using an authentication code.
 
         This method exchanges the authorization code for user access information,
         including their user ID and available notebooks.
@@ -147,18 +147,7 @@ class Client:
             "users/user_access_info", login_or_email=user_email, password=auth_code
         )
 
-        uid = itemgetter(
-            "id",
-            # "auto-login-allowed"
-        )(
-            extract_etree(
-                uid_tree,
-                {
-                    "id": str,
-                    # "auto-login-allowed": to_bool
-                },
-            )
-        )
+        uid = itemgetter("id")(extract_etree(uid_tree, {"id": str}))
 
         notebooks: list[NotebookInit] = []
 
@@ -166,7 +155,11 @@ class Client:
             try:
                 notebook_id, notebook_name, is_default = itemgetter(
                     "id", "name", "is-default"
-                )(extract_etree(notebook, {"id": str, "name": str, "is-default": to_bool}))
+                )(
+                    extract_etree(
+                        notebook, {"id": str, "name": str, "is-default": to_bool}
+                    )
+                )
             except ValueError as e:
                 warnings.warn(f"Failed to parse notebook entry: {e}")
                 continue
@@ -175,7 +168,7 @@ class Client:
 
         notebooks.sort(key=lambda k: k.is_default)
 
-        return User(uid, False, notebooks, self)
+        return User(uid, notebooks, self)
 
     @staticmethod
     def _handle_request_status(response: Response) -> None:
@@ -459,7 +452,7 @@ class Client:
         with TCPServer(("127.0.0.1", 8089), AuthRequestHandler) as httpd:
             httpd.handle_request()
 
-        return self.login_authcode(auth_info["email"], auth_info["auth_code"])
+        return self.login(auth_info["email"], auth_info["auth_code"])
 
     def construct_url(
         self,

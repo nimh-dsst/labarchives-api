@@ -123,6 +123,7 @@ class AttachmentEntry(Entry[Attachment]):
         :type value: labapi.entry.attachment.Attachment
         """
         # NOTE: this implicitly invalidates all previous Attachments
+        # BUG: currently returns 4999
 
         self._user.api_post(
             "entries/update_attachment",

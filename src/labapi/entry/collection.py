@@ -116,6 +116,7 @@ class Entries(Sequence["Entry[Any]"]):
                 pid=self._page.id,
                 change_description="File uploaded via API",
             )
+            # TODO client_ip should be the end user ip (allow this to be set?)
 
             id = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
             entry = Entry.get_entry("attachment", id, data.caption, self._user)
