@@ -27,11 +27,8 @@ class BaseTextEntry(Entry[str], ABC):
         """Initializes a BaseTextEntry object.
 
         :param eid: The unique ID of the entry.
-        :type eid: str
         :param data: The text content of the entry.
-        :type data: str
         :param user: The authenticated user.
-        :type user: labapi.user.User
         """
         super().__init__(eid, user)
         self._entry_data = data
@@ -42,7 +39,6 @@ class BaseTextEntry(Entry[str], ABC):
         """The text content of the entry.
 
         :returns: The content of the entry as a string.
-        :rtype: str
         """
         return self._entry_data
 
@@ -54,7 +50,6 @@ class BaseTextEntry(Entry[str], ABC):
         This operation updates the entry's content in LabArchives via an API call.
 
         :param value: The new text content for the entry.
-        :type value: str
         """
         self._user.api_post("entries/update_entry", {"entry_data": value}, eid=self.id)
 
@@ -73,7 +68,6 @@ class TextEntry(BaseTextEntry):
         """The content type identifier for a rich text entry.
 
         :returns: The string "text entry".
-        :rtype: str
         """
         return "text entry"
 
@@ -90,7 +84,6 @@ class HeaderEntry(BaseTextEntry):
         """The content type identifier for a header entry.
 
         :returns: The string "heading".
-        :rtype: str
         """
         return "heading"
 
@@ -107,6 +100,5 @@ class PlainTextEntry(BaseTextEntry):
         """The content type identifier for a plain text entry.
 
         :returns: The string "plain text entry".
-        :rtype: str
         """
         return "plain text entry"

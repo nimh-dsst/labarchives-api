@@ -39,12 +39,9 @@ class User:
         """Initializes a new User session.
 
         :param uid: The unique ID of the user.
-        :type uid: str
         :param notebooks: A sequence of :class:`~labapi.util.notebookinit.NotebookInit` objects
                           representing the notebooks accessible to the user.
-        :type notebooks: Sequence[labapi.util.notebookinit.NotebookInit]
         :param client: The :class:`~labapi.client.Client` instance used for API communication.
-        :type client: labapi.client.Client
         """
         super().__init__()
         self._id: str = uid
@@ -56,7 +53,6 @@ class User:
         """The unique ID of the user.
 
         :returns: The user's ID.
-        :rtype: str
         """
         return self._id
 
@@ -65,7 +61,6 @@ class User:
         """The :class:`~labapi.client.Client` instance associated with this user session.
 
         :returns: The client instance.
-        :rtype: labapi.client.Client
         """
         return self._client
 
@@ -76,11 +71,8 @@ class User:
 
         :param api_method_uri: The API method URI (e.g., "get_user_settings").
                                Can be a string or a sequence of strings representing path segments.
-        :type api_method_uri: str or Sequence[str]
         :param kwargs: Additional query parameters to pass to the API method.
-        :type kwargs: Any
         :returns: The response from the API, typically an lxml Element.
-        :rtype: lxml.etree.Element
         :raises RuntimeError: If the API request fails.
         """
         return self._client.api_get(api_method_uri, **kwargs, uid=self._id)
@@ -97,13 +89,9 @@ class User:
 
         :param api_method_uri: The API method URI (e.g., "create_entry").
                                Can be a string or a sequence of strings representing path segments.
-        :type api_method_uri: str or Sequence[str]
         :param body: The request body, which can be a mapping of form data or a file-like object.
-        :type body: Mapping[str, str] or BufferedIOBase
         :param kwargs: Additional query parameters to pass to the API method.
-        :type kwargs: Any
         :returns: The response from the API, typically an lxml Element.
-        :rtype: lxml.etree.Element
         :raises RuntimeError: If the API request fails.
         """
         return self._client.api_post(api_method_uri, body, **kwargs, uid=self._id)
@@ -114,7 +102,6 @@ class User:
         The unit of the returned value is bytes.
 
         :returns: The maximum upload size in bytes.
-        :rtype: int
         :raises RuntimeError: If the API request fails.
         """
         return extract_etree(
@@ -126,6 +113,5 @@ class User:
         """Provides access to the user's notebooks.
 
         :returns: A :class:`~labapi.tree.collection.Notebooks` object managing the user's notebooks.
-        :rtype: labapi.tree.collection.Notebooks
         """
         return self._notebooks

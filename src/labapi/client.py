@@ -10,6 +10,7 @@ import warnings
 from operator import itemgetter
 from typing import Any, Generator, Mapping, Sequence, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from os import getenv
 
 from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.hazmat.primitives.hmac import HMAC
@@ -32,11 +33,38 @@ from http.server import SimpleHTTPRequestHandler
 
 from .browser import default_browser
 
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
+
+
 context = ssl.create_default_context()
 
 
 class _313HTTPAdapter(HTTPAdapter):
+    """Custom HTTP adapter that disables strict X.509 certificate verification.
+
+    This adapter is used to work around certain SSL certificate validation issues
+    by disabling the VERIFY_X509_STRICT flag. This allows the client to connect
+    to servers with certificates that might not pass strict validation.
+
+    .. warning::
+       This reduces security by relaxing certificate validation. Use only when
+       necessary and with trusted servers.
+    """
+
     def init_poolmanager(self, *args: Any, **kwargs: Any):
+        """Initializes the connection pool manager with custom SSL context.
+
+        This method overrides the default pool manager initialization to inject
+        a custom SSL context that disables strict X.509 verification.
+
+        :param args: Positional arguments to pass to the parent init_poolmanager.
+        :param kwargs: Keyword arguments to pass to the parent init_poolmanager.
+        """
         context = ssl.create_default_context()
         context.verify_flags &= ~ssl.VERIFY_X509_STRICT
 
@@ -47,8 +75,8 @@ class Client:
     """
     A client for the LabArchives API.
 
-    This class handles the connection to the LabArchives API, including request signing
-    using HMAC-SHA512, and provides methods for making authenticated API calls.
+    This class handles the connection to the LabArchives API
+    and provides methods for making authenticated API calls.
     It also manages the authentication flow.
     """
 
@@ -57,6 +85,8 @@ class Client:
         base_url: str | None = None,
         akid: str | None = None,
         akpass: bytes | str | None = None,
+        *,
+        strict_cert: bool = True
     ):
         """
         Initializes a new LabArchives API client.
@@ -70,22 +100,18 @@ class Client:
 
         :param base_url: The base URL of the LabArchives API (e.g., "https://mynotebook.labarchives.com").
                          If None, loaded from the ``API_URL`` environment variable.
-        :type base_url: str or None
         :param akid: The Access Key ID for API authentication.
                      If None, loaded from the ``ACCESS_KEYID`` environment variable.
-        :type akid: str or None
         :param akpass: The Access Key Password for HMAC-SHA512 signing.
                        If None, loaded from the ``ACCESS_PWD`` environment variable.
-        :type akpass: bytes, str, or None
+        :param strict_cert: Whether to use strict X.509 certificate verification.
+                           If False, disables the VERIFY_X509_STRICT flag to allow connections
+                           to servers with certificates that may not pass strict validation.
+                           Defaults to True. **Warning:** Setting this to False reduces security.
         """
         super().__init__()
 
         if base_url is None or akid is None or akpass is None:
-            from dotenv import load_dotenv
-            from os import getenv
-
-            load_dotenv()
-
             if base_url is None:
                 base_url = getenv("API_URL", "https://api.labarchives.com")
             if akid is None:
@@ -104,7 +130,8 @@ class Client:
             bytes(akpass, "utf8") if isinstance(akpass, str) else akpass, SHA512()
         )
         self.session = Session()
-        self.session.mount("https://", _313HTTPAdapter())
+        if not strict_cert:
+            self.session.mount("https://", _313HTTPAdapter())
 
     def generate_auth_url(self, redirect_url: str) -> str:
         """
@@ -115,9 +142,7 @@ class Client:
 
         :param redirect_url: The URL to which LabArchives will redirect the user
                              after successful authentication, containing the authorization code.
-        :type redirect_url: str
         :returns: The full authentication URL.
-        :rtype: str
         """
         return self.construct_url(
             "api_user_login",
@@ -128,18 +153,15 @@ class Client:
 
     def login(self, user_email: str, auth_code: str) -> User:
         """
-        Logs in a user using an authentication code.
+        Logs in a user using an authentication code. This can be from the standard
+        authentication flow or a one-hour code from the LabArchives website.
 
         This method exchanges the authorization code for user access information,
         including their user ID and available notebooks.
 
         :param user_email: The email address of the authenticating user.
-        :type user_email: str
-        :param auth_code: The authorization code received from LabArchives after
-                          the user grants permission.
-        :type auth_code: str
+        :param auth_code: The authorization code received from LabArchives.
         :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
-        :rtype: labapi.user.User
         """
         uid_tree = self.api_get(
             "users/user_access_info", login_or_email=user_email, password=auth_code
@@ -174,7 +196,6 @@ class Client:
         Handles the HTTP response status, raising an error for unsuccessful requests.
 
         :param response: The HTTP response object from the requests library.
-        :type response: requests.Response
         :raises RuntimeError: If the HTTP status code is not 200 (OK).
         """
         if response.status_code != status_codes.ok:
@@ -195,13 +216,9 @@ class Client:
 
         :param api_method_uri: The API method URI (e.g., "get_file_attachment").
                                Can be a string or a sequence of strings representing path segments.
-        :type api_method_uri: str or Sequence[str]
         :param kwargs: Additional query parameters to pass to the API method.
-        :type kwargs: Any
         :yields: Chunks of bytes from the API response.
-        :ytype: bytes
         :returns: The full requests.Response object after the stream has been consumed.
-        :rtype: requests.Response
         :raises RuntimeError: If the API request fails.
         """
         with self.session.get(
@@ -228,15 +245,10 @@ class Client:
 
         :param api_method_uri: The API method URI (e.g., "upload_file_attachment").
                                Can be a string or a sequence of strings representing path segments.
-        :type api_method_uri: str or Sequence[str]
         :param body: The request body, which can be a mapping of form data or a file-like object.
-        :type body: Mapping[str, str] or BufferedIOBase
         :param kwargs: Additional query parameters to pass to the API method.
-        :type kwargs: Any
         :yields: Chunks of bytes from the API response.
-        :ytype: bytes
         :returns: The full requests.Response object after the stream has been consumed.
-        :rtype: requests.Response
         :raises RuntimeError: If the API request fails.
         """
         with self.session.post(
@@ -261,11 +273,8 @@ class Client:
 
         :param api_method_uri: The API method URI (e.g., "get_entry_data").
                                Can be a string or a sequence of strings representing path segments.
-        :type api_method_uri: str or Sequence[str]
         :param kwargs: Additional query parameters to pass to the API method.
-        :type kwargs: Any
         :returns: The requests.Response object containing the API response.
-        :rtype: requests.Response
         :raises RuntimeError: If the API request fails.
         """
         request = self.session.get(self.construct_url(api_method_uri, query=kwargs))
@@ -288,13 +297,9 @@ class Client:
 
         :param api_method_uri: The API method URI (e.g., "create_entry").
                                Can be a string or a sequence of strings representing path segments.
-        :type api_method_uri: str or Sequence[str]
         :param body: The request body, which can be a mapping of form data or a file-like object.
-        :type body: Mapping[str, str] or BufferedIOBase
         :param kwargs: Additional query parameters to pass to the API method.
-        :type kwargs: Any
         :returns: The requests.Response object containing the API response.
-        :rtype: requests.Response
         :raises RuntimeError: If the API request fails.
         """
         request = self.session.post(
@@ -312,11 +317,8 @@ class Client:
 
         :param api_method_uri: The API method URI (e.g., "get_notebook_info").
                                Can be a string or a sequence of strings representing path segments.
-        :type api_method_uri: str or Sequence[str]
         :param kwargs: Additional query parameters to pass to the API method.
-        :type kwargs: Any
         :returns: An lxml Element representing the root of the XML response.
-        :rtype: lxml.etree.Element
         :raises RuntimeError: If the API request fails or the response is not valid XML.
         """
 
@@ -338,13 +340,9 @@ class Client:
 
         :param api_method_uri: The API method URI (e.g., "create_entry").
                                Can be a string or a sequence of strings representing path segments.
-        :type api_method_uri: str or Sequence[str]
         :param body: The request body, which can be a mapping of form data or a file-like object.
-        :type body: Mapping[str, str] or BufferedIOBase
         :param kwargs: Additional query parameters to pass to the API method.
-        :type kwargs: Any
         :returns: An lxml Element representing the root of the XML response.
-        :rtype: lxml.etree.Element
         :raises RuntimeError: If the API request fails or the response is not valid XML.
         """
 
@@ -370,7 +368,6 @@ class Client:
            Install it with: ``pip install selenium``
 
         :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
-        :rtype: labapi.user.User
         :raises ImportError: If selenium is not installed.
         :raises RuntimeError: If authentication fails.
         """
@@ -382,16 +379,19 @@ class Client:
             match default_browser:
                 case "chrome":
                     import selenium.webdriver as webdriver
+
                     options = webdriver.ChromeOptions()
                     driver = webdriver.Chrome(options=options)
                     print("Opening Chrome for authentication...")
                 case "firefox":
                     import selenium.webdriver as webdriver
+
                     options = webdriver.FirefoxOptions()
                     driver = webdriver.Firefox(options=options)
                     print("Opening Firefox for authentication...")
                 case "edge":
                     import selenium.webdriver as webdriver
+
                     options = webdriver.EdgeOptions()
                     driver = webdriver.Edge(options=options)
                     print("Opening Edge for authentication...")
@@ -407,7 +407,9 @@ class Client:
 
             if driver is not None:
                 driver.get(auth_url)
-                print("Please complete the authentication in the opened browser window...")
+                print(
+                    "Please complete the authentication in the opened browser window..."
+                )
 
             user = self.collect_auth_response()
 
@@ -431,7 +433,6 @@ class Client:
         successful authentication.
 
         :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
-        :rtype: labapi.user.User
         :raises KeyError: If the authentication code or email is not received.
         """
 
@@ -483,23 +484,17 @@ class Client:
 
         :param api_method_uri: The API method URI (e.g., "get_notebook_info").
                                Can be a string or a sequence of strings representing path segments.
-        :type api_method_uri: str or Sequence[str]
         :param query: A dictionary of query parameters to include in the URL.
-        :type query: Mapping[str, Any]
         :param expires_in: The duration for which the URL should be valid. Can be a
                            `timedelta` object or a specific `datetime` object. If None,
                            defaults to 60 seconds from now.
-        :type expires_in: timedelta or datetime or None
         :param should_prefix_api: If True, ensures the API method path starts with "api/".
                                   Defaults to True.
-        :type should_prefix_api: bool
         :param signature_method: An optional string to use as the API method for
                                  signature generation, overriding `api_method_uri`.
                                  Useful for methods like `api_user_login` where the
                                  actual method name differs from the URI path.
-        :type signature_method: str or None
         :returns: The fully constructed and signed URL.
-        :rtype: str
         """
         if isinstance(api_method_uri, str):
             api_method_uri = api_method_uri.split("/")
@@ -537,11 +532,8 @@ class Client:
         cryptographic signature based on the Access Key ID, API method, and expiry.
 
         :param api_method: The specific API method name used in the signature calculation.
-        :type api_method: str
         :param expiry: The expiration timestamp (in milliseconds since epoch) for the request.
-        :type expiry: int
         :returns: The base64-encoded HMAC-SHA512 signature.
-        :rtype: str
         """
         hmac = self._hmac.copy()
 
@@ -564,15 +556,11 @@ class Client:
         the generated signature to the URL's query string.
 
         :param url: The unsigned URL to be signed.
-        :type url: str
         :param api_method: The specific API method name used for signature generation.
-        :type api_method: str
         :param expires_in: The duration for which the URL should be valid. Can be a
                            `timedelta` object or a specific `datetime` object. Defaults
                            to 60 seconds from the current time.
-        :type expires_in: timedelta or datetime
         :returns: The fully signed URL.
-        :rtype: str
         """
         scheme, netloc, path, querystring, _f = urlsplit(url)
         query = dict(parse_qsl(querystring))

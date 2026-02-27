@@ -12,13 +12,4 @@ type JsonData = (
 """
 A recursive type alias representing any data structure that can be
 serialized to or deserialized from JSON.
-
-This includes:
-    - `Sequence[JsonData]` (e.g., lists, tuples)
-    - `Mapping[str, JsonData]` (e.g., dictionaries)
-    - `str`
-    - `bool`
-    - `int`
-    - `float`
-    - `None`
 """

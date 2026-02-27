@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, override
 
 from labapi.util import extract_etree, to_bool
 
-from .mixins import AbstractBaseTreeNode, AbstractTreeContainer, HasNameMixin
+from .mixins import AbstractTreeContainer, HasNameMixin
 
 if TYPE_CHECKING:
     from labapi.user import User
@@ -33,11 +33,8 @@ class Notebook(AbstractTreeContainer):
         """Initializes a Notebook object.
 
         :param init: Initial data for the notebook.
-        :type init: NotebookInit
         :param user: The authenticated user.
-        :type user: labapi.user.User
         :param notebooks: The collection of notebooks this notebook belongs to.
-        :type notebooks: labapi.tree.collection.Notebooks
         """
         super().__init__("0", init.name, self, self, user)
         self._id = init.id
@@ -51,7 +48,6 @@ class Notebook(AbstractTreeContainer):
         """The unique ID of the notebook.
 
         :returns: The notebook's ID.
-        :rtype: str
         """
         return self._id
 
@@ -62,7 +58,6 @@ class Notebook(AbstractTreeContainer):
         This operation updates the notebook's name in LabArchives via an API call.
 
         :param value: The new name for the notebook.
-        :type value: str
         """
         self.user.api_get("notebooks/modify_notebook_info", nbid=self.id, name=value)
 
@@ -73,7 +68,6 @@ class Notebook(AbstractTreeContainer):
         """Indicates whether this notebook is the user's default notebook.
 
         :returns: True if the notebook is the default, False otherwise.
-        :rtype: bool
         """
         return self._is_default
 
@@ -85,7 +79,6 @@ class Notebook(AbstractTreeContainer):
         been loaded yet.
 
         :returns: True if new entries are inserted at the bottom, False if at the top.
-        :rtype: bool
         """
         if (
             self._inserts_from_bottom is None
@@ -96,30 +89,3 @@ class Notebook(AbstractTreeContainer):
             )["add-entry-to-page-top"]
 
         return self._inserts_from_bottom
-
-    def traverse(self, path: str) -> AbstractBaseTreeNode:
-        """Traverses the notebook's tree structure to find a node by its path.
-
-        The path segments should be separated by '/'. Each segment is treated
-        as a name to look up in the current container.
-
-        :param path: The slash-separated path to the desired node (e.g., "My Folder/My Page").
-        :type path: str
-        :returns: The :class:`AbstractTreeContainer` or :class:`AbstractTreeNode` found at the specified path.
-        :rtype: AbstractTreeContainer or AbstractTreeNode
-        :raises RuntimeError: If a segment in the path does not lead to a directory.
-        :raises KeyError: If a node at any segment of the path is not found.
-        """
-        segments = path.split("/")
-
-        curr = self
-        parsed_segments: list[str] = []
-
-        for segment in segments:
-            parsed_segments.append(segment)
-            if isinstance(curr, AbstractTreeContainer):
-                curr = curr[segment]
-            else:
-                raise RuntimeError(f"{'/'.join(parsed_segments)} is not a directory")
-
-        return curr
