@@ -5,6 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, overload
 
+from labapi.util import get_normalized_part_type
+
 if TYPE_CHECKING:
     from labapi.user import User
 
@@ -37,7 +39,7 @@ class Entry(ABC, Generic[T]):
     @overload
     @staticmethod
     def get_entry(
-        part_type: Literal["attachment", "Attachment"], *args: Any
+        part_type: Literal["attachment"], *args: Any
     ) -> AttachmentEntry:
         pass
 
@@ -46,19 +48,14 @@ class Entry(ABC, Generic[T]):
     def get_entry(part_type: Literal["widget entry"], *args: Any) -> WidgetEntry:
         pass
 
-    @overload
     @staticmethod
     def get_entry(part_type: str, *args: Any) -> Entry[Any]:
-        pass
-
-    @staticmethod
-    def get_entry(part_type: str, *args: Any) -> Entry[Any]:  # pyright: ignore[reportInvalidTypeVarUse]
         from .attachment import AttachmentEntry
         from .text import HeaderEntry, PlainTextEntry, TextEntry
         from .widget import WidgetEntry
 
-        match part_type.lower().strip():
-            case "plain text entry" | "sketch entry":
+        match get_normalized_part_type(part_type):
+            case "plain text entry":
                 return PlainTextEntry(*args)
             case "text entry":
                 return TextEntry(*args)

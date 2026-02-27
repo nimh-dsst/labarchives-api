@@ -8,10 +8,11 @@ entries contained within the page.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, override, Literal
+import warnings
+from typing import TYPE_CHECKING, Any, cast, override
 
 from labapi.entry import Attachment, Entries, Entry
-from labapi.util import extract_etree
+from labapi.util import extract_etree, is_part_type, is_valid_part_type, get_normalized_part_type
 
 from labapi.tree.mixins import AbstractTreeContainer, AbstractTreeNode
 
@@ -92,18 +93,33 @@ class NotebookPage(AbstractTreeNode):
                     },
                 )
 
-                part_type = entry_data["part-type"]
+                part_type = get_normalized_part_type(entry_data["part-type"])
 
-                assert isinstance(part_type, str)
-
-                entries.append(
-                    Entry.get_entry(
-                        part_type,
-                        entry_data["eid"],
-                        entry_data["entry-data"],
-                        self._user,
-                    ),
-                )
+                if is_part_type(part_type):
+                    if is_valid_part_type(part_type):
+                        # Cast extracted string values to ensure type checker knows they're not None
+                        entries.append(
+                            Entry.get_entry(
+                                part_type,
+                                cast(str, entry_data["eid"]),
+                                cast(str, entry_data["entry-data"]),
+                                self._user,
+                            )
+                        )
+                    else:
+                        warnings.warn(
+                            f"Entry type '{part_type}' (ID: {entry_data['eid']}) is recognized but not "
+                            f"implemented in labapi. Skipping this entry.",
+                            UserWarning,
+                            stacklevel=2,
+                        )
+                else:
+                    warnings.warn(
+                        f"Unknown entry type '{part_type}' (ID: {entry_data['eid']}) encountered. "
+                        f"This entry will be skipped.",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
 
             self._entries = Entries(entries, self._user, self)
 
@@ -113,24 +129,35 @@ class NotebookPage(AbstractTreeNode):
     def copy_to(self, destination: AbstractTreeContainer) -> NotebookPage:
         """Copies this page and its entries to a specified destination container.
 
+        .. warning::
+           This method has known limitations:
+
+           - LabArchives may rename attachment files during copy operations
+           - Only certain entry types are fully supported (text, plain text, headers, attachments)
+           - Some entry types may fail to copy and will cause errors
+
+        .. todo::
+           Add specific handling for attachment entries to work around LabArchives renaming behavior
+
+        .. todo::
+           Implement create_entry methods for all entry types to prevent failures
+
         :param destination: The target container to copy the page to.
         :type destination: AbstractTreeContainer
         :returns: A new instance of the copied page in the destination.
         :rtype: NotebookPage
+        :raises AttributeError: If an unsupported entry type is encountered
         """
         new_page = destination.create_page(self.name)
 
         for entry in self.entries:
-            # TODO might need to make a specific case for copying Attachments because LA freaks out and renames shit
             new_page.entries.create_entry(  # pyright: ignore[reportCallIssue]
-                # TODO add in the other create_entries so this doesn't explode
                 entry.content_type,  # pyright: ignore[reportArgumentType]
                 entry.content,
             )
 
             if isinstance(entry.content, Attachment):
-                # Attachment doesn't have a close method in the current implementation,
-                # but the original code had it. I'll check src/entry/attachment.py.
+                # TODO release attachment
                 pass
 
         return new_page
@@ -143,3 +170,19 @@ class NotebookPage(AbstractTreeNode):
         :rtype: bool
         """
         return False
+
+    @override
+    def refresh(self) -> None:
+        """Refreshes the page by clearing its cached entries.
+
+        This method clears the internal entries cache, forcing the page
+        to re-fetch its entries from the LabArchives API on the next access.
+
+        .. note::
+           Currently only clears the entries cache. Future implementation should
+           properly invalidate all entry objects before clearing.
+
+        :rtype: None
+        """
+        # TODO: Properly invalidate all entry objects before clearing
+        self._entries = None

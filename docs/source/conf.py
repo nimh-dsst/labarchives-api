@@ -60,35 +60,18 @@ autodoc_typehints = "signature"  # Show type hints in function signatures
 autodoc_typehints_format = "short"  # Use short type names (List instead of typing.List)
 autodoc_member_order = "bysource"
 autodoc_default_options = {
-    'members': True,
-    'member-order': 'bysource',
-    'special-members': '__init__',
-    'undoc-members': False,
-    'exclude-members': '__weakref__,__dict__,__module__',
-    'private-members': False,
+    "members": True,
+    "member-order": "bysource",
+    "special-members": "__init__",
+    "undoc-members": False,
+    "exclude-members": "__weakref__,__dict__,__module__",
+    "private-members": False,
 }
 
 # Suppress cross-reference warnings for re-exported classes
-suppress_warnings = ['ref.python']
+suppress_warnings = ["ref.python"]
 
-# Hide members that should not be documented
-def skip_member(app, what, name, obj, skip, options):
-    """Skip internal/private members from documentation."""
-    # Skip private members (starting with _)
-    if name.startswith('_') and name not in ('__init__',):
-        return True
 
-    # Skip specific internal methods
-    internal_methods = {
-        'raw_api_get', 'raw_api_post',
-        'stream_api_get', 'stream_api_post',
-        'collect_auth_response', 'construct_url',
-        'refresh', 'traverse'
-    }
-    if name in internal_methods:
-        return True
-
-    return skip
 
 def process_docstring(app, what, name, obj, options, lines):
     """Remove :rtype: and :type: fields from docstrings since we show types in signatures."""
@@ -100,21 +83,22 @@ def process_docstring(app, what, name, obj, options, lines):
         stripped = line.strip()
 
         # Remove :rtype: field
-        if stripped.startswith(':rtype:'):
+        if stripped.startswith(":rtype:"):
             del lines[i]
             removed_count += 1
         # Remove :type param: fields
-        elif stripped.startswith(':type '):
+        elif stripped.startswith(":type "):
             del lines[i]
             removed_count += 1
 
         i -= 1
 
     # Debug: print when we remove something from Attachment
-    if removed_count > 0 and 'Attachment' in name:
+    if removed_count > 0 and "Attachment" in name:
         print(f"Removed {removed_count} type annotations from {name}")
 
+
 def setup(app):
-    app.connect('autodoc-skip-member', skip_member)
+    app.connect("autodoc-skip-member", skip_member)
     # Run our docstring processor FIRST (priority 0) before any other processing
-    app.connect('autodoc-process-docstring', process_docstring, priority=0)
+    app.connect("autodoc-process-docstring", process_docstring, priority=0)

@@ -34,7 +34,7 @@ def la_user(la_client: LA.Client):
     if not email or not key:
         pytest.fail("AUTH_EMAIL and AUTH_KEY required for non-interactive login.")
 
-    return la_client.login_authcode(email, key)
+    return la_client.login(email, key)
 
 
 @pytest.fixture(scope="session")

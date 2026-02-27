@@ -33,7 +33,6 @@ class User:
     def __init__(
         self,
         uid: str,
-        auto_login: bool,
         notebooks: Sequence[NotebookInit],
         client: Client,
     ):
@@ -41,8 +40,6 @@ class User:
 
         :param uid: The unique ID of the user.
         :type uid: str
-        :param auto_login: A boolean indicating if the user session can be automatically refreshed.
-        :type auto_login: bool
         :param notebooks: A sequence of :class:`~labapi.util.notebookinit.NotebookInit` objects
                           representing the notebooks accessible to the user.
         :type notebooks: Sequence[labapi.util.notebookinit.NotebookInit]
@@ -51,7 +48,6 @@ class User:
         """
         super().__init__()
         self._id: str = uid
-        self._can_refresh = auto_login
         self._notebooks = Notebooks(notebooks, self)
         self._client = client
 
@@ -112,32 +108,6 @@ class User:
         """
         return self._client.api_post(api_method_uri, body, **kwargs, uid=self._id)
 
-    # @deprecated("LabArchives Auth Refreshing is unstable and inconsistent")
-    def refresh(self, *, user_requested: bool = False) -> None:
-        """.. deprecated::
-           LabArchives Auth Refreshing is unstable and inconsistent.
-
-        Refreshes the user's session information from the LabArchives API.
-
-        This method updates the user's ID and potentially other session-related
-        details. It can only be called if the session allows automatic refreshing
-        or if explicitly requested by the user.
-
-        :param user_requested: If True, forces a refresh even if automatic refreshing
-                               is not enabled for the session. Defaults to False.
-        :type user_requested: bool
-        :raises RuntimeError: If the user session cannot be automatically refreshed
-                              and `user_requested` is False.
-        """
-        if not self._can_refresh and not user_requested:
-            raise RuntimeError("User session cannot be automatically refreshed")
-
-        uid_tree = self.api_get("users/user_info_via_id", authenticated=user_requested)
-        self._id = extract_etree(uid_tree, {"id": str})["id"]
-        # XXX should we refresh ability to auto_login and notebooks here?
-
-        # TODO fill in rest of function
-
     def get_max_upload_size(self) -> int:
         """Retrieves the maximum allowed file upload size for the user from the LabArchives API.
 
@@ -147,7 +117,6 @@ class User:
         :rtype: int
         :raises RuntimeError: If the API request fails.
         """
-        # NOTE the api reference doesn't explain what unit this is, so I'm going to treat this as bytes
         return extract_etree(
             self.api_get("users/max_file_size"), {"max-file-size": int}
         )["max-file-size"]

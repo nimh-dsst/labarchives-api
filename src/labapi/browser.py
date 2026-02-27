@@ -1,7 +1,7 @@
 """Browser Detection Module.
 
 This module attempts to detect an installed web browser (Chrome, Firefox, or Edge)
-to be used for OAuth authentication flows. It prioritizes a browser specified
+to be used for OAuth-like authentication flows. It prioritizes a browser specified
 via the `LA_AUTH_BROWSER` environment variable, then the system's default browser,
 and finally any detected installed browser. If no compatible browser is found,
 it defaults to "terminal", indicating that the authentication URL should be
