@@ -10,7 +10,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, MutableSequence, Sequence, ValuesView
 from datetime import datetime
-from typing import TYPE_CHECKING, Self, overload, override
+from typing import TYPE_CHECKING, Self, overload, override, Literal, cast
 
 from labapi.util import IdIndex, IdOrNameIndex, Index, NameIndex, extract_etree, to_bool
 
@@ -122,6 +122,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
         :returns: True if the node is a directory, False otherwise.
         """
+        return False
 
     @abstractmethod
     def refresh(self) -> None:
@@ -132,6 +133,67 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         node's state may have changed externally.
         """
         raise NotImplementedError()
+
+    def traverse(self, path: str) -> AbstractBaseTreeNode:
+        """Traverses the notebook's tree structure to find a node by its path.
+
+        The path segments should be separated by '/'. Each segment is treated
+        as a name to look up in the current container. Paths starting with '/'
+        are absolute (relative to the notebook root), while paths without a
+        leading '/' are relative to the current container.
+
+        Special path segments:
+        - '..' navigates to the parent container
+
+        .. note::
+           - When multiple children have the same name, this method returns the first match.
+           - Empty path segments (from trailing slashes or multiple consecutive slashes)
+             will attempt to look up nodes with empty string names.
+           - '.' is not treated specially; it will look for a node literally named '.'.
+
+        .. warning::
+           Nodes with names that are literally '..' cannot be accessed via
+           this method, as '..' is reserved for parent navigation.
+
+        :param path: The slash-separated path to the desired node (e.g., "My Folder/My Page" or "/Folder/Subfolder/Page").
+        :returns: The :class:`AbstractTreeContainer` or :class:`AbstractTreeNode` found at the specified path.
+        :raises RuntimeError: If a segment in the path does not lead to a directory.
+        :raises KeyError: If a node at any segment of the path is not found.
+        """
+
+        if path.startswith("/"):
+            curr = self.root
+        else:
+            curr = self
+
+        segments = path.lstrip("/").split("/")
+
+        parsed_segments: list[str] = []
+
+        for segment in segments:
+            parsed_segments.append(segment)
+            if segment == "..":
+                curr = curr.parent
+            elif isinstance(curr, AbstractTreeContainer):
+                curr = curr[segment]
+            else:
+                raise RuntimeError(f"{'/'.join(parsed_segments)} is not a directory")
+
+        return curr
+
+    def as_dir(self) -> AbstractTreeContainer:
+        """Casts this node to an :class:`AbstractTreeContainer` if it is a directory.
+
+        This method provides a convenient way to perform directory-specific
+        operations on a node after checking its type, with static type
+        checking support.
+
+        :returns: The node cast to an :class:`AbstractTreeContainer`.
+        :raises TypeError: If the node is not a directory (i.e., `is_dir()` returns `False`).
+        """
+        if self.is_dir():
+            return cast(AbstractTreeContainer, self)
+        raise TypeError("Node is not a directory")
 
 
 class AbstractTreeNode(AbstractBaseTreeNode):
@@ -345,6 +407,37 @@ class AbstractTreeContainer(
                         return node
                 raise KeyError(f'Node with name "{key}" not found')
 
+    def enumerate_all(
+        self, _current_depth: int = 0, *, max_depth: int = 1
+    ) -> Sequence[str]:
+        current: MutableSequence[str] = []
+
+        if _current_depth >= max_depth:
+            return current
+
+        for name, child in self.items():
+            try:
+                current.extend(
+                    [
+                        f"{self.name}/{child_name}"
+                        for child_name in child.as_dir().enumerate_all(
+                            _current_depth + 1, max_depth=max_depth
+                        )
+                    ]
+                )
+            except TypeError:
+                current.append(f"{self.name}/{name}")
+
+        return current
+
+    def enumerate_dirs(self, *, max_depth: int = 1) -> Sequence[str]:
+        all_names = self.enumerate_all(max_depth=max_depth)
+        return [name for name in all_names if self.traverse(name).is_dir()]
+
+    def enumerate_pages(self, *, max_depth: int = 1) -> Sequence[str]:
+        all_names = self.enumerate_all(max_depth=max_depth)
+        return [name for name in all_names if not self.traverse(name).is_dir()]
+
     @override
     def values(self) -> ValuesView[AbstractBaseTreeNode]:
         return super().values()  # pyright: ignore[reportReturnType]
@@ -396,7 +489,7 @@ class AbstractTreeContainer(
         return new_dir
 
     @override
-    def is_dir(self) -> bool:
+    def is_dir(self) -> Literal[True]:
         """Indicates that this node is a directory (container).
 
         :returns: Always True.
@@ -416,50 +509,3 @@ class AbstractTreeContainer(
         """
         # TODO invalidate all children first
         self._children = []
-
-    def traverse(self, path: str) -> AbstractBaseTreeNode:
-        """Traverses the notebook's tree structure to find a node by its path.
-
-        The path segments should be separated by '/'. Each segment is treated
-        as a name to look up in the current container. Paths starting with '/'
-        are absolute (relative to the notebook root), while paths without a
-        leading '/' are relative to the current container.
-
-        Special path segments:
-        - '..' navigates to the parent container
-
-        .. note::
-           - When multiple children have the same name, this method returns the first match.
-           - Empty path segments (from trailing slashes or multiple consecutive slashes)
-             will attempt to look up nodes with empty string names.
-           - '.' is not treated specially; it will look for a node literally named '.'.
-
-        .. warning::
-           Nodes with names that are literally '..' cannot be accessed via
-           this method, as '..' is reserved for parent navigation.
-
-        :param path: The slash-separated path to the desired node (e.g., "My Folder/My Page" or "/Folder/Subfolder/Page").
-        :returns: The :class:`AbstractTreeContainer` or :class:`AbstractTreeNode` found at the specified path.
-        :raises RuntimeError: If a segment in the path does not lead to a directory.
-        :raises KeyError: If a node at any segment of the path is not found.
-        """
-
-        if path.startswith("/"):
-            curr = self.root
-        else:
-            curr = self
-
-        segments = path.lstrip("/").split("/")
-
-        parsed_segments: list[str] = []
-
-        for segment in segments:
-            parsed_segments.append(segment)
-            if segment == "..":
-                curr = curr.parent
-            elif isinstance(curr, AbstractTreeContainer):
-                curr = curr[segment]
-            else:
-                raise RuntimeError(f"{'/'.join(parsed_segments)} is not a directory")
-
-        return curr

@@ -9,7 +9,7 @@ entries contained within the page.
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override, Literal
 
 from labapi.entry import Attachment, Entries, Entry
 from labapi.util import (
@@ -159,7 +159,7 @@ class NotebookPage(AbstractTreeNode):
         return new_page
 
     @override
-    def is_dir(self) -> bool:
+    def is_dir(self) -> Literal[False]:
         """Indicates that this node is not a directory.
 
         :returns: Always False.

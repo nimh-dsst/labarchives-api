@@ -4,7 +4,8 @@ Your First Entry
 Making a Client
 ---------------
 
-To begin, you must instantiate a :class:`Client <labapi.client.Client>` object, which will connect to LabArchives. You will need your API URL, Access Key ID, and Access Password. There are several ways to provide these credentials:
+To begin, you must instantiate a :class:`~labapi.client.Client` object, which will connect to LabArchives. 
+You will need your API URL, Access Key ID, and Access Password. There are several ways to provide these credentials:
 
 .. tab-set::
 
@@ -49,7 +50,7 @@ To begin, you must instantiate a :class:`Client <labapi.client.Client>` object, 
    .. tab-item:: As Constructor Arguments
       :sync: explicit
 
-      You can pass the credentials directly when creating the :class:`Client <labapi.client.Client>`. Note that hardcoding credentials in your scripts is generally not recommended for security reasons.
+      You can pass the credentials directly when creating the :class:`~labapi.client.Client`. Note that hardcoding credentials in your scripts is generally not recommended for security reasons.
 
       .. code-block:: python
 
@@ -69,8 +70,8 @@ To interact with the LabArchives API, you first need to authenticate. There are 
 Auth Flow Authentication
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The simplest way is to use the :func:`default_authenticate <labapi.client.Client.default_authenticate>` method, which allows users running on the same machine
-to log in with their browser. :func:`default_authenticate <labapi.client.Client.default_authenticate>` relies on a local implementation of the 
+The simplest way is to use the :meth:`~labapi.client.Client.default_authenticate` method, which allows users running on the same machine
+to log in with their browser. :meth:`~labapi.client.Client.default_authenticate` relies on a local implementation of the 
 :ref:`Authentication Flow <authflow>`, 
 so more complex uses, like those involving a client-server model, should not use this function.
 
@@ -92,7 +93,7 @@ If you cannot use a browser on the machine where your script is running, or for 
 
 1. Log in to your LabArchives account in a web browser.
 2. Click on your name in the top right corner and select **External App authentication**.
-3. Copy the email address and password token and use them directly in the :func:`login <labapi.client.Client.login>` method.
+3. Copy the email address and password token and use them directly in the :meth:`~labapi.client.Client.login` method.
 
 .. code-block:: python
 
@@ -107,7 +108,7 @@ If you cannot use a browser on the machine where your script is running, or for 
 Getting a Notebook
 ------------------
 
-Once you have a :class:`User <labapi.user.User>` object, you can access your notebooks. You can look them up by name or get a list of all available notebooks:
+Once you have a :class:`~labapi.user.User` object, you can access your notebooks. You can index them up by name or get a list of all available notebooks:
 
 .. code-block:: python
 
@@ -117,6 +118,7 @@ Once you have a :class:`User <labapi.user.User>` object, you can access your not
    # Or list all your notebooks
    for notebook_name in user.notebooks:
     print(notebook_name)
+
 
 
 Writing Entries
