@@ -41,14 +41,16 @@ We recommend using uv to install labapi.
       pip install labapi
 
 
+.. _optional-deps:
+
 Optional Dependencies
 ---------------------
 
-labapi comes with two optional dependency groups:
+``labapi`` comes with two optional dependency groups:
 
 .. dropdown:: builtin-auth
 
-  This group of dependencies allows the default_authenticate function to open 
+  This group of dependencies allows the :meth:`~labapi.client.Client.default_authenticate` function to open 
   browser windows for higher quality-of-life when running locally.
 
   .. tab-set::
@@ -72,8 +74,8 @@ labapi comes with two optional dependency groups:
         pip install 'labapi[builtin-auth]'
 .. dropdown:: dotenv
 
-  This group of dependencies allows the Client constructor to use environment variables 
-  specified in the .env file in a project.
+  This group of dependencies allows the :class:`~labapi.client.Client` constructor to use environment variables 
+  specified in the ``.env`` file in a project.
 
   .. tab-set::
 
@@ -94,9 +96,6 @@ labapi comes with two optional dependency groups:
       .. code-block:: bash
         
         pip install 'labapi[dotenv]'
-
-.. TODO reference default authenticate()
-.. TODO reference Client() constructor
 
 
 

@@ -9,7 +9,7 @@ entries contained within the page.
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override, Literal
 
 from labapi.entry import Attachment, Entries, Entry
 from labapi.util import (
