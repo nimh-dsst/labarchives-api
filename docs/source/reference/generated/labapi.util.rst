@@ -29,15 +29,11 @@ labapi.util
 
 .. autosummary::
    :toctree:
-   :template: custom-module-template.rst                 
+   :template: custom-module-template.rst
    :recursive:
 
    extract
    index
    notebookinit
    part_type
-   test_extract
-   test_index
-   test_notebookinit
-   test_part_type
 

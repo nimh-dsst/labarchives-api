@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import Mock
 
-import pytest
 
 from labapi import Index, Notebook, NotebookDirectory
 from labapi.user import User
@@ -72,32 +71,40 @@ class TestNotebookDirectoryIntegration:
         destination = notebook_tree  # Copy to root of notebook
 
         assert isinstance(source_dir, NotebookDirectory)
+        client.clear_log()
 
         # Mock API responses for creating new directory and its children
-        # First call: create new directory
+        # 1. create_directory -> tree_tools/insert_node
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <tree-tools>
-            <level-node>
+            <node>
                 <tree-id>dir-copy</tree-id>
-            </level-node>
+            </node>
         </tree-tools>
         """
-        # Second call: create first page copy
+        # Copying child Page A:
+        # 2. create_page -> tree_tools/insert_node
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <tree-tools>
-            <level-node>
+            <node>
                 <tree-id>page-copy-1</tree-id>
-            </level-node>
+            </node>
         </tree-tools>
         """
-        # Third call: create second page copy
+        # 3. page.entries (source) -> tree_tools/get_entries_for_page (empty)
+        client.api_response = "<entries><response/></entries>"
+
+        # Copying child Page B:
+        # 4. create_page -> tree_tools/insert_node
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <tree-tools>
-            <level-node>
+            <node>
                 <tree-id>page-copy-2</tree-id>
-            </level-node>
+            </node>
         </tree-tools>
         """
+        # 5. page.entries (source) -> tree_tools/get_entries_for_page (empty)
+        client.api_response = "<entries><response/></entries>"
 
         # Perform copy
         new_dir = source_dir.copy_to(destination)
@@ -110,10 +117,10 @@ class TestNotebookDirectoryIntegration:
         # Verify API calls were made
         # First call should be to create the directory
         api_call1 = client.api_log
-        assert "tree_tools/create_directory" in api_call1[0] or "create_directory" in str(
-            api_call1[0]
-        )
+        assert "tree_tools/create_directory" in api_call1[
+            0
+        ] or "create_directory" in str(api_call1[0])
 
         # The next two calls should be for copying the child pages
-        api_call2 = client.api_log
-        api_call3 = client.api_log
+        client.api_log
+        client.api_log

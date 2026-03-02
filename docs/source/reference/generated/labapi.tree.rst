@@ -29,7 +29,7 @@ labapi.tree
 
 .. autosummary::
    :toctree:
-   :template: custom-module-template.rst                 
+   :template: custom-module-template.rst
    :recursive:
 
    collection
@@ -37,8 +37,4 @@ labapi.tree
    mixins
    notebook
    page
-   test_collection
-   test_directory
-   test_notebook
-   test_page
 

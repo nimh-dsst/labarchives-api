@@ -29,15 +29,11 @@ labapi.entry.entries
 
 .. autosummary::
    :toctree:
-   :template: custom-module-template.rst                 
+   :template: custom-module-template.rst
    :recursive:
 
    attachment
    base
-   test_attachment
-   test_base
-   test_text
-   test_widget
    text
    widget
 

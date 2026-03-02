@@ -48,7 +48,9 @@ def test_notebook(la_user: LA.User):
     return notebooks[0]
 
 
-def get_or_create_dir(parent: LA.NotebookTreeNode, name: str) -> LA.NotebookDirectory:
+def get_or_create_dir(
+    parent: LA.Notebook | LA.NotebookDirectory, name: str
+) -> LA.NotebookDirectory:
     """Helper to find a directory by name or create it if missing."""
     existing = parent[Index.Name : name]
     if existing:

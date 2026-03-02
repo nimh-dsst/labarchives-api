@@ -29,14 +29,12 @@ labapi
 
 .. autosummary::
    :toctree:
-   :template: custom-module-template.rst                 
+   :template: custom-module-template.rst
    :recursive:
 
    browser
    client
    entry
-   test_client
-   test_user
    tree
    user
    util

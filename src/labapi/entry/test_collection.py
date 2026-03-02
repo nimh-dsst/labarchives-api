@@ -99,9 +99,12 @@ class TestEntriesIntegration:
 
         # Mock API response
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <eid>new_text_eid</eid>
-        </entry>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>new_text_eid</eid>
+            </entry>
+        </entries>
         """
 
         entry = entries.create_entry("text entry", "<p>New content</p>")
@@ -125,9 +128,12 @@ class TestEntriesIntegration:
         entries = Entries([], user, mock_page)
 
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <eid>new_heading_eid</eid>
-        </entry>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>new_heading_eid</eid>
+            </entry>
+        </entries>
         """
 
         entry = entries.create_entry("heading", "<h1>Title</h1>")
@@ -141,9 +147,12 @@ class TestEntriesIntegration:
         entries = Entries([], user, mock_page)
 
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <eid>new_plain_eid</eid>
-        </entry>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>new_plain_eid</eid>
+            </entry>
+        </entries>
         """
 
         entry = entries.create_entry("plain text entry", "Plain text content")
@@ -156,9 +165,12 @@ class TestEntriesIntegration:
         entries = Entries([], user, mock_page)
 
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <eid>new_attachment_eid</eid>
-        </entry>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>new_attachment_eid</eid>
+            </entry>
+        </entries>
         """
 
         # Create attachment
@@ -191,14 +203,20 @@ class TestEntriesIntegration:
 
         # Mock API responses (first for attachment, then for text)
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <eid>json_attachment_eid</eid>
-        </entry>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>json_attachment_eid</eid>
+            </entry>
+        </entries>
         """
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <eid>json_text_eid</eid>
-        </entry>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>json_text_eid</eid>
+            </entry>
+        </entries>
         """
 
         # Create JSON entry
