@@ -53,5 +53,5 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = "src"
-testpaths = ["tests"]
+testpaths = ["tests", "src"]
 addopts = "--cov=labapi --cov-report=term-missing"
