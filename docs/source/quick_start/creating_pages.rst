@@ -63,9 +63,7 @@ Creating Entries
 Entry Types
 ~~~~~~~~~~~
 
-The following entry types are supported:
-
-.. tell them to see entry types docs
+The following entry types are supported. For more detailed information, see the :doc:`/guide/entries` guide.
 
 .. list-table::
    :header-rows: 1
@@ -86,3 +84,26 @@ The following entry types are supported:
    * - ``"attachment"``
      - ``Attachment``
      - File uploads (images, documents, data files, etc.) 
+
+Reading Entries
+---------------
+
+Access the entries on a page through the ``entries`` property, which behaves like a standard Python list:
+
+.. code-block:: python
+
+    # Iterate through all entries
+    for entry in page.entries:
+        print(f"Type: {entry.content_type}")
+        print(f"Content: {entry.content}")
+
+    # Access by index
+    first_entry = page.entries[0]
+    
+    # Check entry types
+    from labapi.entry import TextEntry, AttachmentEntry
+
+    if isinstance(first_entry, TextEntry):
+        print("This is a text-based entry")
+    elif isinstance(first_entry, AttachmentEntry):
+        print(f"This is a file: {first_entry.content.filename}")

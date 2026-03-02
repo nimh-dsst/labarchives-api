@@ -46,7 +46,7 @@ Directories are deleted using the same method. The entire directory and all its 
     directory.delete()
 
 .. warning::
-   When you delete a directory, all pages and subdirectories within it are moved together to the ``API Deleted Items``directory. 
+   When you delete a directory, all pages and subdirectories within it are moved together to the "API Deleted Items" directory. 
    Make sure you want to delete all contents before proceeding.
 
 Recovering Deleted Items
@@ -77,4 +77,6 @@ Deleting Entries
 .. note::
     Entries (text entries, attachments, headers, etc.) cannot be deleted through the API at this time.
 
-   See :ref:`entries` for more information about working with entries.
+    See :ref:`entries` for more information about working with entries.
+
+    .. TODO the ref here doesn't work

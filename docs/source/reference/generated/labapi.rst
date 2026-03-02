@@ -35,6 +35,8 @@ labapi
    browser
    client
    entry
+   test_client
+   test_user
    tree
    user
    util

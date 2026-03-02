@@ -19,6 +19,15 @@ class WidgetEntry(BaseTextEntry):
     content is often represented as text (e.g., HTML, JSON).
     """
 
+    @BaseTextEntry.content.setter
+    @override
+    def content(self, value: str) -> None:
+        """Widget entries are read-only in labapi.
+
+        :raises AttributeError: Always, as updating widget content is not supported.
+        """
+        raise AttributeError("Widget entries are read-only.")
+
     @property
     @override
     def content_type(self) -> str:

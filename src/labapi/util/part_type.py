@@ -42,7 +42,7 @@ _ALL_IMPLEMENTED_PART_TYPES = (
     "plain text entry",
     "heading",
     "text entry",
-    "widget entry",  # NOTE only partially implemented
+    "widget entry",  # NOTE read-only
 )
 
 type ImplementedPartType = Literal[

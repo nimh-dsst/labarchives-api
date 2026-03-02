@@ -37,4 +37,6 @@ labapi.entry
    comment
    entries
    json_data
+   test_attachment
+   test_collection
 

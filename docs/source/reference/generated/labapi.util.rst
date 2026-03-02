@@ -36,4 +36,8 @@ labapi.util
    index
    notebookinit
    part_type
+   test_extract
+   test_index
+   test_notebookinit
+   test_part_type
 
