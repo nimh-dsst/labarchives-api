@@ -410,6 +410,15 @@ class AbstractTreeContainer(
     def enumerate_all(
         self, _current_depth: int = 0, *, max_depth: int = 1
     ) -> Sequence[str]:
+        """Enumerates all children (directories and pages) up to a specified depth.
+
+        Returns relative path strings from the current container for all descendant
+        nodes, including both directories and pages. Each path is relative to this
+        container (e.g., "Folder/Page" or "Folder/Subfolder/Page").
+
+        :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :returns: A sequence of relative path strings for all descendants.
+        """
         current: MutableSequence[str] = []
 
         if _current_depth >= max_depth:
@@ -431,10 +440,26 @@ class AbstractTreeContainer(
         return current
 
     def enumerate_dirs(self, *, max_depth: int = 1) -> Sequence[str]:
+        """Enumerates only directories up to a specified depth.
+
+        Returns relative path strings from the current container for all descendant
+        directories (excluding pages). Each path is relative to this container.
+
+        :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :returns: A sequence of relative path strings for all descendant directories.
+        """
         all_names = self.enumerate_all(max_depth=max_depth)
         return [name for name in all_names if self.traverse(name).is_dir()]
 
     def enumerate_pages(self, *, max_depth: int = 1) -> Sequence[str]:
+        """Enumerates only pages up to a specified depth.
+
+        Returns relative path strings from the current container for all descendant
+        pages (excluding directories). Each path is relative to this container.
+
+        :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :returns: A sequence of relative path strings for all descendant pages.
+        """
         all_names = self.enumerate_all(max_depth=max_depth)
         return [name for name in all_names if not self.traverse(name).is_dir()]
 

@@ -63,7 +63,78 @@ To get a list of all children that match a given name, use :attr:`~labapi.util.i
    # Get all pages named "Results"
    results_pages = notebook[Index.Name:"Results"]
 
-.. TODO listing children
+Finding Children
+----------------
+
+To discover what the contents of a directory are, ``labapi`` provides the following methods available on
+:class:`~labapi.tree.notebook.Notebook` and :class:`~labapi.tree.directory.NotebookDirectory`:
+
+Listing All Children
+^^^^^^^^^^^^^^^^^^^^
+
+:meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_all` returns relative path strings for all descendants up to ``max_depth`` (default is 1):
+
+.. code-block:: python
+
+   all_items = notebook.enumerate_all()
+   # Returns: ['Experiments', 'Notes']
+
+   all_items = notebook.enumerate_all(max_depth=3)
+   # Returns: ['Experiments', 'Experiments/2024', 'Experiments/2024/Results', 'Experiments/Archive', 'Notes']
+
+   experiments = notebook['Experiments']
+   experiment_items = experiments.enumerate_all(max_depth=2)
+   # Returns: ['2024', '2024/Results', 'Archive']
+
+.. note::
+   The ``max_depth`` parameter controls how many levels deep to traverse in the tree structure:
+
+   Given this tree structure::
+
+      Notebook/
+      ├── Experiments/
+      │   ├── 2024/
+      │   │   └── Results
+      │   └── Archive
+      └── Notes
+
+   - ``max_depth=1`` returns: ``['Experiments', 'Notes']``
+   - ``max_depth=2`` returns: ``['Experiments', 'Experiments/2024', 'Experiments/Archive', 'Notes']``
+   - ``max_depth=3`` returns: ``['Experiments', 'Experiments/2024', 'Experiments/2024/Results', 'Experiments/Archive', 'Notes']``
+
+Listing Only Directories
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+:meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_dirs` returns relative path strings for directories only:
+
+.. code-block:: python
+
+   directories = notebook.enumerate_dirs()
+   # Returns: ['Experiments']
+
+   directories = notebook.enumerate_dirs(max_depth=2)
+   # Returns: ['Experiments', 'Experiments/2024']
+
+   experiments = notebook['Experiments']
+   subdirs = experiments.enumerate_dirs()
+   # Returns: ['2024']
+
+Listing Only Pages
+^^^^^^^^^^^^^^^^^^
+
+:meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_pages` returns relative path strings for pages only:
+
+.. code-block:: python
+
+   pages = notebook.enumerate_pages()
+   # Returns: ['Notes']
+
+   pages = notebook.enumerate_pages(max_depth=2)
+   # Returns: ['Experiments/Archive', 'Notes']
+
+   experiments = notebook['Experiments']
+   experiment_pages = experiments.enumerate_pages(max_depth=2)
+   # Returns: ['Archive', '2024/Results']
 
 
 Accessing the Parent
