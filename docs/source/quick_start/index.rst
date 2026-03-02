@@ -10,3 +10,4 @@ Quick Start
   navigating
   uploading_files
   writing_rich_text
+  deleting

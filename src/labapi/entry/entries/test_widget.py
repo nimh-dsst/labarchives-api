@@ -39,20 +39,11 @@ class TestWidgetEntryUnit:
 class TestWidgetEntryIntegration:
     """Integration tests with real objects and mocked API."""
 
-    def test_widget_entry_content_setter(self, client, user: User):
-        """Test WidgetEntry.content setter updates via API (inherited from BaseTextEntry)."""
+    def test_widget_entry_content_setter(self, user: User):
+        """Test WidgetEntry.content setter raises AttributeError as it is read-only."""
         entry = WidgetEntry("eid_widget", "Old widget data", user)
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <success>true</success>
-        </entry>
-        """
+        with pytest.raises(AttributeError, match="Widget entries are read-only."):
+            entry.content = "New widget data"
 
-        entry.content = "New widget data"
-
-        api_call = client.api_log
-        assert api_call[0] == "entries/update_entry"
-        assert api_call[1]["entry_data"] == "New widget data"
-        assert api_call[1]["eid"] == "eid_widget"
-        assert entry.content == "New widget data"
+        assert entry.content == "Old widget data"

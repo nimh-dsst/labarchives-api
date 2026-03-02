@@ -5,4 +5,6 @@ User Guide
   :maxdepth: 2
 
   auth
+  entries
   json_entries
+  api_calls

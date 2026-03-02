@@ -37,4 +37,8 @@ labapi.tree
    mixins
    notebook
    page
+   test_collection
+   test_directory
+   test_notebook
+   test_page
 

@@ -34,6 +34,10 @@ labapi.entry.entries
 
    attachment
    base
+   test_attachment
+   test_base
+   test_text
+   test_widget
    text
    widget
 
