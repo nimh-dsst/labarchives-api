@@ -19,6 +19,7 @@ from labapi.util import (
     get_normalized_part_type,
 )
 
+
 from .mixins import AbstractTreeContainer, AbstractTreeNode
 
 if TYPE_CHECKING:
@@ -79,6 +80,7 @@ class NotebookPage(AbstractTreeNode):
                 nbid=self.root.id,
                 entry_data=True,
             )
+
             for entry in entries_tree.iterfind(".//entry"):
                 entry_data = extract_etree(
                     entry,

@@ -8,7 +8,12 @@ from typing import Any
 import pytest
 from lxml import etree
 
-from labapi.util.extract import EtreeExtractorDict, _flatten_dict, extract_etree, to_bool
+from labapi.util.extract import (
+    EtreeExtractorDict,
+    _flatten_dict,
+    extract_etree,
+    to_bool,
+)
 
 
 # Tests for _flatten_dict
@@ -190,7 +195,7 @@ def test_extract_etree_missing_element_raises():
         "missing": str,
     }
 
-    with pytest.raises(ValueError, match=r"Could not find value for '\\.//missing'"):
+    with pytest.raises(ValueError, match=r"Could not find value for './/missing'"):
         extract_etree(element, format_dict)
 
 

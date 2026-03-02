@@ -33,7 +33,8 @@ builtin-auth = [
     "installed-browsers>=0.1.5"
 ]
 dotenv = [
-    "python-dotenv>=1.2.1"
+    "labapi",
+    "python-dotenv>=1.2.1",
 ]
 
 [dependency-groups]
@@ -55,3 +56,11 @@ where = ["src"]
 pythonpath = "src"
 testpaths = ["tests", "src"]
 addopts = "--cov=labapi --cov-report=term-missing"
+
+[tool.uv.workspace]
+members = [
+    ".",
+]
+
+[tool.uv.sources]
+labapi = { workspace = true }

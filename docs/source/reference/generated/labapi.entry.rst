@@ -29,7 +29,7 @@ labapi.entry
 
 .. autosummary::
    :toctree:
-   :template: custom-module-template.rst                 
+   :template: custom-module-template.rst
    :recursive:
 
    attachment
@@ -37,6 +37,4 @@ labapi.entry
    comment
    entries
    json_data
-   test_attachment
-   test_collection
 

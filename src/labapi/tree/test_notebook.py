@@ -86,6 +86,8 @@ class TestNotebookIntegration:
         </notebooks>
         """
 
+        client.clear_log()
+
         # Access property (should trigger API call)
         result = notebook.inserts_from_bottom
 
@@ -113,8 +115,8 @@ class TestNotebookIntegration:
         result1 = notebook.inserts_from_bottom
         assert result1 is False  # true means inserts from top, not bottom
 
-        # Pop the API log
-        client.api_log
+        # Clear the API log
+        client.clear_log()
 
         # Second access should not make another API call
         result2 = notebook.inserts_from_bottom

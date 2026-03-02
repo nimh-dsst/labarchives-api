@@ -7,6 +7,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import pytest
 import requests
+
 # from dotenv import load_dotenv
 from lxml import etree
 
@@ -79,6 +80,17 @@ class MockClient(LA.Client):
     def api_log(self):
         return self._api_logs.pop(0)
 
+    def flush_responses(self):
+        """Clears all queued API responses."""
+        self._api_response.clear()
+
+    def flush_logs(self):
+        """Clears all recorded API logs."""
+        self._api_logs.clear()
+
+    def clear_log(self):
+        self.flush_logs()
+
     @override
     def api_get(
         self,
@@ -105,7 +117,11 @@ class MockClient(LA.Client):
         body: dict[str, str] | BufferedIOBase,
         **kwargs: Any,
     ) -> requests.Response:
-        self._api_logs.append((api_method_uri, kwargs))
+        log_kwargs = {**kwargs}
+        if isinstance(body, dict):
+            log_kwargs.update(body)
+
+        self._api_logs.append((api_method_uri, log_kwargs))
 
         assert len(self._api_response) != 0, (
             "Invalid Mock Client State: Did not load API Response"
@@ -126,7 +142,16 @@ class MockClient(LA.Client):
 @pytest.fixture
 def client():
     """Fixture providing a MockClient instance."""
-    return MockClient()
+    client = MockClient()
+    yield client
+    # Ensure all queued responses were consumed
+    assert len(client._api_response) == 0, (
+        f"Unused API responses in MockClient: {len(client._api_response)}"
+    )
+    # Ensure all API calls were verified (logs popped)
+    assert len(client._api_logs) == 0, (
+        f"Unverified API calls in MockClient: {len(client._api_logs)}"
+    )
 
 
 @pytest.fixture
@@ -164,6 +189,7 @@ def user(client: MockClient):
         "users/user_access_info",
         {"login_or_email": "test_email@test.test", "password": "test_authcode"},
     )
+    client.flush_logs()
     return result
 
 
@@ -190,23 +216,25 @@ def new_notebook(client: MockClient, notebooks: LA.Notebooks):
 
     notebook = notebooks.create_notebook("Test Notebook 4")
 
-    client.api_log  # NOTE this looks ugly but it pops the last api call
+    client.flush_logs()
     return notebook
 
 
-def traverse_populate(node: LA.NotebookTreeNode | LA.Notebook):
+def traverse_populate(node: LA.Notebook | LA.NotebookDirectory):
     """Helper function to recursively populate a notebook tree."""
-    for _node in node.keys():
-        if isinstance(_node, Sequence):
-            raise ValueError("Iter did not return iterator over ids")
+    # Trigger population
+    len(node)
 
-        if isinstance(_node, LA.NotebookTreeNode | LA.Notebook):
+    for _node in node.values():
+        if isinstance(_node, LA.Notebook | LA.NotebookDirectory):
             traverse_populate(_node)
 
 
 @pytest.fixture
 def notebook_tree(client: MockClient, notebook: LA.Notebook) -> LA.Notebook:
     """Fixture providing a fully populated notebook tree structure."""
+    notebook.refresh()
+
     # Level 0
     client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
     <tree-tools>
@@ -352,6 +380,10 @@ def notebook_tree(client: MockClient, notebook: LA.Notebook) -> LA.Notebook:
     </tree-tools>
     """
 
+    # Extra response for tests that hit empty directories
+    client.api_response = "<tree-tools><level-nodes type='array'/></tree-tools>"
+
     traverse_populate(notebook)
+    client.flush_logs()
 
     return notebook

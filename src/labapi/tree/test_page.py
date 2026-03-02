@@ -72,6 +72,7 @@ class TestNotebookPageIntegration:
         page = notebook_tree[Index.Id : "page-1"]
 
         assert isinstance(page, NotebookPage)
+        client.clear_log()
 
         # Mock API response for entries
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
@@ -111,6 +112,7 @@ class TestNotebookPageIntegration:
         page = notebook_tree[Index.Id : "page-1"]
 
         assert isinstance(page, NotebookPage)
+        client.clear_log()
 
         # Mock API response
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
@@ -144,6 +146,7 @@ class TestNotebookPageIntegration:
         page = notebook_tree[Index.Id : "page-1"]
 
         assert isinstance(page, NotebookPage)
+        client.clear_log()
 
         # Mock API response for first load
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
