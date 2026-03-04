@@ -17,14 +17,14 @@ class TestUserUnit:
     def test_user_stores_id(self):
         """Test User stores the provided user ID."""
         mock_client = Mock()
-        user = User("test_id_123", [], mock_client)
+        user = User("test_id_123", "test@example.com", [], mock_client)
 
         assert user.id == "test_id_123"
 
     def test_user_stores_client(self):
         """Test User stores the provided client."""
         mock_client = Mock()
-        user = User("test_id", [], mock_client)
+        user = User("test_id", "test@example.com", [], mock_client)
 
         assert user.client is mock_client
 
@@ -34,7 +34,7 @@ class TestUserUnit:
         mock_element = etree.fromstring(b"<test/>")
         mock_client.api_get.return_value = mock_element
 
-        user = User("user_123", [], mock_client)
+        user = User("user_123", "test@example.com", [], mock_client)
         result = user.api_get("test_endpoint", param1="value1")
 
         mock_client.api_get.assert_called_once_with(
@@ -48,7 +48,7 @@ class TestUserUnit:
         mock_element = etree.fromstring(b"<test/>")
         mock_client.api_post.return_value = mock_element
 
-        user = User("user_456", [], mock_client)
+        user = User("user_456", "test@example.com", [], mock_client)
         result = user.api_post("test_endpoint", {"data": "test"}, param1="value1")
 
         mock_client.api_post.assert_called_once_with(
@@ -67,7 +67,7 @@ class TestUserIntegration:
             NotebookInit(id="nb2", name="Notebook 2", is_default=False),
         ]
 
-        user = User("user_id_123", notebooks_init, client)
+        user = User("user_id_123", "test@example.com", notebooks_init, client)
 
         assert user.id == "user_id_123"
         assert isinstance(user.notebooks, Notebooks)

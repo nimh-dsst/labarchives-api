@@ -13,4 +13,5 @@ including custom authentication, specialized entry types, and direct API access.
   entries
   json_entries
   api_calls
+  index_access
   clearing_cache

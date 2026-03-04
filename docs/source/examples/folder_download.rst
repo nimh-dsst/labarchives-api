@@ -61,10 +61,11 @@ Example Code
     import argparse
     import sys
     from pathlib import Path
+
     from labapi import Client
-    from labapi.tree.directory import NotebookDirectory
-    from labapi.tree.notebook import Notebook
+    from labapi.tree.mixins import AbstractTreeContainer
     from labapi.tree.page import NotebookPage
+    from labapi.user import User
 
 
     def sanitize_filename(name: str) -> str:
@@ -72,10 +73,10 @@ Example Code
         # Replace problematic characters
         unsafe_chars = '<>:"/\\|?*'
         for char in unsafe_chars:
-            name = name.replace(char, '_')
+            name = name.replace(char, "_")
 
         # Remove leading/trailing spaces and dots
-        name = name.strip('. ')
+        name = name.strip(". ")
 
         # Limit length to avoid filesystem issues
         if len(name) > 200:
@@ -84,7 +85,7 @@ Example Code
         return name or "untitled"
 
 
-    def download_page(page: NotebookPage, output_dir: Path):
+    def download_page(page: NotebookPage, output_dir: Path) -> None:
         """Download a page and its entries to a directory."""
 
         page_dir = output_dir / sanitize_filename(page.name)
@@ -112,7 +113,7 @@ Example Code
 
             try:
                 if entry.content_type == "Attachment":
-                    attachment = entry.get_attachment()
+                    attachment = entry.content
                     filename = sanitize_filename(attachment.filename)
                     output_path = page_dir / f"{entry_prefix}_attachment_{filename}"
                     print(f"    Entry {i}: Attachment - {filename}")
@@ -150,7 +151,7 @@ Example Code
                     f.write(f"Error downloading entry {i}: {e}\nEntry type: {entry.content_type}\n")
 
 
-    def download_directory(directory: NotebookDirectory | Notebook, output_dir: Path):
+    def download_directory(directory: AbstractTreeContainer, output_dir: Path) -> None:
         """Recursively download a directory and its contents."""
 
         dir_name = sanitize_filename(directory.name)
@@ -163,17 +164,19 @@ Example Code
         for child in directory.children:
             if child.is_dir():
                 # Recursively download subdirectory
-                download_directory(child, dir_path)
+                download_directory(child.as_dir(), dir_path)
             else:
                 # Download page
-                download_page(child, dir_path)
+                download_page(child.as_page(), dir_path)
 
 
-    def download_notebook_or_folder(user, notebook_name: str, path: str | None, output_dir: Path):
+    def download_notebook_or_folder(
+        user: User, notebook_name: str, path: str | None, output_dir: Path
+    ) -> None:
         """Download a notebook or folder from LabArchives."""
 
+        notebooks = user.notebooks
         try:
-            notebooks = user.notebooks
             notebook = notebooks[notebook_name]
 
             # Navigate to subfolder if specified
@@ -185,10 +188,10 @@ Example Code
 
             # Download the target
             if target.is_dir():
-                download_directory(target, output_dir)
+                download_directory(target.as_dir(), output_dir)
             else:
                 # It's a page
-                download_page(target, output_dir)
+                download_page(target.as_page(), output_dir)
 
             print(f"\nDownload complete! Content saved to: {output_dir.absolute()}")
 
@@ -201,7 +204,7 @@ Example Code
             sys.exit(1)
 
 
-    def main():
+    def main() -> None:
         parser = argparse.ArgumentParser(
             description="Download LabArchives folder structure to local disk"
         )
