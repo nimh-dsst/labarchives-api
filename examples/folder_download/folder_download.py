@@ -50,16 +50,16 @@ def download_page(page: NotebookPage, output_dir: Path) -> None:
 
     # Save page metadata
     metadata_file = page_dir / "_metadata.txt"
-    with open(metadata_file, 'w', encoding='utf-8') as f:
+    with open(metadata_file, "w", encoding="utf-8") as f:
         f.write(f"Page: {page.name}\n")
         f.write(f"ID: {page.id}\n")
         f.write(f"Entry count: {len(page.entries)}\n")
 
     # Maps content_type → (filename suffix, display label)
     text_entry_types = {
-        "text entry":       ("_text.html",       "Text entry"),
-        "plain text entry": ("_plaintext.txt",   "Plain text entry"),
-        "heading":          ("_header.txt",       "Header"),
+        "text entry": ("_text.html", "Text entry"),
+        "plain text entry": ("_plaintext.txt", "Plain text entry"),
+        "heading": ("_header.txt", "Header"),
     }
 
     # Download each entry
@@ -72,38 +72,44 @@ def download_page(page: NotebookPage, output_dir: Path) -> None:
                 filename = sanitize_filename(attachment.filename)
                 output_path = page_dir / f"{entry_prefix}_attachment_{filename}"
                 print(f"    Entry {i}: Attachment - {filename}")
-                with open(output_path, 'wb') as f:
+                with open(output_path, "wb") as f:
                     attachment.seek(0)
                     f.write(attachment.read())
                 if attachment.caption:
                     caption_file = page_dir / f"{entry_prefix}_caption.txt"
-                    with open(caption_file, 'w', encoding='utf-8') as f:
+                    with open(caption_file, "w", encoding="utf-8") as f:
                         f.write(attachment.caption)
 
             elif entry.content_type in text_entry_types:
                 suffix, label = text_entry_types[entry.content_type]
                 output_path = page_dir / f"{entry_prefix}{suffix}"
                 print(f"    Entry {i}: {label}")
-                with open(output_path, 'w', encoding='utf-8') as f:
+                with open(output_path, "w", encoding="utf-8") as f:
                     f.write(entry.content)
 
             elif entry.content_type == "widget entry":
                 output_path = page_dir / f"{entry_prefix}_widget.txt"
                 print(f"    Entry {i}: Widget (read-only)")
-                with open(output_path, 'w', encoding='utf-8') as f:
-                    f.write(f"Widget Entry (ID: {entry.id})\nNote: Widget entries are read-only and cannot be fully exported\n")
+                with open(output_path, "w", encoding="utf-8") as f:
+                    f.write(
+                        f"Widget Entry (ID: {entry.id})\nNote: Widget entries are read-only and cannot be fully exported\n"
+                    )
 
             else:
                 output_path = page_dir / f"{entry_prefix}_unknown.txt"
                 print(f"    Entry {i}: Unknown type ({entry.content_type})")
-                with open(output_path, 'w', encoding='utf-8') as f:
-                    f.write(f"Unknown entry type: {entry.content_type}\nEntry ID: {entry.id}\n")
+                with open(output_path, "w", encoding="utf-8") as f:
+                    f.write(
+                        f"Unknown entry type: {entry.content_type}\nEntry ID: {entry.id}\n"
+                    )
 
         except Exception as e:
             print(f"    Entry {i}: Error - {e}")
             error_file = page_dir / f"{entry_prefix}_error.txt"
-            with open(error_file, 'w', encoding='utf-8') as f:
-                f.write(f"Error downloading entry {i}: {e}\nEntry type: {entry.content_type}\n")
+            with open(error_file, "w", encoding="utf-8") as f:
+                f.write(
+                    f"Error downloading entry {i}: {e}\nEntry type: {entry.content_type}\n"
+                )
 
 
 def download_directory(directory: AbstractTreeContainer, output_dir: Path) -> None:
@@ -163,25 +169,20 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Download LabArchives folder structure to local disk"
     )
-    parser.add_argument(
-        "output",
-        help="Local output directory path"
-    )
+    parser.add_argument("output", help="Local output directory path")
     parser.add_argument(
         "--notebook",
         "-n",
         required=True,
-        help="Name of the LabArchives notebook to download from"
+        help="Name of the LabArchives notebook to download from",
     )
     parser.add_argument(
         "--path",
         "-p",
-        help="Optional path within notebook (e.g., 'Experiments/2024'). If not specified, downloads entire notebook."
+        help="Optional path within notebook (e.g., 'Experiments/2024'). If not specified, downloads entire notebook.",
     )
     parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        help="Overwrite existing files"
+        "--overwrite", action="store_true", help="Overwrite existing files"
     )
 
     args = parser.parse_args()
@@ -201,7 +202,7 @@ def main() -> None:
         client = Client()  # Loads credentials from .env
         print("Authenticating...")
         user = client.default_authenticate()  # Opens browser for OAuth
-        print(f"✓ Authenticated successfully")
+        print("✓ Authenticated successfully")
     except Exception as e:
         print(f"Authentication error: {e}")
         print("\nMake sure you have a .env file with your credentials:")

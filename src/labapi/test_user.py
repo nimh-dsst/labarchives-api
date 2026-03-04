@@ -60,7 +60,7 @@ class TestUserUnit:
 class TestUserIntegration:
     """Integration tests with real objects and mocked API."""
 
-    def test_user_initialization_creates_notebooks(self, client: MockClient):
+    def test_user_initialization_creates_notebooks(self, client):
         """Test User initialization creates a Notebooks collection."""
         notebooks_init = [
             NotebookInit(id="nb1", name="Notebook 1", is_default=True),
@@ -78,11 +78,11 @@ class TestUserIntegration:
         """Test User.id property returns the user ID."""
         assert user.id == "testid1"
 
-    def test_user_client_property(self, user: User, client: MockClient):
+    def test_user_client_property(self, user: User, client):
         """Test User.client property returns the client."""
         assert user.client is client
 
-    def test_user_api_get_full_flow(self, client: MockClient, user: User):
+    def test_user_api_get_full_flow(self, client, user: User):
         """Test User.api_get full flow with MockClient."""
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <result>
@@ -100,7 +100,7 @@ class TestUserIntegration:
         assert api_call[1]["param1"] == "value1"
         assert api_call[1]["uid"] == "testid1"
 
-    def test_user_api_post_full_flow(self, client: MockClient, user: User):
+    def test_user_api_post_full_flow(self, client, user: User):
         """Test User.api_post full flow with MockClient."""
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <result>
@@ -108,16 +108,14 @@ class TestUserIntegration:
         </result>
         """
 
-        response = user.api_post(
-            "test_post_endpoint", {"data": "test_data"}, param1="value1"
-        )
+        user.api_post("test_post_endpoint", {"data": "test_data"}, param1="value1")
 
         api_call = client.api_log
         assert api_call[0] == "test_post_endpoint"
         assert api_call[1]["param1"] == "value1"
         assert api_call[1]["uid"] == "testid1"
 
-    def test_user_get_max_upload_size(self, client: MockClient, user: User):
+    def test_user_get_max_upload_size(self, client, user: User):
         """Test User.get_max_upload_size retrieves and parses max file size."""
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <users>

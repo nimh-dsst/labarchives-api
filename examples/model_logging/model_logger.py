@@ -83,10 +83,14 @@ class ModelLogger:
         page = run_dir.create_page("Model Run Details")
         entries = page.entries
 
-        print(f"Logging to: {self.notebook_name}/Model Log/{self.user.email}/{timestamp}/")
+        print(
+            f"Logging to: {self.notebook_name}/Model Log/{self.user.email}/{timestamp}/"
+        )
 
         # 1. Log Commit Hash
-        entries.create_entry("text entry", f"<p><strong>Git Commit:</strong> {commit}</p>")
+        entries.create_entry(
+            "text entry", f"<p><strong>Git Commit:</strong> {commit}</p>"
+        )
 
         # 2. Log Tags
         # Flatten tags if they are mixed str and list[str]
@@ -97,7 +101,12 @@ class ModelLogger:
             else:
                 flat_tags.append(tag)
 
-        tags_html = "".join([f'<span style="background: #eee; padding: 2px 5px; margin: 2px; border-radius: 3px;">{t}</span>' for t in flat_tags])
+        tags_html = "".join(
+            [
+                f'<span style="background: #eee; padding: 2px 5px; margin: 2px; border-radius: 3px;">{t}</span>'
+                for t in flat_tags
+            ]
+        )
         entries.create_entry("text entry", f"<p><strong>Tags:</strong> {tags_html}</p>")
 
         # 3. Log Metrics
@@ -111,7 +120,7 @@ class ModelLogger:
             BytesIO(results),
             "application/octet-stream",
             "results.bin",
-            "Model prediction results"
+            "Model prediction results",
         )
         entries.create_entry("Attachment", results_attachment)
 
@@ -119,9 +128,9 @@ class ModelLogger:
         for i, fig_data in enumerate(figures, 1):
             fig_attachment = Attachment(
                 BytesIO(fig_data),
-                "image/png", # Assuming PNG, could be parameterized
+                "image/png",  # Assuming PNG, could be parameterized
                 f"figure_{i}.png",
-                f"Model evaluation figure {i}"
+                f"Model evaluation figure {i}",
             )
             entries.create_entry("Attachment", fig_attachment)
 
@@ -138,7 +147,7 @@ def main() -> None:
         metrics={"f1": 0.88, "accuracy": 0.92, "loss": 0.15},
         results=b"Prediction results data...",
         figures=[b"fake figure 1 content", b"fake figure 2 content"],
-        commit="a1b2c3d4e5f67890"
+        commit="a1b2c3d4e5f67890",
     )
 
 
