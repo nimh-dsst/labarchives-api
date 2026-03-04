@@ -41,10 +41,6 @@ class Attachment:
         The MIME type is automatically guessed from the file's name.
         If the MIME type cannot be determined, it defaults to "application/octet-stream".
 
-        .. todo::
-           Rewrite to clone the BufferedRandom into a tempfile or memory buffer
-           to allow using BufferedReader as well.
-
         :param file: The file object to create an attachment from. Must have a `name` attribute.
         :returns: A new Attachment object wrapping the file.
         """

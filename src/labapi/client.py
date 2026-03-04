@@ -14,10 +14,8 @@ from os import getenv
 
 from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.hazmat.primitives.hmac import HMAC
-from requests import Response
-from requests import codes as status_codes
+from requests import codes as status_codes, Response, Session
 from requests.adapters import HTTPAdapter
-from requests import Session
 import ssl
 
 from .user import User
@@ -86,7 +84,7 @@ class Client:
         akid: str | None = None,
         akpass: bytes | str | None = None,
         *,
-        strict_cert: bool = True
+        strict_cert: bool = True,
     ):
         """
         Initializes a new LabArchives API client.
@@ -188,7 +186,7 @@ class Client:
 
         notebooks.sort(key=lambda k: k.is_default)
 
-        return User(uid, notebooks, self)
+        return User(uid, user_email, notebooks, self)
 
     @staticmethod
     def _handle_request_status(response: Response) -> None:

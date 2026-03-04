@@ -48,7 +48,9 @@ class TestEntryIntegration:
 
     def test_entry_from_part_type_text_entry(self, user: User):
         """Test Entry.from_part_type creates TextEntry for 'text entry'."""
-        entry = Entry.from_part_type("text entry", "eid_123", "<p>Test content</p>", user)
+        entry = Entry.from_part_type(
+            "text entry", "eid_123", "<p>Test content</p>", user
+        )
 
         assert isinstance(entry, TextEntry)
         assert entry.id == "eid_123"

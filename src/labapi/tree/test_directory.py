@@ -117,10 +117,11 @@ class TestNotebookDirectoryIntegration:
         # Verify API calls were made
         # First call should be to create the directory
         api_call1 = client.api_log
-        assert "tree_tools/create_directory" in api_call1[
+        assert "tree_tools/insert_node" in api_call1[
             0
-        ] or "create_directory" in str(api_call1[0])
+        ] or "insert_node" in str(api_call1[0])
 
         # The next two calls should be for copying the child pages
         client.api_log
         client.api_log
+        client.clear_log()

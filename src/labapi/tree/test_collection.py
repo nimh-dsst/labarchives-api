@@ -67,7 +67,9 @@ class TestNotebooksUnit:
         notebooks_init = [NotebookInit(id="nb1", name="Test", is_default=True)]
         notebooks = Notebooks(notebooks_init, mock_user)
 
-        with pytest.raises(KeyError, match='Notebook with name "Nonexistent" not found'):
+        with pytest.raises(
+            KeyError, match='Notebook with name "Nonexistent" not found'
+        ):
             notebooks["Nonexistent"]
 
     def test_notebooks_iter(self):
@@ -160,3 +162,4 @@ class TestNotebooksIntegration:
 
         with pytest.raises(RuntimeError, match="API returned an existing notebook ID"):
             notebooks.create_notebook("Duplicate")
+        client.clear_log()

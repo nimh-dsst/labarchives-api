@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import Mock
 
-import pytest
 from lxml import etree
 
 from labapi import User

@@ -10,9 +10,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, MutableSequence, Sequence, ValuesView
 from datetime import datetime
-from typing import TYPE_CHECKING, Self, overload, override, Literal, cast
+from typing import TYPE_CHECKING, ItemsView, Self, overload, override, Literal, cast
 
 from labapi.util import IdIndex, IdOrNameIndex, Index, NameIndex, extract_etree, to_bool
+
+from datetime import timedelta
+import time
+
 
 if TYPE_CHECKING:
     from labapi.user import User
@@ -193,7 +197,25 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         """
         if self.is_dir():
             return cast(AbstractTreeContainer, self)
-        raise TypeError("Node is not a directory")
+        else:
+            raise TypeError("Node is not a directory")
+        
+    def as_page(self) -> NotebookPage:
+        """Casts this node to a :class:`NotebookPage` if it is a page.
+
+        This method provides a convenient way to perform page-specific
+        operations on a node after checking its type, with static type
+        checking support.
+
+        :returns: The node cast to a :class:`NotebookPage`.
+        :raises TypeError: If the node is not a page (i.e., `is_dir()` returns `True`).
+        """
+        if not self.is_dir():
+            from . import page
+
+            return cast(page.NotebookPage, self)
+        else:
+            raise TypeError("Node is not a page")
 
 
 class AbstractTreeNode(AbstractBaseTreeNode):
@@ -306,6 +328,7 @@ class AbstractTreeContainer(
         """
         super().__init__(tree_id, name, root, parent, user)
         self._children: MutableSequence[AbstractTreeNode] = []
+        self._populated: bool = False
 
     @property
     def children(self) -> Sequence[AbstractTreeNode]:
@@ -313,18 +336,18 @@ class AbstractTreeContainer(
 
         :returns: A sequence of :class:`AbstractTreeNode` objects.
         """
+        self._ensure_populated()
         return self._children
 
     def _ensure_populated(self) -> None:
         """Ensures that the children of this container have been loaded from the API.
 
-        If the children list is empty, it makes an API call to retrieve the
-        tree level and populates the `_children` list with :class:`NotebookPage`
-        or :class:`NotebookDirectory` objects.
+        If the children have not been loaded yet, it makes an API call to
+        retrieve the tree level and populates the `_children` list.
         """
         from . import directory, page
 
-        if len(self.children) == 0:
+        if not self._populated:
             xml_tree = self.user.api_get(
                 "tree_tools/get_tree_level",
                 nbid=self.root.id,
@@ -357,6 +380,7 @@ class AbstractTreeContainer(
                     nodes.append(directory.NotebookDirectory(*args))
 
             self._children = nodes
+            self._populated = True
 
     def __len__(self) -> int:
         self._ensure_populated()
@@ -364,6 +388,10 @@ class AbstractTreeContainer(
 
     def __iter__(self) -> Iterator[str]:
         return iter(node.name for node in self.children)
+
+    @override
+    def items(self) -> ItemsView[str, AbstractBaseTreeNode]:
+        return {i.name: i for i in self._children}.items()
 
     @overload
     def __getitem__(self, key: str) -> AbstractBaseTreeNode: ...
@@ -408,7 +436,12 @@ class AbstractTreeContainer(
                 raise KeyError(f'Node with name "{key}" not found')
 
     def enumerate_all(
-        self, _current_depth: int = 0, *, max_depth: int = 1
+        self,
+        _current_depth: int = 0,
+        *,
+        max_depth: int = 1,
+        timeout: timedelta | None = None,
+        _timeout: float | None = None,
     ) -> Sequence[str]:
         """Enumerates all children (directories and pages) up to a specified depth.
 
@@ -417,6 +450,7 @@ class AbstractTreeContainer(
         container (e.g., "Folder/Page" or "Folder/Subfolder/Page").
 
         :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :param timeout: The maximum time to spend enumerating children.
         :returns: A sequence of relative path strings for all descendants.
         """
         current: MutableSequence[str] = []
@@ -424,13 +458,22 @@ class AbstractTreeContainer(
         if _current_depth >= max_depth:
             return current
 
+        if timeout is None:
+            timeout = timedelta(seconds=5)
+
+        if _timeout is None:
+            _timeout = time.monotonic() + timeout.total_seconds()
+
         for name, child in self.items():
+            if time.monotonic() > _timeout:
+                break
+
             try:
                 current.extend(
                     [
                         f"{self.name}/{child_name}"
                         for child_name in child.as_dir().enumerate_all(
-                            _current_depth + 1, max_depth=max_depth
+                            _current_depth + 1, max_depth=max_depth, _timeout=_timeout
                         )
                     ]
                 )
@@ -439,28 +482,34 @@ class AbstractTreeContainer(
 
         return current
 
-    def enumerate_dirs(self, *, max_depth: int = 1) -> Sequence[str]:
+    def enumerate_dirs(
+        self, *, max_depth: int = 1, timeout: timedelta | None = None
+    ) -> Sequence[str]:
         """Enumerates only directories up to a specified depth.
 
         Returns relative path strings from the current container for all descendant
         directories (excluding pages). Each path is relative to this container.
 
         :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :param timeout: The maximum time to spend enumerating children.
         :returns: A sequence of relative path strings for all descendant directories.
         """
-        all_names = self.enumerate_all(max_depth=max_depth)
+        all_names = self.enumerate_all(max_depth=max_depth, timeout=timeout)
         return [name for name in all_names if self.traverse(name).is_dir()]
 
-    def enumerate_pages(self, *, max_depth: int = 1) -> Sequence[str]:
+    def enumerate_pages(
+        self, *, max_depth: int = 1, timeout: timedelta | None = None
+    ) -> Sequence[str]:
         """Enumerates only pages up to a specified depth.
 
         Returns relative path strings from the current container for all descendant
         pages (excluding directories). Each path is relative to this container.
 
         :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :param timeout: The maximum time to spend enumerating children.
         :returns: A sequence of relative path strings for all descendant pages.
         """
-        all_names = self.enumerate_all(max_depth=max_depth)
+        all_names = self.enumerate_all(max_depth=max_depth, timeout=timeout)
         return [name for name in all_names if not self.traverse(name).is_dir()]
 
     @override
@@ -534,3 +583,4 @@ class AbstractTreeContainer(
         """
         # TODO invalidate all children first
         self._children = []
+        self._populated = False
