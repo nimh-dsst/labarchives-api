@@ -380,9 +380,6 @@ def notebook_tree(client: MockClient, notebook: LA.Notebook) -> LA.Notebook:
     </tree-tools>
     """
 
-    # Extra response for tests that hit empty directories
-    client.api_response = "<tree-tools><level-nodes type='array'/></tree-tools>"
-
     traverse_populate(notebook)
     client.flush_logs()
 
