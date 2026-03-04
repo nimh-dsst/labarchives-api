@@ -13,6 +13,8 @@ wheels/
 .env
 .python-version
 .ruff_cache/
+.mypy_cache/
+
 
 # Coverage reports
 .coverage
@@ -21,7 +23,14 @@ wheels/
 .vscode/
 .idea/
 *.iml
+.idea
 
+
+.claude/
 .notes
-
 .environment-*
+.mcp.json
+
+docs/build/
+
+
