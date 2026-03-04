@@ -1,0 +1,7 @@
+{
+  "f1": 0.912,
+  "accuracy": 0.945,
+  "loss": 0.082,
+  "epoch": 50,
+  "learning_rate": 0.001
+}

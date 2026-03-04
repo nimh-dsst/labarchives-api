@@ -1,0 +1,6 @@
+{
+  "experiment_id": "EXP-001",
+  "timestamp": "2026-03-04T10:00:00Z",
+  "measurements": [1.2, 1.5, 1.4, 1.6],
+  "average": 1.425
+}
