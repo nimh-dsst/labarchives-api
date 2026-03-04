@@ -3,6 +3,9 @@
 User Guide
 ==========
 
+The User Guide covers implementation details and workflows beyond basic operations, 
+including custom authentication, specialized entry types, and direct API access.
+
 .. toctree::
   :maxdepth: 2
 

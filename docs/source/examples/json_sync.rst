@@ -137,8 +137,8 @@ Example Code
 
             try:
                 # Read JSON data from attachment
-                attachment._backing.seek(0)
-                data = json.load(attachment._backing)
+                attachment.seek(0)
+                data = json.load(attachment)
 
                 # Write to local file
                 with open(output_path, 'w') as f:

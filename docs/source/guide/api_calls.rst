@@ -22,7 +22,7 @@ Parsing XML Responses
 Since the LabArchives API returns XML, ``labapi`` uses the ``lxml`` library for parsing. You can use standard ``lxml`` methods or the built-in :func:`~labapi.util.extract.extract_etree` utility for simpler data extraction.
 
 Using extract_etree
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 The :func:`~labapi.util.extract.extract_etree` function allows you to define a "format dictionary" that maps XML tags to Python types or nested structures.
 

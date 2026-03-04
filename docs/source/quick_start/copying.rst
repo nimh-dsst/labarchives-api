@@ -186,6 +186,6 @@ This approach gives you more control and avoids potential issues with unsupporte
 See Also
 --------
 
-* :ref:`deleting` - For information on moving pages to the deleted items directory
-* :ref:`navigating` - For details on navigating to source and destination locations
-* :ref:`creating_pages` - For creating new pages instead of copying
+* :ref:`delete` - For information on moving pages to the deleted items directory
+* :doc:`navigating` - For details on navigating to source and destination locations
+* :doc:`creating_pages` - For creating new pages instead of copying

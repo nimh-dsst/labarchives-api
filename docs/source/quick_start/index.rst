@@ -3,8 +3,11 @@
 Quick Start
 ===========
 
+Instructions for installing ``labapi``, authenticating with LabArchives, 
+and performing basic operations like creating pages and navigating notebooks.
+
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 1
 
   installation
   first_calls
