@@ -141,6 +141,7 @@ class TestEntriesIntegration:
         assert isinstance(entry, HeaderEntry)
         assert entry.id == "new_heading_eid"
         assert len(entries) == 1
+        client.clear_log()
 
     def test_entries_create_entry_plain_text(self, client, user: User, mock_page):
         """Test Entries.create_entry with plain text entry type."""
@@ -159,6 +160,7 @@ class TestEntriesIntegration:
 
         assert isinstance(entry, PlainTextEntry)
         assert entry.id == "new_plain_eid"
+        client.clear_log()
 
     def test_entries_create_entry_attachment(self, client, user: User, mock_page):
         """Test Entries.create_entry with attachment type."""
@@ -238,3 +240,4 @@ class TestEntriesIntegration:
         assert "uploaded_data_" in text_entry.content
         assert ".json" in text_entry.content
         assert file_entry.id in text_entry.content
+        client.clear_log()

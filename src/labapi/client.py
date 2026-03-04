@@ -8,20 +8,15 @@ handling authentication, request signing, and various API call methods.
 from __future__ import annotations
 import warnings
 from operator import itemgetter
-from os import getenv
-from socketserver import TCPServer
 from typing import Any, Generator, Mapping, Sequence, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from os import getenv
 
-import selenium.webdriver as webdriver
 from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.hazmat.primitives.hmac import HMAC
-from dotenv import load_dotenv
-from lxml.etree import Element, fromstring
-from requests import Response, Session
-from requests import codes as status_codes
+from requests import codes as status_codes, Response, Session
 from requests.adapters import HTTPAdapter
+import ssl
 
 from .user import User
 from .util import extract_etree, to_bool, NotebookInit
@@ -89,7 +84,7 @@ class Client:
         akid: str | None = None,
         akpass: bytes | str | None = None,
         *,
-        strict_cert: bool = True
+        strict_cert: bool = True,
     ):
         """
         Initializes a new LabArchives API client.
@@ -101,7 +96,7 @@ class Client:
         - ``ACCESS_KEYID``: The Access Key ID.
         - ``ACCESS_PWD``: The Access Key Password.
 
-        :param base_url: The base URL of the LabArchives API (e.g., "https://api.labarchives.com").
+        :param base_url: The base URL of the LabArchives API (e.g., "https://mynotebook.labarchives.com").
                          If None, loaded from the ``API_URL`` environment variable.
         :param akid: The Access Key ID for API authentication.
                      If None, loaded from the ``ACCESS_KEYID`` environment variable.
@@ -191,7 +186,7 @@ class Client:
 
         notebooks.sort(key=lambda k: k.is_default)
 
-        return User(uid, notebooks, self)
+        return User(uid, user_email, notebooks, self)
 
     @staticmethod
     def _handle_request_status(response: Response) -> None:

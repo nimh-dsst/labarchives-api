@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from labapi.user import User
     from labapi.util import NotebookInit
 
-    from labapi.tree.collection import Notebooks
+    from .collection import Notebooks
 
 
 class Notebook(AbstractTreeContainer):

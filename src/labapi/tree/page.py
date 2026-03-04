@@ -136,16 +136,15 @@ class NotebookPage(AbstractTreeNode):
            - Only certain entry types are fully supported (text, plain text, headers, attachments)
            - Some entry types may fail to copy and will cause errors
 
-        .. todo::
-           Add specific handling for attachment entries to work around LabArchives renaming behavior
-
-        .. todo::
-           Implement create_entry methods for all entry types to prevent failures
-
         :param destination: The target container to copy the page to.
         :returns: A new instance of the copied page in the destination.
         :raises AttributeError: If an unsupported entry type is encountered
         """
+        # TODO: Add specific handling for attachment entries to work around
+        #   LabArchives renaming behavior
+        # TODO: Implement create_entry methods for all entry types to prevent
+        #   failures
+
         new_page = destination.create_page(self.name)
 
         for entry in self.entries:

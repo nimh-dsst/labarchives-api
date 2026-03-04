@@ -106,6 +106,7 @@ class TestNotebookPageIntegration:
         assert api_call[1]["page_tree_id"] == "page-1"
         assert api_call[1]["nbid"] == notebook_tree.id
         assert api_call[1]["entry_data"] is True
+        client.clear_log()
 
     def test_page_entries_caching(self, client, notebook_tree: Notebook):
         """Test NotebookPage.entries caches the result."""
@@ -140,6 +141,7 @@ class TestNotebookPageIntegration:
         # Verify no second API call was made
         with pytest.raises(IndexError):
             client.api_log
+        client.clear_log()
 
     def test_page_refresh(self, client, notebook_tree: Notebook):
         """Test NotebookPage.refresh clears cached entries."""
@@ -197,3 +199,4 @@ class TestNotebookPageIntegration:
         # Verify API call was made again
         api_call = client.api_log
         assert api_call[0] == "tree_tools/get_entries_for_page"
+        client.clear_log()

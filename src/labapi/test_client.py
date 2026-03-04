@@ -72,7 +72,9 @@ class TestClientUnit:
         """Test Client.construct_url with sequence of path segments."""
         client = Client("https://api.test.com", "test_akid", "test_password")
 
-        url = client.construct_url(["users", "get_info"], {"uid": "123"}, expires_in=None)
+        url = client.construct_url(
+            ["users", "get_info"], {"uid": "123"}, expires_in=None
+        )
 
         assert "api.test.com/api/users/get_info" in url
 
@@ -132,7 +134,9 @@ class TestClientUnit:
         response.url = "https://api.test.com/endpoint"
         response.text = "Not Found"
 
-        with pytest.raises(RuntimeError, match="API request failed with status code 404"):
+        with pytest.raises(
+            RuntimeError, match="API request failed with status code 404"
+        ):
             Client._handle_request_status(response)
 
     def test_client_initialization_with_params(self):

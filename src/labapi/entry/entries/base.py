@@ -11,9 +11,9 @@ if TYPE_CHECKING:
     from labapi.user import User
     from labapi.util.part_type import ImplementedPartType
 
-    from labapi.entry.entries.attachment import AttachmentEntry
-    from labapi.entry.entries.text import HeaderEntry, PlainTextEntry, TextEntry
-    from labapi.entry.entries.widget import WidgetEntry
+    from .attachment import AttachmentEntry
+    from .text import HeaderEntry, PlainTextEntry, TextEntry
+    from .widget import WidgetEntry
 
 
 T = TypeVar("T")

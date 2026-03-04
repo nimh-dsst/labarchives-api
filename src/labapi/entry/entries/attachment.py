@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, override
 
 from labapi.entry.attachment import Attachment
 
-from labapi.entry.entries.base import Entry
+from .base import Entry
 
 if TYPE_CHECKING:
     from labapi.user import User

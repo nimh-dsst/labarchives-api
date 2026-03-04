@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from labapi.util import NotebookInit
 
-    from labapi.client import Client
+    from .client import Client
 
 
 class User:
@@ -33,18 +33,21 @@ class User:
     def __init__(
         self,
         uid: str,
+        email: str,
         notebooks: Sequence[NotebookInit],
         client: Client,
     ):
         """Initializes a new User session.
 
         :param uid: The unique ID of the user.
+        :param email: The email address of the user.
         :param notebooks: A sequence of :class:`~labapi.util.notebookinit.NotebookInit` objects
                           representing the notebooks accessible to the user.
         :param client: The :class:`~labapi.client.Client` instance used for API communication.
         """
         super().__init__()
         self._id: str = uid
+        self._email: str = email
         self._notebooks = Notebooks(notebooks, self)
         self._client = client
 
@@ -55,6 +58,14 @@ class User:
         :returns: The user's ID.
         """
         return self._id
+
+    @property
+    def email(self) -> str:
+        """The email address of the user.
+
+        :returns: The user's email.
+        """
+        return self._email
 
     @property
     def client(self) -> Client:
