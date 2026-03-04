@@ -1,3 +1,5 @@
+.. _quick_start:
+
 Quick Start
 ===========
 
@@ -10,4 +12,5 @@ Quick Start
   navigating
   uploading_files
   writing_rich_text
+  copying
   deleting

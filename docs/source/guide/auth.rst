@@ -1,3 +1,4 @@
+.. _auth:
 .. _authflow:
 
 Authentication
@@ -70,7 +71,7 @@ Example Flask App
 
         # Now you can use the user object to make API calls, or save the user object in a session
         notebooks = user.notebooks
-        return f"Logged in as {user.uid}. Notebooks: {[n.name for n in notebooks]}"
+        return f"Logged in as {user.id}. Notebooks: {[n.name for n in notebooks]}"
 
     if __name__ == "__main__":
         app.run(port=8080)

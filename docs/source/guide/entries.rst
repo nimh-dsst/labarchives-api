@@ -1,3 +1,5 @@
+.. _entries:
+
 Working with Entries
 ====================
 
@@ -10,7 +12,7 @@ You can access the entries of a :class:`~labapi.tree.page.NotebookPage` through 
 
 .. code-block:: python
 
-   page = notebook.get_page_by_path("Project A/Experiment 1/Results")
+   page = notebook.traverse("Project A/Experiment 1/Results")
    
    # Get the number of entries
    print(len(page.entries))

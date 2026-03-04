@@ -1,3 +1,5 @@
+.. _guide:
+
 User Guide
 ==========
 
@@ -8,3 +10,4 @@ User Guide
   entries
   json_entries
   api_calls
+  clearing_cache

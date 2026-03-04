@@ -36,7 +36,7 @@ Example JSON Entry Creation
 
     ...
 
-    page = user.notebooks.traverse('/My Json Data/Page 1')
+    page = user.notebooks["My Notebook"].traverse('My Json Data/Page 1')
 
     # Create some JSON data
     my_data: JsonData = {
@@ -50,9 +50,9 @@ Example JSON Entry Creation
     }
 
     # Create the JSON entry
-    attachment_entry, text_entry = page.create_json_entry(my_data)
+    attachment_entry, text_entry = page.entries.create_json_entry(my_data)
 
-    print(f"Created attachment: {attachment_entry.name} (ID: {attachment_entry.id})")
+    print(f"Created attachment entry (ID: {attachment_entry.id})")
     print(f"Created text preview (ID: {text_entry.id})")
 
 In this example, ``my_data`` will be saved as a ``.json`` file, and a formatted version will be visible as a text entry in your notebook. 
