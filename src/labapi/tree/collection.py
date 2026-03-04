@@ -7,7 +7,7 @@ It provides methods for accessing, iterating over, and creating notebooks.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Sequence, ValuesView, KeysView
+from collections.abc import ItemsView, Iterator, KeysView, Mapping, Sequence, ValuesView
 from typing import TYPE_CHECKING, Literal, overload, override
 
 from labapi.util import IdOrNameIndex, Index, NotebookInit, extract_etree
@@ -84,12 +84,28 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
         return len(self._notebooks)
 
     @override
-    def values(self) -> ValuesView[Notebook]:
-        return self._notebooks_by_id.values()
-    
-    @override
     def keys(self) -> KeysView[str]:
-        return {i.name: i for i in self._notebooks}.keys()
+        """A view of the names of the notebooks in the collection.
+
+        :returns: A keys view of notebook names.
+        """
+        return KeysView({n.name: n for n in self._notebooks})
+
+    @override
+    def items(self) -> ItemsView[str, Notebook]:
+        """A view of the names and notebook objects in the collection.
+
+        :returns: An items view of (name, notebook) pairs.
+        """
+        return ItemsView({n.name: n for n in self._notebooks})
+
+    @override
+    def values(self) -> ValuesView[Notebook]:
+        """A view of the notebook objects in the collection.
+
+        :returns: A values view of notebook objects.
+        """
+        return ValuesView({n.name: n for n in self._notebooks})
 
     def create_notebook(self, name: str) -> Notebook:
         """Creates a new notebook in LabArchives.

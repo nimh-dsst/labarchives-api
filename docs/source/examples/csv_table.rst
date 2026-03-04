@@ -55,9 +55,42 @@ Example Code
     import csv
     import sys
     from pathlib import Path
+
     from bs4 import BeautifulSoup
 
     from labapi import Client
+    from labapi.entry import TextEntry
+    from labapi.tree.mixins import AbstractTreeContainer
+    from labapi.tree.page import NotebookPage
+    from labapi.user import User
+
+
+    def get_or_create_page(container: AbstractTreeContainer, path: str) -> NotebookPage:
+        """
+        Traverse a path in the notebook, creating directories as needed,
+        and returning the page at the end of the path.
+        """
+        segments = path.strip("/").split("/")
+        curr = container
+
+        # Handle all but the last segment (directories)
+        for segment in segments[:-1]:
+            try:
+                curr = curr[segment].as_dir()
+            except (KeyError, TypeError):
+                print(f"  Creating directory: {segment}")
+                curr = curr.create_directory(segment)
+
+        # Handle the last segment (the page)
+        last_segment = segments[-1]
+        try:
+            node = curr[last_segment]
+            if node.is_dir():
+                raise TypeError(f"'{path}' refers to a directory, but a page is required")
+            return node.as_page()
+        except KeyError:
+            print(f"  Creating page: {last_segment}")
+            return curr.create_page(last_segment)
 
 
     def csv_to_html_table(csv_file: Path, has_header: bool = True) -> str:
@@ -69,21 +102,21 @@ Example Code
         :returns: HTML string containing the table
         """
 
-        with open(csv_file, 'r', encoding='utf-8') as f:
+        with open(csv_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
         if not rows:
             return "<p>Empty CSV file</p>"
 
-        html_parts = ['<table>']
+        html_parts = ["<table>"]
 
         # Process header row
         if has_header and rows:
             html_parts.append("  <thead>")
             html_parts.append("    <tr>")
             for cell in rows[0]:
-                html_parts.append(f'      <th>{cell}</th>')
+                html_parts.append(f"      <th>{cell}</th>")
             html_parts.append("    </tr>")
             html_parts.append("  </thead>")
             rows = rows[1:]  # Remove header from data rows
@@ -94,7 +127,7 @@ Example Code
             for row in rows:
                 html_parts.append("    <tr>")
                 for cell in row:
-                    html_parts.append(f'      <td>{cell}</td>')
+                    html_parts.append(f"      <td>{cell}</td>")
                 html_parts.append("    </tr>")
             html_parts.append("  </tbody>")
 
@@ -103,7 +136,7 @@ Example Code
         return "\n".join(html_parts)
 
 
-    def html_table_to_csv(html: str, output_file: Path):
+    def html_table_to_csv(html: str, output_file: Path) -> bool:
         """
         Extract HTML tables from HTML content and save as CSV.
 
@@ -111,8 +144,8 @@ Example Code
         :param output_file: Path to save the CSV file
         """
 
-        soup = BeautifulSoup(html, 'html.parser')
-        tables = soup.find_all('table')
+        soup = BeautifulSoup(html, "html.parser")
+        tables = soup.find_all("table")
 
         if not tables:
             print("No tables found in HTML content")
@@ -125,51 +158,53 @@ Example Code
         rows: list[list[str]] = []
 
         # Extract header if present
-        thead = table.find('thead')
+        thead = table.find("thead")
         if thead:
-            header_row = thead.find('tr')
+            header_row = thead.find("tr")
             if header_row:
-                headers = [th.get_text(strip=True) for th in header_row.find_all('th')]
+                headers = [th.get_text(strip=True) for th in header_row.find_all("th")]
                 rows.append(headers)
 
         # Extract body rows
-        tbody = table.find('tbody')
+        tbody = table.find("tbody")
         if tbody:
-            for tr in tbody.find_all('tr'):
-                cells = [td.get_text(strip=True) for td in tr.find_all('td')]
+            for tr in tbody.find_all("tr"):
+                cells = [td.get_text(strip=True) for td in tr.find_all("td")]
                 rows.append(cells)
         else:
             # No tbody, just get all tr elements after thead
-            for tr in table.find_all('tr'):
+            for tr in table.find_all("tr"):
                 # Skip if this is the header row we already processed
-                if thead and tr in thead.find_all('tr'):
+                if thead and tr in thead.find_all("tr"):
                     continue
-                cells = [td.get_text(strip=True) for td in tr.find_all(['td', 'th'])]
+                cells = [td.get_text(strip=True) for td in tr.find_all(["td", "th"])]
                 if cells:
                     rows.append(cells)
 
         # Write to CSV
-        with open(output_file, 'w', newline='', encoding='utf-8') as f:
+        with open(output_file, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerows(rows)
 
         return True
 
 
-    def upload_csv_as_table(user, notebook_name: str, csv_file: Path, page_path: str, has_header: bool = True):
+    def upload_csv_as_table(
+        user: User, notebook_name: str, csv_file: Path, page_path: str, has_header: bool = True
+    ) -> None:
         """Upload a CSV file as an HTML table to a LabArchives page."""
 
         if not csv_file.exists():
             print(f"Error: CSV file '{csv_file}' does not exist")
             sys.exit(1)
 
+        notebooks = user.notebooks
         try:
-            notebooks = user.notebooks
             notebook = notebooks[notebook_name]
-            page = notebook.traverse(page_path)
-        except KeyError as e:
-            print(f"Error: Could not find notebook '{notebook_name}' or page '{page_path}': {e}")
-            print(f"Available notebooks: {list(notebooks.keys())}")
+            print(f"Ensuring page path exists: {page_path}")
+            page = get_or_create_page(notebook, page_path)
+        except Exception as e:
+            print(f"Error: Could not access or create path '{page_path}': {e}")
             sys.exit(1)
 
         print(f"Converting '{csv_file}' to HTML table...")
@@ -184,24 +219,33 @@ Example Code
             sys.exit(1)
 
 
-    def download_table_as_csv(user, notebook_name: str, page_path: str, output_file: Path, entry_index: int = -1):
+    def download_table_as_csv(
+        user: User,
+        notebook_name: str,
+        page_path: str,
+        output_file: Path,
+        entry_index: int = -1,
+    ) -> None:
         """Download an HTML table from a LabArchives page as a CSV file."""
 
+        notebooks = user.notebooks
         try:
-            notebooks = user.notebooks
             notebook = notebooks[notebook_name]
-            page = notebook.traverse(page_path)
+            page = notebook.traverse(page_path).as_page()
         except KeyError as e:
-            print(f"Error: Could not find notebook '{notebook_name}' or page '{page_path}': {e}")
+            print(
+                f"Error: Could not find notebook '{notebook_name}' or page '{page_path}': {e}"
+            )
             print(f"Available notebooks: {list(notebooks.keys())}")
             sys.exit(1)
 
         entries = page.entries
 
         # Find text entries that contain tables
-        table_entries = [
-            (i, e) for i, e in enumerate(entries)
-            if e.content_type == "text entry" and "<table" in e.content.lower()
+        table_entries: list[tuple[int, TextEntry]] = [
+            (i, e)
+            for i, e in enumerate(entries)
+            if isinstance(e, TextEntry) and "<table" in e.content.lower()
         ]
 
         if not table_entries:
@@ -218,56 +262,52 @@ Example Code
             print(f"Using most recent table entry (entry {entry_idx + 1})")
         else:
             if entry_index >= len(entries):
-                print(f"Error: Entry index {entry_index} out of range (page has {len(entries)} entries)")
+                print(
+                    f"Error: Entry index {entry_index} out of range (page has {len(entries)} entries)"
+                )
                 sys.exit(1)
             entry = entries[entry_index]
-            if entry.content_type != "text entry":
+            if not isinstance(entry, TextEntry):
                 print(f"Error: Entry {entry_index} is not a text entry")
                 sys.exit(1)
 
-        print(f"Extracting table from entry...")
+        print("Extracting table from entry...")
         success = html_table_to_csv(entry.content, output_file)
 
         if success:
             print(f"✓ Table saved to '{output_file}'")
         else:
-            print(f"✗ Failed to extract table")
+            print("✗ Failed to extract table")
             sys.exit(1)
 
 
-    def main():
+    def main() -> None:
         parser = argparse.ArgumentParser(
             description="Upload CSV files as HTML tables or download HTML tables as CSV"
         )
         parser.add_argument(
-            "action",
-            choices=["upload", "download"],
-            help="Action to perform"
+            "action", choices=["upload", "download"], help="Action to perform"
         )
         parser.add_argument(
-            "file",
-            help="CSV file (upload) or LabArchives page path (download)"
+            "file", help="CSV file (upload) or LabArchives page path (download)"
         )
         parser.add_argument(
-            "target",
-            help="LabArchives page path (upload) or output CSV file (download)"
+            "target", help="LabArchives page path (upload) or output CSV file (download)"
         )
         parser.add_argument(
             "--notebook",
             "-n",
             required=True,
-            help="Name of the LabArchives notebook to use"
+            help="Name of the LabArchives notebook to use",
         )
         parser.add_argument(
             "--entry-index",
             type=int,
             default=-1,
-            help="Entry index to download (default: most recent table entry)"
+            help="Entry index to download (default: most recent table entry)",
         )
         parser.add_argument(
-            "--no-header",
-            action="store_true",
-            help="CSV file has no header row"
+            "--no-header", action="store_true", help="CSV file has no header row"
         )
 
         args = parser.parse_args()
@@ -278,7 +318,7 @@ Example Code
             client = Client()  # Loads credentials from .env
             print("Authenticating...")
             user = client.default_authenticate()  # Opens browser for OAuth
-            print(f"✓ Authenticated successfully")
+            print("✓ Authenticated successfully")
         except Exception as e:
             print(f"Authentication error: {e}")
             print("\nMake sure you have a .env file with your credentials:")
@@ -300,7 +340,9 @@ Example Code
         else:  # download
             page_path = args.file
             output_file = Path(args.target)
-            download_table_as_csv(user, args.notebook, page_path, output_file, args.entry_index)
+            download_table_as_csv(
+                user, args.notebook, page_path, output_file, args.entry_index
+            )
 
 
     if __name__ == "__main__":

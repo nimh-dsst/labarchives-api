@@ -8,9 +8,9 @@ provide common functionalities and properties for tree nodes and containers.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator, Mapping, MutableSequence, Sequence, ValuesView
+from collections.abc import ItemsView, Iterator, KeysView, Mapping, MutableSequence, Sequence, ValuesView
 from datetime import datetime
-from typing import TYPE_CHECKING, ItemsView, Self, overload, override, Literal, cast
+from typing import TYPE_CHECKING, Literal, Self, cast, overload, override
 
 from labapi.util import IdIndex, IdOrNameIndex, Index, NameIndex, extract_etree, to_bool
 
@@ -390,8 +390,31 @@ class AbstractTreeContainer(
         return iter(node.name for node in self.children)
 
     @override
+    def keys(self) -> KeysView[str]:
+        """A view of the names of the children within this container.
+
+        :returns: A keys view of child names.
+        """
+        self._ensure_populated()
+        return KeysView({node.name: node for node in self.children})
+
+    @override
     def items(self) -> ItemsView[str, AbstractBaseTreeNode]:
-        return {i.name: i for i in self._children}.items()
+        """A view of the names and child nodes within this container.
+
+        :returns: An items view of (name, node) pairs.
+        """
+        self._ensure_populated()
+        return ItemsView({node.name: node for node in self.children})
+
+    @override
+    def values(self) -> ValuesView[AbstractBaseTreeNode]:
+        """A view of the child nodes within this container.
+
+        :returns: A values view of child nodes.
+        """
+        self._ensure_populated()
+        return ValuesView({node.name: node for node in self.children})
 
     @overload
     def __getitem__(self, key: str) -> AbstractBaseTreeNode: ...
@@ -468,17 +491,20 @@ class AbstractTreeContainer(
             if time.monotonic() > _timeout:
                 break
 
+            current.append(name)
+
             try:
+                container = child.as_dir()
                 current.extend(
                     [
-                        f"{self.name}/{child_name}"
-                        for child_name in child.as_dir().enumerate_all(
+                        f"{name}/{child_path}"
+                        for child_path in container.enumerate_all(
                             _current_depth + 1, max_depth=max_depth, _timeout=_timeout
                         )
                     ]
                 )
             except TypeError:
-                current.append(f"{self.name}/{name}")
+                pass
 
         return current
 
@@ -511,10 +537,6 @@ class AbstractTreeContainer(
         """
         all_names = self.enumerate_all(max_depth=max_depth, timeout=timeout)
         return [name for name in all_names if not self.traverse(name).is_dir()]
-
-    @override
-    def values(self) -> ValuesView[AbstractBaseTreeNode]:
-        return super().values()  # pyright: ignore[reportReturnType]
 
     def create_page(self, name: str) -> NotebookPage:
         """Creates a new page within this container.

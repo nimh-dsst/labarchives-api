@@ -32,7 +32,7 @@ def la_user(la_client: LA.Client):
     email = os.getenv("AUTH_EMAIL")
     key = os.getenv("AUTH_KEY")
     if not email or not key:
-        pytest.fail("AUTH_EMAIL and AUTH_KEY required for non-interactive login.")
+        pytest.skip("AUTH_EMAIL and AUTH_KEY required for non-interactive login.")
 
     return la_client.login(email, key)
 
