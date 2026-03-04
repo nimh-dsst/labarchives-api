@@ -107,7 +107,7 @@ def test_attachment_seeks_to_beginning():
     backing = BytesIO(b"Test")
     backing.seek(2)  # Move to middle
 
-    attachment = Attachment(
+    Attachment(
         backing=backing,
         mime_type="text/plain",
         filename="test.txt",

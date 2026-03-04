@@ -10,9 +10,12 @@ import argparse
 from pathlib import Path
 from model_logger import ModelLogger
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Test ModelLogger with files")
-    parser.add_argument("--notebook", "-n", required=True, help="LabArchives notebook name")
+    parser.add_argument(
+        "--notebook", "-n", required=True, help="LabArchives notebook name"
+    )
     args = parser.parse_args()
 
     data_dir = Path(__file__).parent / "test_data"
@@ -38,8 +41,9 @@ def main() -> None:
         metrics=metrics,
         results=results_bytes,
         figures=[figure_bytes],
-        commit="f7e2a4c1"
+        commit="f7e2a4c1",
     )
+
 
 if __name__ == "__main__":
     main()

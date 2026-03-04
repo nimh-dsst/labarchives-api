@@ -88,8 +88,12 @@ def populate_notebook(notebook_name: str) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Populate a LabArchives notebook with test data")
-    parser.add_argument("--notebook", "-n", required=True, help="Name of the notebook to populate")
+    parser = argparse.ArgumentParser(
+        description="Populate a LabArchives notebook with test data"
+    )
+    parser.add_argument(
+        "--notebook", "-n", required=True, help="Name of the notebook to populate"
+    )
     args = parser.parse_args()
 
     populate_notebook(args.notebook)

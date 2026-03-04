@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import pytest
-from unittest.mock import Mock
 
-from labapi import Index, Notebook, NotebookDirectory, NotebookPage
-from labapi.tree.mixins import AbstractBaseTreeNode, AbstractTreeContainer, AbstractTreeNode
-from labapi.user import User
+from labapi import Index, Notebook, NotebookPage
+from labapi.tree.mixins import (
+    AbstractTreeContainer,
+)
 
 
 class TestTreeMixinsIntegration:
@@ -73,9 +73,9 @@ class TestTreeMixinsIntegration:
         """Test updating a node's name."""
         page = notebook_tree[Index.Id : "page-1"]
         client.api_response = "<success/>"
-        
+
         page.name = "New Name"
-        
+
         assert page.name == "New Name"
         api_call = client.api_log
         assert api_call[0] == "tree_tools/update_node"
@@ -86,15 +86,15 @@ class TestTreeMixinsIntegration:
         page = notebook_tree[Index.Id : "page-1"]
         folder_a = notebook_tree[Index.Id : "dir-1"]
         old_parent = page.parent
-        
+
         client.api_response = "<success/>"
-        
+
         page.move_to(folder_a)
-        
+
         assert page.parent is folder_a
         assert page in folder_a.children
         assert page not in old_parent.children
-        
+
         api_call = client.api_log
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["parent_tree_id"] == folder_a.tree_id
@@ -114,16 +114,16 @@ class TestTreeMixinsIntegration:
         client.api_response = "<success/>"
         # 4. Move to deleted directory
         client.api_response = "<success/>"
-        
+
         page.delete()
-        
+
         assert "Deleted at" in page.name
         assert page.parent.name == "API Deleted Items"
-        
+
         # Verify sequence of calls
-        client.api_log # insert_node for dir creation
-        client.api_log # update_node for name
-        client.api_log # update_node for move
+        client.api_log  # insert_node for dir creation
+        client.api_log  # update_node for name
+        client.api_log  # update_node for move
 
     def test_mapping_methods(self, notebook_tree: Notebook):
         """Test keys(), values(), and items() on a container."""
@@ -131,10 +131,10 @@ class TestTreeMixinsIntegration:
         assert "Test Folder A" in keys
         assert "Test Folder B" in keys
         assert "Test Page 1" in keys
-        
+
         values = list(notebook_tree.values())
         assert any(v.name == "Test Folder A" for v in values)
-        
+
         items = dict(notebook_tree.items())
         assert items["Test Folder A"].id == "dir-1"
 
@@ -146,13 +146,13 @@ class TestTreeMixinsIntegration:
         assert "Test Folder A" in all_items
         assert "Test Folder B" in all_items
         assert "Test Page 1" in all_items
-        
+
         # Deeper enumeration
         all_items_deep = notebook_tree.enumerate_all(max_depth=2)
         assert "Test Folder A/Dir1 Test Page A" in all_items_deep
         assert "Test Folder A/Dir1 Test Page B" in all_items_deep
         assert "Test Folder B/Dir2 Subfolder A" in all_items_deep
-        
+
         dirs = notebook_tree.enumerate_dirs(max_depth=2)
         assert "Test Folder A" in dirs
         assert "Test Folder B/Dir2 Subfolder A" in dirs

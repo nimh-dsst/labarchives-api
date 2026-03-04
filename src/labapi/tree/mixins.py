@@ -8,7 +8,15 @@ provide common functionalities and properties for tree nodes and containers.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import ItemsView, Iterator, KeysView, Mapping, MutableSequence, Sequence, ValuesView
+from collections.abc import (
+    ItemsView,
+    Iterator,
+    KeysView,
+    Mapping,
+    MutableSequence,
+    Sequence,
+    ValuesView,
+)
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal, Self, cast, overload, override
 
@@ -199,7 +207,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
             return cast(AbstractTreeContainer, self)
         else:
             raise TypeError("Node is not a directory")
-        
+
     def as_page(self) -> NotebookPage:
         """Casts this node to a :class:`NotebookPage` if it is a page.
 

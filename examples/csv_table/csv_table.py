@@ -152,7 +152,11 @@ def html_table_to_csv(html: str, output_file: Path) -> bool:
 
 
 def upload_csv_as_table(
-    user: User, notebook_name: str, csv_file: Path, page_path: str, has_header: bool = True
+    user: User,
+    notebook_name: str,
+    csv_file: Path,
+    page_path: str,
+    has_header: bool = True,
 ) -> None:
     """Upload a CSV file as an HTML table to a LabArchives page."""
 

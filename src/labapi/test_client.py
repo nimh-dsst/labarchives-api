@@ -159,7 +159,7 @@ class TestClientUnit:
 class TestClientIntegration:
     """Integration tests with MockClient and real objects."""
 
-    def test_client_login_creates_user(self, client: MockClient):
+    def test_client_login_creates_user(self, client):
         """Test Client.login creates User with notebooks from API response."""
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <users>
