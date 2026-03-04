@@ -1,0 +1,6 @@
+id,prediction,probability,true_label
+0,cat,0.98,cat
+1,dog,0.85,dog
+2,bird,0.92,bird
+3,cat,0.78,dog
+4,dog,0.99,dog
