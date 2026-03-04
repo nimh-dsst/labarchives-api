@@ -1,3 +1,5 @@
+.. _first_calls:
+
 Your First Entry
 ================
 

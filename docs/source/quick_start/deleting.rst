@@ -78,5 +78,3 @@ Deleting Entries
     Entries (text entries, attachments, headers, etc.) cannot be deleted through the API at this time.
 
     See :ref:`entries` for more information about working with entries.
-
-    .. TODO the ref here doesn't work
