@@ -2,9 +2,9 @@ name: Unit Test Suite
 
 on:
   push:
-    branches: [ "christoph" ]
+    branches: [ "main", "claude" ]
   pull_request:
-    branches: [ "christoph" ]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -27,4 +27,4 @@ jobs:
       run: uv sync --all-extras --dev
 
     - name: Run tests with pytest
-      run: uv run pytest test_unit.py
+      run: uv run pytest src/
