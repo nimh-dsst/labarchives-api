@@ -117,8 +117,8 @@ Example Code
                     output_path = page_dir / f"{entry_prefix}_attachment_{filename}"
                     print(f"    Entry {i}: Attachment - {filename}")
                     with open(output_path, 'wb') as f:
-                        attachment._backing.seek(0)
-                        f.write(attachment._backing.read())
+                        attachment.seek(0)
+                        f.write(attachment.read())
                     if attachment.caption:
                         caption_file = page_dir / f"{entry_prefix}_caption.txt"
                         with open(caption_file, 'w', encoding='utf-8') as f:

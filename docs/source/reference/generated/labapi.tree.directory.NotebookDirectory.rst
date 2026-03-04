@@ -1,4 +1,4 @@
-# Source - https://stackoverflow.com/a/62613202
+﻿# Source - https://stackoverflow.com/a/62613202
 # Posted by James Leedham, modified by community. See post 'Timeline' for change history
 # Retrieved 2026-02-27, License - CC BY-SA 4.0
 
@@ -22,6 +22,7 @@ labapi.tree.directory.NotebookDirectory
    
       ~NotebookDirectory.__init__
       ~NotebookDirectory.as_dir
+      ~NotebookDirectory.as_page
       ~NotebookDirectory.copy_to
       ~NotebookDirectory.create_directory
       ~NotebookDirectory.create_page

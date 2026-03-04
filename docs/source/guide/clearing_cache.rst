@@ -7,8 +7,8 @@ The LabArchives API client caches various data to improve performance and reduce
 However, there are situations where you may need to refresh this cached data to reflect changes made
 outside your current session.
 
-The ``refresh()`` Method
--------------------------
+Refreshing Object Cache
+-----------------------
 
 Tree nodes (notebooks, directories, and pages) provide a :meth:`~labapi.tree.mixins.AbstractBaseTreeNode.refresh`
 method that clears cached data and forces the object to re-fetch from the API on next access.
@@ -51,8 +51,8 @@ Similarly, you can refresh directories and notebooks to reload their children:
     # Next access gets fresh data
     children = directory.children  # Re-fetches from API
 
-When to Use ``refresh()``
---------------------------
+When to Refresh Data
+--------------------
 
 You typically need to refresh cached data in these scenarios:
 
@@ -139,29 +139,3 @@ The following data is cached and will be cleared by ``refresh()``:
 
 * User authentication state
 * Notebook metadata accessed through :class:`~labapi.user.User`
-
-Lazy Loading
-------------
-
-The LabArchives API client uses lazy loading throughout. This means that data isn't fetched from
-the API until you actually access it:
-
-.. code-block:: python
-
-    # This doesn't make an API call yet
-    page = notebook.traverse("My Page")
-
-    # API call happens here when we access entries
-    entries = page.entries
-
-    # Subsequent accesses use cached data (no API call)
-    entries = page.entries
-    entries = page.entries
-
-    # Clear cache and force refresh
-    page.refresh()
-
-    # Next access makes an API call again
-    entries = page.entries
-
-This design minimizes unnecessary API calls while still giving you control over when to fetch fresh data.

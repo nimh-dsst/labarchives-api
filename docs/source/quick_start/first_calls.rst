@@ -85,7 +85,7 @@ so more complex uses, like those involving a client-server model, should not use
    user = client.default_authenticate()
 
 .. note::
-  If a compatible browser is not detected, the api will prompt you in the terminal to open a link. 
+  If a compatible browser is not detected, the API will prompt you in the terminal to open a link. 
   Simply copy the link and login.
 
 External App Authentication

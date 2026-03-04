@@ -12,8 +12,8 @@ sys.path.insert(0, os.path.abspath("../../src"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "labapi"
-copyright = "2026, Your Name"
-author = "Christoph Li <christoph.li@nih.gov>"
+copyright = "2026, Christoph Li and Joshua Lawrimore"
+author = "Christoph Li <christoph.li@nih.gov>, Joshua Lawrimore <jlawrimore@nih.gov>"
 
 version = "0.1.0"
 release = "0.1.0"
@@ -28,7 +28,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosummary",
     "sphinx_copybutton",
-    "sphinx_design"
+    "sphinx_design",
 ]
 
 autodoc_mock_imports = ["installed_browsers", "selenium"]
@@ -53,14 +53,6 @@ intersphinx_mapping = {
     "cryptography": ("https://cryptography.io/en/latest/", None),
     "selenium": ("https://www.selenium.dev/selenium/docs/api/py/", None),
 }
-
-# Napoleon settings for Google and NumPy style docstrings
-napoleon_google_docstring = True
-napoleon_numpy_docstring = True
-napoleon_include_init_with_doc = True
-napoleon_use_rtype = False  # Don't show redundant "Return type:" field
-napoleon_use_param = True  # Keep parameter descriptions
-napoleon_preprocess_types = True  # Simplify type names
 
 # Autodoc settings
 autodoc_typehints = "signature"  # Show type hints in function signatures

@@ -23,6 +23,7 @@ Deleting a Page
 To delete a page, call the :meth:`~labapi.tree.page.NotebookPage.delete` method:
 
 .. code-block:: python
+    
     # Navigate to a page
     page = notebook.traverse('My Folder/Page to Delete')
 

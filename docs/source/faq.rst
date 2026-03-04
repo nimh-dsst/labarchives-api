@@ -45,11 +45,6 @@ Example usage:
     auth_url = client.generate_auth_url("http://localhost:8080/callback")
     # Firefox will open automatically
 
-.. note::
-    The ``terminal`` option is useful when running on headless servers or in environments
-    where a graphical browser isn't available. The authentication URL will be printed to
-    the console for you to open manually.
-
 
 SSL/TLS Certificate Verification
 ---------------------------------
@@ -85,7 +80,7 @@ Adding Custom CA Certificates
 
 If you're working in an environment with custom Certificate Authority (CA) certificates
 (common in corporate networks), you can add your CA certificate to the ``certifi`` certificate
-bundle instead of disabling verification entirely.
+bundle.
 
 This approach maintains security while allowing connections through your custom CA:
 
@@ -118,11 +113,6 @@ custom certificate bundle file:
     client = Client()
 
 This allows you to maintain strict certificate verification while supporting custom CAs.
-
-.. note::
-    The LabArchives API client uses the ``requests`` library internally, which respects
-    the ``REQUESTS_CA_BUNDLE`` environment variable and the ``certifi`` package for
-    certificate verification.
 
 
 Authentication Flow Issues
