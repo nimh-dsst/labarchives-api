@@ -182,6 +182,8 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         :raises KeyError: If a node at any segment of the path is not found.
         """
 
+        # TODO rewrite to use NotebookPath (or str that is converted to NotebookPath internally)
+
         if path.startswith("/"):
             curr = self.root
         else:
@@ -570,27 +572,6 @@ class AbstractTreeContainer(
         all_names = self.enumerate_all(max_depth=max_depth, timeout=timeout)
         return [name for name in all_names if not self.traverse(name).is_dir()]
 
-    @overload
-    def create(
-        self,
-        cls: Type[T],
-        name: str,
-        *,
-        if_exists: InsertBehavior = InsertBehavior.Raise,
-    ) -> T:
-        pass
-
-    @overload
-    def create(
-        self,
-        cls: Type[T],
-        name: NotebookPath,
-        *,
-        parents: bool = False,
-        if_exists: InsertBehavior = InsertBehavior.Raise,
-    ) -> T:
-        pass
-
     def create(
         self,
         cls: Type[T],
@@ -613,15 +594,10 @@ class AbstractTreeContainer(
         """
         path_self = NotebookPath(self)
 
-        if isinstance(name, str):
-            if parents:
-                raise TypeError(
-                    "`parents` can only be set when `name` is a NotebookPath"
-                )
-        elif name.is_absolute():
-            raise  # TODO
-
-        path = (path_self / name).relative_to(self)
+        if not isinstance(name, str) and name.is_absolute():
+            path = name.relative_to(self)
+        else:
+            path = (path_self / name).relative_to(self)
 
         if len(path) == 1:
             nodes = [n for n in self[Index.Name : path.name] if isinstance(n, cls)]
@@ -656,36 +632,15 @@ class AbstractTreeContainer(
             self._children.append(new_node)
             return new_node
         else:
-            segments = tuple(path)
-            next_name = segments[0]
-            candidates = self[Index.Name : next_name]
-
-            next_node = next(
-                (
-                    node
-                    for node in candidates
-                    if isinstance(node, AbstractTreeContainer)
-                ),
-                None,
+            next_node = self.create(
+                NotebookDirectory,
+                path[0],
+                if_exists=InsertBehavior.Retain if parents else InsertBehavior.Raise,
             )
-
-            if next_node is None:
-                if parents:
-                    from .directory import NotebookDirectory
-
-                    next_node = self.create(
-                        NotebookDirectory,
-                        next_name,
-                        if_exists=InsertBehavior.Retain,
-                    )
-                elif candidates:
-                    raise RuntimeError(f'"{next_name}" is not a directory')
-                else:
-                    raise KeyError(f'Node with name "{next_name}" not found')
 
             return next_node.create(
                 cls,
-                NotebookPath(None, *segments[1:]),
+                path,
                 parents=parents,
                 if_exists=if_exists,
             )
