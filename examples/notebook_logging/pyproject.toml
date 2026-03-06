@@ -1,0 +1,12 @@
+[project]
+name = "example-notebook-logging"
+version = "0.1.0"
+dependencies = [
+    "labapi",
+    "ipywidgets",
+    "matplotlib",
+    "jupyter",
+]
+
+[tool.uv.sources]
+labapi = { path = "../../", editable = true }
