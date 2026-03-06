@@ -23,6 +23,7 @@ labapi.tree.mixins.AbstractTreeContainer
       ~AbstractTreeContainer.__init__
       ~AbstractTreeContainer.as_dir
       ~AbstractTreeContainer.as_page
+      ~AbstractTreeContainer.create
       ~AbstractTreeContainer.create_directory
       ~AbstractTreeContainer.create_page
       ~AbstractTreeContainer.enumerate_all

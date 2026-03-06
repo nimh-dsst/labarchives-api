@@ -23,6 +23,7 @@ labapi.tree.notebook.Notebook
       ~Notebook.__init__
       ~Notebook.as_dir
       ~Notebook.as_page
+      ~Notebook.create
       ~Notebook.create_directory
       ~Notebook.create_page
       ~Notebook.enumerate_all

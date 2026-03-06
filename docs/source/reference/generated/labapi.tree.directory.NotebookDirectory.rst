@@ -24,6 +24,7 @@ labapi.tree.directory.NotebookDirectory
       ~NotebookDirectory.as_dir
       ~NotebookDirectory.as_page
       ~NotebookDirectory.copy_to
+      ~NotebookDirectory.create
       ~NotebookDirectory.create_directory
       ~NotebookDirectory.create_page
       ~NotebookDirectory.delete

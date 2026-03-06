@@ -29,7 +29,7 @@ from .tree import (
     NotebookPage,
 )
 from .user import User
-from .util import Index
+from .util import Index, InsertBehavior, Path
 
 __all__ = [
     "Attachment",
@@ -38,10 +38,12 @@ __all__ = [
     "Entry",
     "HeaderEntry",
     "Index",
+    "InsertBehavior",
     "Notebook",
     "NotebookDirectory",
     "NotebookPage",
     "PlainTextEntry",
+    "Path",
     "TextEntry",
     "User",
     "WidgetEntry",

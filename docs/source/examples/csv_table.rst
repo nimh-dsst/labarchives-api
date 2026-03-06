@@ -58,10 +58,9 @@ Example Code
 
     from bs4 import BeautifulSoup
 
-    from labapi import Client
+    from labapi import Client, NotebookDirectory, NotebookPage
     from labapi.entry import TextEntry
     from labapi.tree.mixins import AbstractTreeContainer
-    from labapi.tree.page import NotebookPage
     from labapi.user import User
 
 
@@ -79,7 +78,7 @@ Example Code
                 curr = curr[segment].as_dir()
             except (KeyError, TypeError):
                 print(f"  Creating directory: {segment}")
-                curr = curr.create_directory(segment)
+                curr = curr.create(NotebookDirectory, segment)
 
         # Handle the last segment (the page)
         last_segment = segments[-1]
@@ -90,7 +89,7 @@ Example Code
             return node.as_page()
         except KeyError:
             print(f"  Creating page: {last_segment}")
-            return curr.create_page(last_segment)
+            return curr.create(NotebookPage, last_segment)
 
 
     def csv_to_html_table(csv_file: Path, has_header: bool = True) -> str:

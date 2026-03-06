@@ -173,8 +173,10 @@ and add entries programmatically rather than using ``copy_to()``:
 
 .. code-block:: python
 
+    from labapi import NotebookPage
+
     # Create a new page manually
-    new_page = destination.create_page("New Page")
+    new_page = destination.create(NotebookPage, "New Page")
 
     # Add entries from scratch or based on original page
     for entry in original_page.entries:

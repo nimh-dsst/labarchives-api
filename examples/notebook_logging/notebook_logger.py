@@ -12,13 +12,11 @@ LabArchives path structure:
             └── Figure 1..N     (AttachmentEntry: PNG)
 """
 
-import sys
-
-sys.path.append('~/home/phoenyx/projects/labarchives-api/src')
-
 import html
+import os
 from datetime import datetime
 from io import BytesIO
+from mimetypes import guess_type
 from typing import Any
 
 from labapi import Client
@@ -34,7 +32,12 @@ except ImportError:
 class NotebookLogger:
     """Logs Jupyter notebook runs and outputs to LabArchives."""
 
-    def __init__(self, notebook_name: str, client: Client | None = None) -> None:
+    def __init__(
+        self,
+        notebook_name: str,
+        client: Client | None = None,
+        user: User | None = None,
+    ) -> None:
         """
         Initialize the logger with Jupyter-friendly auth.
 
@@ -43,10 +46,37 @@ class NotebookLogger:
 
         :param notebook_name: Name of the LabArchives notebook.
         :param client: Optional pre-configured client (loaded from .env if omitted).
+        :param user: Optional pre-authenticated User instance.
         """
         self.client = client or Client()
         self.notebook_name = notebook_name
-        self.user: User
+        self.captured_figures: list[bytes] = []
+        self.tracked_files: list[str] = []
+
+        # Register IPython display formatter to capture figures as they are shown
+        ip = get_ipython()
+        if ip:
+
+            def capture_fig(fig):
+                buf = BytesIO()
+                fig.savefig(buf, format="png", bbox_inches="tight")
+                data = buf.getvalue()
+                self.captured_figures.append(data)
+                return data
+
+            try:
+                import matplotlib.figure
+
+                ip.display_formatter.formatters["image/png"].for_type(
+                    matplotlib.figure.Figure, capture_fig
+                )
+            except ImportError:
+                pass
+
+        if user is not None:
+            self.user = user
+            print(f"Using existing authentication for: {self.user.email}")
+            return
 
         auth_url = self.client.generate_auth_url("http://localhost:8089/")
 
@@ -68,6 +98,16 @@ class NotebookLogger:
         self.user = self.client.collect_auth_response()
         print(f"Authenticated as: {self.user.email}")
 
+    def track_file(self, path: str) -> None:
+        """Register a file to be uploaded with the next log() call."""
+        abs_path = os.path.abspath(path)
+        if not os.path.exists(abs_path):
+            print(f"Warning: File {path} not found.")
+            return
+        if abs_path not in self.tracked_files:
+            self.tracked_files.append(abs_path)
+            print(f"Tracking file for LabArchives: {path}")
+
     def _get_or_create_dir(
         self, parent: AbstractTreeContainer, name: str
     ) -> AbstractTreeContainer:
@@ -82,12 +122,14 @@ class NotebookLogger:
 
     def _capture_figures(self) -> list[bytes]:
         """Capture all open matplotlib figures as PNG bytes."""
+        figures = list(self.captured_figures)
+        self.captured_figures.clear()
+
         try:
             import matplotlib.pyplot as plt
         except ImportError:
-            return []
+            return figures
 
-        figures = []
         for fig_num in plt.get_fignums():
             buf = BytesIO()
             plt.figure(fig_num).savefig(buf, format="png", bbox_inches="tight")
@@ -130,6 +172,7 @@ class NotebookLogger:
         cell_info: dict[str, Any],
         result: str,
         figures: list[bytes],
+        files: list[str] | None = None,
     ) -> None:
         """
         Save a notebook run to LabArchives.
@@ -138,8 +181,15 @@ class NotebookLogger:
         :param cell_info: Dict with 'execution_count' and 'recent_cells'.
         :param result: String repr of the last cell output.
         :param figures: List of PNG bytes, one per matplotlib figure.
+        :param files: Optional list of file paths to attach.
         """
         from labapi.entry import Attachment
+
+        # Combine explicitly passed files and tracked files, avoiding duplicates
+        all_files = set(self.tracked_files)
+        if files:
+            all_files.update(os.path.abspath(f) for f in files)
+        self.tracked_files.clear()
 
         notebooks = self.user.notebooks
         try:
@@ -147,8 +197,7 @@ class NotebookLogger:
         except KeyError:
             available = ", ".join(notebooks.keys())
             raise RuntimeError(
-                f"Notebook '{self.notebook_name}' not found. "
-                f"Available: {available}"
+                f"Notebook '{self.notebook_name}' not found. Available: {available}"
             ) from None
 
         print("Navigating to logging directory...")
@@ -156,16 +205,21 @@ class NotebookLogger:
         user_dir = self._get_or_create_dir(notebook_log_dir, self.user.email)
 
         timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
-        run_dir = user_dir.create_directory(timestamp)
-
-        page = run_dir.create_page("Notebook Run Details")
+        page = user_dir.create_page(timestamp)
         entries = page.entries
 
         print(
-            f"Logging to: {self.notebook_name}/Notebook Log/{self.user.email}/{timestamp}/"
+            f"Logging to: {self.notebook_name}/Notebook Log/{self.user.email}/{timestamp}"
         )
 
-        # 1. Cell info as HTML
+        # 1. Tags as styled pills
+        tags_html = "".join(
+            f'<span style="background: #eee; padding: 2px 5px; margin: 2px; border-radius: 3px;">{html.escape(t)}</span>'
+            for t in tags
+        )
+        entries.create_entry("text entry", f"<p><strong>Tags:</strong> {tags_html}</p>")
+
+        # 2. Cell info as HTML
         recent = cell_info.get("recent_cells", [])
         exec_count = cell_info.get("execution_count")
         cells_html = "".join(
@@ -177,13 +231,6 @@ class NotebookLogger:
             f"(execution count: {exec_count})</p>{cells_html}"
         )
         entries.create_entry("text entry", cell_html)
-
-        # 2. Tags as styled pills
-        tags_html = "".join(
-            f'<span style="background: #eee; padding: 2px 5px; margin: 2px; border-radius: 3px;">{html.escape(t)}</span>'
-            for t in tags
-        )
-        entries.create_entry("text entry", f"<p><strong>Tags:</strong> {tags_html}</p>")
 
         # 3. Result as plain text
         entries.create_entry("plain text entry", result)
@@ -198,8 +245,25 @@ class NotebookLogger:
             )
             entries.create_entry("Attachment", attachment)
 
-        print("Log complete!")
+        # 5. Tracked files as attachments
+        for path in all_files:
+            if not os.path.isfile(path):
+                print(f"Warning: Tracked file '{path}' is not a valid file.")
+                continue
 
+            with open(path, "rb") as f:
+                content = f.read()
+                mime_type = guess_type(path)[0] or "application/octet-stream"
+                filename = os.path.basename(path)
+                attachment = Attachment(
+                    BytesIO(content),
+                    mime_type,
+                    filename,
+                    f"Attached file: {filename}",
+                )
+                entries.create_entry("Attachment", attachment)
+
+        print("Log complete!")
 
     def show_ui(self) -> None:
         """Display an ipywidgets form for tagging and saving the current run."""
@@ -207,7 +271,9 @@ class NotebookLogger:
             import ipywidgets as widgets
             from IPython.display import display
         except ImportError:
-            print("ipywidgets is required for show_ui(). Install it with: pip install ipywidgets")
+            print(
+                "ipywidgets is required for show_ui(). Install it with: pip install ipywidgets"
+            )
             return
 
         tag_input = widgets.Text(
