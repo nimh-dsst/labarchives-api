@@ -15,6 +15,8 @@ from .part_type import (
     is_valid_part_type,
     serialize_part_type,
 )
+from .behavior import InsertBehavior
+from .path import NotebookPath
 
 __all__ = [
     "IdIndex",
@@ -28,4 +30,6 @@ __all__ = [
     "is_valid_part_type",
     "serialize_part_type",
     "to_bool",
+    "InsertBehavior",
+    "NotebookPath",
 ]

@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import override
 
 from .mixins import AbstractTreeContainer, AbstractTreeNode
+from labapi.util import InsertBehavior
 
 
 class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):
@@ -31,7 +32,9 @@ class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):
         :param destination: The target container to copy the directory to.
         :returns: A new instance of the copied directory in the destination.
         """
-        new_dir = destination.create_directory(self.name)
+        new_dir = destination.create(
+            NotebookDirectory, self.name, if_exists=InsertBehavior.Ignore
+        )
 
         for child in self.children:
             child.copy_to(new_dir)
@@ -46,11 +49,3 @@ class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):
         :returns: The directory's ID.
         """
         return super().id
-
-    @override
-    def is_dir(self) -> bool:
-        """Indicates that this node is a directory.
-
-        :returns: Always True.
-        """
-        return True

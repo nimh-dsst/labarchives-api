@@ -17,6 +17,7 @@ from labapi.util import (
     is_part_type,
     is_valid_part_type,
     get_normalized_part_type,
+    InsertBehavior,
 )
 
 
@@ -145,7 +146,9 @@ class NotebookPage(AbstractTreeNode):
         # TODO: Implement create_entry methods for all entry types to prevent
         #   failures
 
-        new_page = destination.create_page(self.name)
+        new_page = destination.create(
+            NotebookPage, self.name, if_exists=InsertBehavior.Ignore
+        )
 
         for entry in self.entries:
             new_page.entries.create_entry(  # pyright: ignore[reportCallIssue]

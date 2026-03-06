@@ -7,34 +7,46 @@ LabArchives organizes content hierarchically:
 - **Directories** can contain other directories and pages, and are similar to folders on a computer.
 - **Pages** contain **entries**, which are organized top-down, similar to a word document.
 
-Creating Directories
---------------------
+Creating Directories and Pages
+----------------------------
 
-:class:`NotebookDirectories <labapi.tree.directory.NotebookDirectory>` organize your notebook's structure. 
-Create them using the :func:`create_directory <labapi.tree.mixins.AbstractTreeContainer.create_directory>` 
-method on any :class:`Notebook <labapi.tree.notebook.Notebook>` or :class:`NotebookDirectory <labapi.tree.directory.NotebookDirectory>`:
+Use the :meth:`create <labapi.tree.mixins.AbstractTreeContainer.create>` method to add new 
+:class:`NotebookDirectories <labapi.tree.directory.NotebookDirectory>` or 
+:class:`NotebookPages <labapi.tree.page.NotebookPage>` to your notebook. This method is 
+available on any :class:`Notebook <labapi.tree.notebook.Notebook>` or 
+:class:`NotebookDirectory <labapi.tree.directory.NotebookDirectory>`.
 
 .. code-block:: python
+
+    from labapi import NotebookDirectory, NotebookPage
 
     # Create a directory in the notebook root
-    my_folder = notebook.create_directory("Experiments")
+    my_folder = notebook.create(NotebookDirectory, "Experiments")
+
+    # Create a page inside the new directory
+    experiment_page = my_folder.create(NotebookPage, "Experiment 1")
 
     # Create nested directories
-    subfolder = my_folder.create_directory("2024 Results")
+    subfolder = my_folder.create(NotebookDirectory, "2024 Results")
 
-Creating Pages
---------------
+Handling Existing Nodes
+~~~~~~~~~~~~~~~~~~~~~~~
 
-:class:`NotebookPages <labapi.tree.page.NotebookPage>` hold your actual content. Create them using the 
-:func:`create_page <labapi.tree.mixins.AbstractTreeContainer.create_page>` method:
+By default, `create()` will raise a ``RuntimeError`` if a node with the same name and type already 
+exists. You can control this behavior using the ``if_exists`` parameter:
 
 .. code-block:: python
 
-    # Create a page in the notebook root
-    page = notebook.create_page("My First Page")
+    from labapi import InsertBehavior
 
-    # Create a page inside a directory
-    experiment_page = my_folder.create_page("Experiment 1")
+    # Raise error if exists (default)
+    page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Raise)
+
+    # Return the existing node if it exists
+    page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Ignore)
+
+    # Delete the existing node(s) and create a new one
+    page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Replace)
 
 Creating Entries
 ----------------

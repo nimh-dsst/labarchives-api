@@ -18,9 +18,18 @@ from collections.abc import (
     ValuesView,
 )
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal, Self, cast, overload, override
+from typing import TYPE_CHECKING, Literal, Self, cast, overload, override, TypeVar, Type
 
-from labapi.util import IdIndex, IdOrNameIndex, Index, NameIndex, extract_etree, to_bool
+from labapi.util import (
+    IdIndex,
+    IdOrNameIndex,
+    Index,
+    NameIndex,
+    extract_etree,
+    to_bool,
+    InsertBehavior,
+    NotebookPath,
+)
 
 from datetime import timedelta
 import time
@@ -294,7 +303,11 @@ class AbstractTreeNode(AbstractBaseTreeNode):
         api_deleted_items = self.root[Index.Name : "API Deleted Items"]
 
         if len(api_deleted_items) == 0:
-            api_deleted_items = self.root.create_directory("API Deleted Items")
+            from .directory import NotebookDirectory
+
+            api_deleted_items = self.root.create(
+                NotebookDirectory, "API Deleted Items", if_exists=InsertBehavior.Retain
+            )
         else:
             api_deleted_items = api_deleted_items[0]
             assert isinstance(api_deleted_items, AbstractTreeContainer)
@@ -305,6 +318,9 @@ class AbstractTreeNode(AbstractBaseTreeNode):
         self.move_to(api_deleted_items)
 
         return self
+
+
+T = TypeVar("T", bound=AbstractTreeNode)
 
 
 class AbstractTreeContainer(
@@ -391,10 +407,18 @@ class AbstractTreeContainer(
             self._populated = True
 
     def __len__(self) -> int:
+        """The number of children in this container.
+
+        :returns: The count of direct child nodes.
+        """
         self._ensure_populated()
         return len(self.children)
 
     def __iter__(self) -> Iterator[str]:
+        """An iterator over the names of the children in this container.
+
+        :returns: An iterator yielding name strings.
+        """
         return iter(node.name for node in self.children)
 
     @override
@@ -546,8 +570,132 @@ class AbstractTreeContainer(
         all_names = self.enumerate_all(max_depth=max_depth, timeout=timeout)
         return [name for name in all_names if not self.traverse(name).is_dir()]
 
+    @overload
+    def create(
+        self,
+        cls: Type[T],
+        name: str,
+        *,
+        if_exists: InsertBehavior = InsertBehavior.Raise,
+    ) -> T:
+        pass
+
+    @overload
+    def create(
+        self,
+        cls: Type[T],
+        name: NotebookPath,
+        *,
+        parents: bool = False,
+        if_exists: InsertBehavior = InsertBehavior.Raise,
+    ) -> T:
+        pass
+
+    def create(
+        self,
+        cls: Type[T],
+        name: str | NotebookPath,
+        *,
+        parents: bool = False,
+        if_exists: InsertBehavior = InsertBehavior.Raise,
+    ) -> T:
+        """Creates a new child node (page or directory) within this container.
+
+        This method allows for more flexible creation of tree nodes compared to
+        the deprecated :meth:`create_page` and :meth:`create_directory` methods.
+        It also supports different behaviors if a node with the same name already exists.
+
+        :param cls: The class of the node to create (e.g., :class:`~labapi.tree.page.NotebookPage` or :class:`~labapi.tree.directory.NotebookDirectory`).
+        :param name: The name of the new node.
+        :param if_exists: The behavior to take if a node with the same name and type already exists. Default is to raise a RuntimeError.
+        :returns: The newly created (or existing) node of type `cls`.
+        :raises RuntimeError: If `if_exists` is `InsertBehavior.Raise` and the node already exists.
+        """
+        path_self = NotebookPath(self)
+
+        if isinstance(name, str):
+            if parents:
+                raise TypeError(
+                    "`parents` can only be set when `name` is a NotebookPath"
+                )
+        elif name.is_absolute():
+            raise  # TODO
+
+        path = (path_self / name).relative_to(self)
+
+        if len(path) == 1:
+            nodes = [n for n in self[Index.Name : path.name] if isinstance(n, cls)]
+
+            if nodes:
+                match if_exists:
+                    case InsertBehavior.Raise:
+                        raise RuntimeError(
+                            f'{cls.__name__} with name "{name}" already exists'
+                        )
+                    case InsertBehavior.Ignore:
+                        pass
+                    case InsertBehavior.Retain:
+                        return nodes[0]
+                    case InsertBehavior.Replace:
+                        for node in nodes:
+                            node.delete()
+
+            create_tree = self.user.api_get(
+                "tree_tools/insert_node",
+                nbid=self.root.id,
+                parent_tree_id=self.tree_id,
+                display_text=path.name,
+                is_folder="false"
+                if cls.__name__ == "NotebookPage"
+                else "true",  # TODO make more resilient
+            )
+
+            tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
+
+            new_node = cls(tree_id, path.name, self.root, self, self.user)
+            self._children.append(new_node)
+            return new_node
+        else:
+            segments = tuple(path)
+            next_name = segments[0]
+            candidates = self[Index.Name : next_name]
+
+            next_node = next(
+                (
+                    node
+                    for node in candidates
+                    if isinstance(node, AbstractTreeContainer)
+                ),
+                None,
+            )
+
+            if next_node is None:
+                if parents:
+                    from .directory import NotebookDirectory
+
+                    next_node = self.create(
+                        NotebookDirectory,
+                        next_name,
+                        if_exists=InsertBehavior.Retain,
+                    )
+                elif candidates:
+                    raise RuntimeError(f'"{next_name}" is not a directory')
+                else:
+                    raise KeyError(f'Node with name "{next_name}" not found')
+
+            return next_node.create(
+                cls,
+                NotebookPath(None, *segments[1:]),
+                parents=parents,
+                if_exists=if_exists,
+            )
+
     def create_page(self, name: str) -> NotebookPage:
         """Creates a new page within this container.
+
+        .. deprecated:: 0.1.0
+
+            Use :py:meth:`~labapi.tree.mixins.AbstractTreeContainer.create` instead.
 
         :param name: The name of the new page.
         :returns: The newly created :class:`~labapi.tree.page.NotebookPage` object.
@@ -565,12 +713,16 @@ class AbstractTreeContainer(
         )
         tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
 
-        new_page = page.NotebookPage(tree_id, name, self, self.root, self.user)
+        new_page = page.NotebookPage(tree_id, name, self.root, self, self.user)
         self._children.append(new_page)
         return new_page
 
     def create_directory(self, name: str) -> NotebookDirectory:
         """Creates a new directory within this container.
+
+        .. deprecated:: 0.1.0
+
+            Use :py:meth:`~labapi.tree.mixins.AbstractTreeContainer.create` instead.
 
         :param name: The name of the new directory.
         :returns: The newly created :class:`~labapi.tree.directory.NotebookDirectory` object.
@@ -588,7 +740,7 @@ class AbstractTreeContainer(
         )
         tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
 
-        new_dir = directory.NotebookDirectory(tree_id, name, self, self.root, self.user)
+        new_dir = directory.NotebookDirectory(tree_id, name, self.root, self, self.user)
         self._children.append(new_dir)
         return new_dir
 

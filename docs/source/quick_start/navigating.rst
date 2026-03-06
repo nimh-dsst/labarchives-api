@@ -181,10 +181,12 @@ This allows you to access directory-specific methods and attributes without your
 
 .. code-block:: python
 
+    from labapi import NotebookPage
+
     node = notebook.traverse("Experiments/Project A")
     if node.is_dir():
         directory = node.as_dir()
         # Now you can access directory-specific methods
-        directory.create_page("New Page")
+        directory.create(NotebookPage, "New Page")
 
 If you call :meth:`~labapi.tree.mixins.AbstractBaseTreeNode.as_dir` on a node that is not a directory, it will raise a :class:`TypeError`.
