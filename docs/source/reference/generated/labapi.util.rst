@@ -37,4 +37,5 @@ labapi.util
    index
    notebookinit
    part_type
+   path
 
