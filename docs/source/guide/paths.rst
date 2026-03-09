@@ -29,7 +29,7 @@ and accepts a slash-separated path string.
 Absolute vs Relative Paths
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Paths starting with ``/`` are **absolute** — they are resolved from the notebook root regardless
+Paths starting with ``/`` are **absolute** -- they are resolved from the notebook root regardless
 of where you call ``traverse``.
 
 .. code-block:: python
@@ -124,7 +124,7 @@ nodes or strings, combined with ``/``, and converted back to strings. It is used
     path = NotebookPath(folder)
     print(path)           # /Experiments/2024
     print(path.name)      # 2024  (last segment)
-    print(path.parts)     # ('Experiments',)  (all but last)
+    print(path.parts)     # ['Experiments']  (all but last)
     print(path.is_absolute())  # True
 
 **Constructing from a string:**

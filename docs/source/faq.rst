@@ -8,8 +8,8 @@ This page addresses common questions and configuration options for the LabArchiv
 Browser Selection for Authentication
 -------------------------------------
 
-When using the built-in authentication flow (``client.generate_auth_url()`` followed by ``client.login()``),
-the library needs to open a browser for the user to authenticate. By default, it will auto-detect available
+When using the built-in interactive authentication flow (``client.default_authenticate()``), the
+library needs to open a browser for the user to authenticate. By default, it will auto-detect available
 browsers on your system.
 
 Configuring the Browser
@@ -42,8 +42,8 @@ Example usage:
 
     from labapi import Client
     client = Client()
-    auth_url = client.generate_auth_url("http://localhost:8080/callback")
-    # Firefox will open automatically
+    user = client.default_authenticate()
+    # Firefox will be selected for authentication
 
 
 SSL/TLS Certificate Verification

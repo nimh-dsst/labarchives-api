@@ -1,3 +1,5 @@
+.. _creating_pages:
+
 Creating Content
 ================
 
@@ -8,13 +10,13 @@ LabArchives organizes content hierarchically:
 - **Pages** contain **entries**, which are organized top-down, similar to a word document.
 
 Creating Directories and Pages
-----------------------------
+------------------------------
 
-Use the :meth:`create <labapi.tree.mixins.AbstractTreeContainer.create>` method to add new 
-:class:`NotebookDirectories <labapi.tree.directory.NotebookDirectory>` or 
+Use the :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` method to add new 
+:class:`NotebookDirectories <labapi.tree.directory.NotebookDirectory` or 
 :class:`NotebookPages <labapi.tree.page.NotebookPage>` to your notebook. This method is 
-available on any :class:`Notebook <labapi.tree.notebook.Notebook>` or 
-:class:`NotebookDirectory <labapi.tree.directory.NotebookDirectory>`.
+available on any :class:`~labapi.tree.notebook.Notebook` or 
+:class:`~labapi.tree.directory.NotebookDirectory`.
 
 .. code-block:: python
 
@@ -32,7 +34,7 @@ available on any :class:`Notebook <labapi.tree.notebook.Notebook>` or
 Handling Existing Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, `create()` will raise a ``RuntimeError`` if a node with the same name and type already 
+By default, :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` will raise a :class:`RuntimeError` if a node with the same name and type already 
 exists. You can control this behavior using the ``if_exists`` parameter:
 
 .. code-block:: python
@@ -42,8 +44,11 @@ exists. You can control this behavior using the ``if_exists`` parameter:
     # Raise error if exists (default)
     page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Raise)
 
-    # Return the existing node if it exists
+    # Create another node with the same name/type
     page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Ignore)
+
+    # Return the existing node instead of creating a duplicate
+    page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Retain)
 
     # Delete the existing node(s) and create a new one
     page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Replace)
@@ -51,8 +56,8 @@ exists. You can control this behavior using the ``if_exists`` parameter:
 Creating Entries
 ----------------
 
-:class:`Entries <labapi.entry.entries.base.Entry>` are the content blocks within pages. Use the 
-:func:`entries.create_entry <labapi.entry.collection.Entries.create_entry>` method to add content:
+:class:`~labapi.entry.collection.Entries` are the content blocks within pages. Use the
+:meth:`~labapi.entry.collection.Entries.create_entry` method to add one:
 
 .. code-block:: python
 

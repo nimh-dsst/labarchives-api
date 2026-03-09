@@ -41,7 +41,7 @@ Example Code
     import sys
     from pathlib import Path
 
-    from labapi import Client, InsertBehavior, NotebookDirectory, NotebookPage
+    from labapi import Client, NotebookDirectory, NotebookPage
     from labapi.entry import AttachmentEntry
     from labapi.tree.mixins import AbstractTreeContainer
     from labapi.user import User
@@ -188,7 +188,7 @@ Example Code
             except Exception as e:
                 print(f"✗ (Error: {e})")
 
-    print(f"\nDownload complete! {len(json_entries)} file(s) saved to '{local_folder}'")
+        print(f"\nDownload complete! {len(json_entries)} file(s) saved to '{local_folder}'")
 
 
     def main() -> None:
