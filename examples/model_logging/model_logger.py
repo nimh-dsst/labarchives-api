@@ -11,7 +11,6 @@ from datetime import datetime
 from typing import Any, Sequence
 
 from labapi import Client, InsertBehavior, NotebookDirectory, NotebookPage
-from labapi.tree.mixins import AbstractTreeContainer
 from labapi.user import User
 
 
@@ -31,12 +30,6 @@ class ModelLogger:
 
         # Store user session in memory (self.user)
         print(f"Authenticated as: {self.user.email} (ID: {self.user.id})")
-
-    def _get_or_create_dir(
-        self, parent: AbstractTreeContainer, name: str
-    ) -> AbstractTreeContainer:
-        """Helper to get or create a directory by name."""
-        return parent.create(NotebookDirectory, name, if_exists=InsertBehavior.Retain)
 
     def log(
         self,
@@ -66,8 +59,12 @@ class ModelLogger:
 
         # Build path: Model Log / {email} / {iso8601}
         print("Navigating to logging directory...")
-        model_log_dir = self._get_or_create_dir(notebook, "Model Log")
-        user_dir = self._get_or_create_dir(model_log_dir, self.user.email)
+        model_log_dir = notebook.create(
+            NotebookDirectory, "Model Log", if_exists=InsertBehavior.Retain
+        )
+        user_dir = model_log_dir.create(
+            NotebookDirectory, self.user.email, if_exists=InsertBehavior.Retain
+        )
 
         timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
         run_dir = user_dir.create(NotebookDirectory, timestamp)

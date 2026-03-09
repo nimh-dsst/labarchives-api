@@ -59,13 +59,13 @@ Optional Dependencies
 
       .. code-block:: bash
 
-        uv add "labapi[builtin-auth]"
+        uv add labapi --optional builtin-auth
 
     .. tab-item:: poetry
 
       .. code-block:: bash
 
-        poetry add "labapi[builtin-auth]"
+        poetry install labapi --with builtin-auth
     
     .. tab-item:: pip
       
@@ -84,13 +84,13 @@ Optional Dependencies
 
       .. code-block:: bash
 
-        uv add "labapi[dotenv]"
+        uv add labapi --optional dotenv
 
     .. tab-item:: poetry
 
       .. code-block:: bash
 
-        poetry add "labapi[dotenv]"
+        poetry install labapi --with dotenv
     
     .. tab-item:: pip
       

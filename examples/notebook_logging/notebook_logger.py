@@ -20,7 +20,6 @@ from mimetypes import guess_type
 from typing import Any
 
 from labapi import Client, InsertBehavior, NotebookDirectory, NotebookPage
-from labapi.tree.mixins import AbstractTreeContainer
 from labapi.user import User
 
 try:
@@ -114,12 +113,6 @@ class NotebookLogger:
         if abs_path not in self.tracked_files:
             self.tracked_files.append(abs_path)
             print(f"Tracking file for LabArchives: {path}")
-
-    def _get_or_create_dir(
-        self, parent: AbstractTreeContainer, name: str
-    ) -> AbstractTreeContainer:
-        """Get or create a directory by name under parent."""
-        return parent.create(NotebookDirectory, name, if_exists=InsertBehavior.Retain)
 
     def _capture_figures(self) -> list[bytes]:
         """Capture all open matplotlib figures as PNG bytes."""
@@ -224,8 +217,12 @@ class NotebookLogger:
             ) from None
 
         print("Navigating to logging directory...")
-        notebook_log_dir = self._get_or_create_dir(notebook, "Notebook Log")
-        user_dir = self._get_or_create_dir(notebook_log_dir, self.user.email)
+        notebook_log_dir = notebook.create(
+            NotebookDirectory, "Notebook Log", if_exists=InsertBehavior.Retain
+        )
+        user_dir = notebook_log_dir.create(
+            NotebookDirectory, self.user.email, if_exists=InsertBehavior.Retain
+        )
 
         timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
         page = user_dir.create(NotebookPage, timestamp)
