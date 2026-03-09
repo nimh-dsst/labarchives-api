@@ -155,10 +155,10 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         """
         raise NotImplementedError()
 
-    def traverse(self, path: str) -> AbstractBaseTreeNode:
+    def traverse(self, path: str | NotebookPath) -> AbstractBaseTreeNode:
         """Traverses the notebook's tree structure to find a node by its path.
 
-        The path segments should be separated by '/'. Each segment is treated
+        String path segments should be separated by '/'. Each segment is treated
         as a name to look up in the current container. Paths starting with '/'
         are absolute (relative to the notebook root), while paths without a
         leading '/' are relative to the current container.
@@ -168,9 +168,6 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
         .. note::
            - When multiple children have the same name, this method returns the first match.
-           - Empty path segments (from trailing slashes or multiple consecutive slashes)
-             will attempt to look up nodes with empty string names.
-           - '.' is not treated specially; it will look for a node literally named '.'.
 
         .. warning::
            Nodes with names that are literally '..' cannot be accessed via
@@ -184,16 +181,14 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
         # TODO rewrite to use NotebookPath (or str that is converted to NotebookPath internally)
 
-        if path.startswith("/"):
-            curr = self.root
-        else:
-            curr = self
+        canonical = NotebookPath(None, path) if isinstance(path, str) else path
+        canonical = canonical.resolve(NotebookPath(self))
 
-        segments = path.lstrip("/").split("/")
+        curr = self.root
 
         parsed_segments: list[str] = []
 
-        for segment in segments:
+        for segment in canonical:
             parsed_segments.append(segment)
             if segment == "..":
                 curr = curr.parent
