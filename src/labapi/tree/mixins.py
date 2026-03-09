@@ -624,6 +624,8 @@ class AbstractTreeContainer(
             tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
 
             new_node = cls(tree_id, path.name, self.root, self, self.user)
+            if isinstance(new_node, AbstractTreeContainer):
+                new_node._populated = True
             self._children.append(new_node)
             return new_node
         else:
