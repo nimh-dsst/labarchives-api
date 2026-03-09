@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="<no title>" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="reference/generated/labapi.tree.page.NotebookPage.html" />
+<meta property="og:site_name" content="labapi" />
+<meta property="og:description" content="{`{ fullname | escape | underline}}" />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_reference_generated_labapi.tree.page.NotebookPage_ccb886ce.png" />
+<meta property="og:image:alt" content="{`{ fullname | escape | underline}}" />
+<meta name="description" content="{`{ fullname | escape | underline}}" />
+<meta name="twitter:card" content="summary_large_image" />
+<title>&lt;no title&gt; - labapi 0.1.0 documentation</title><link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="labapi.user" href="labapi.user.html"><link rel="prev" title="labapi.tree.page" href="labapi.tree.page.html"><script data-cfasync="false">(function(){
+    const m = localStorage.getItem("breeze-mode") || "auto";
+    const d = document.documentElement.dataset;
+    d.mode = m;
+    d.theme = m === "auto"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : m;
+  })();
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8e8a900e" /><link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" /><link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" /><link rel="stylesheet" type="text/css" href="../../_static/styles/breeze.css?v=227fd4f7" /><script defer="defer" src="../../_static/scripts/breeze.js?v=dac9f8c6"></script></head>
+<body>
+  
+  
+  <div class="bz-skip-to-content"><a href="#bz-main-content">Skip to main content</a></div><header class="bz-header-main">
+  <div class="bz-header-start"><a class="bz-header-brand" href="../../index.html">
+  
+  
+  <span>labapi 0.1.0 documentation</span>
+</a>
+  </div>
+  <div class="bz-header-end"><div id="docsearch" class="bz-search-button">
+  <a
+    href="../../search.html#q"
+    aria-label="Search the docs"
+    data-tooltip="Search the docs"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 -1 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </svg>
+    <span>Search</span>
+    <kbd>Ctrl+K</kbd>
+  </a>
+</div><div class="bz-theme-switcher">
+  <button aria-label="Switch theme" data-tooltip="Switch theme">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-light" fill="currentColor">
+      <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-dark" fill="currentColor">
+      <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+    </svg>
+  </button>
+</div>
+  </div>
+</header><nav class="bz-header-tabs" aria-label="Primary Navigation"><label
+  class="bz-sidebar-primary-toggle"
+  for="bz-sidebar-primary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle site navigation"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h12.5"
+    />
+  </svg>
+</label><ul><li class="toctree-l1"><a class="reference internal" href="../../quick_start/index.html">Quick Start</a></li><li class="toctree-l1"><a class="reference internal" href="../../guide/index.html">User Guide</a></li><li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Example Applications</a></li><li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li><li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a></li></ul><div class="bz-dropdown">
+    <button aria-haspopup="true" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <g
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </g>
+      </svg>
+    </button>
+    <ul role="menu" aria-hidden="true"></ul>
+  </div>
+</nav><hr class="bz-header-hr">
+  <div class="bz-content"><aside class="bz-sidebar-primary" data-drawer="bz-sidebar-primary">
+  
+  
+    <nav class="bz-sidebar-nav" aria-label="Section Navigation"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="labapi.html">labapi</a>
+<details open=""><summary aria-label="Toggle submenu"></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="labapi.browser.html">labapi.browser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="labapi.client.html">labapi.client</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="labapi.client.Client.html"><code class="docutils literal notranslate"><span class="pre">Client</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l2"><a class="reference internal" href="labapi.entry.html">labapi.entry</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="labapi.entry.attachment.html">labapi.entry.attachment</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.attachment.Attachment.html"><code class="docutils literal notranslate"><span class="pre">Attachment</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.entry.collection.html">labapi.entry.collection</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.collection.Entries.html"><code class="docutils literal notranslate"><span class="pre">Entries</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.entry.comment.html">labapi.entry.comment</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.comment.Comment.html"><code class="docutils literal notranslate"><span class="pre">Comment</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.entry.entries.html">labapi.entry.entries</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.entries.attachment.html">labapi.entry.entries.attachment</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.attachment.AttachmentEntry.html"><code class="docutils literal notranslate"><span class="pre">AttachmentEntry</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.entries.base.html">labapi.entry.entries.base</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.base.Entry.html"><code class="docutils literal notranslate"><span class="pre">Entry</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.entries.text.html">labapi.entry.entries.text</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.text.BaseTextEntry.html"><code class="docutils literal notranslate"><span class="pre">BaseTextEntry</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.text.HeaderEntry.html"><code class="docutils literal notranslate"><span class="pre">HeaderEntry</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.text.PlainTextEntry.html"><code class="docutils literal notranslate"><span class="pre">PlainTextEntry</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.text.TextEntry.html"><code class="docutils literal notranslate"><span class="pre">TextEntry</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.entries.widget.html">labapi.entry.entries.widget</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.widget.WidgetEntry.html"><code class="docutils literal notranslate"><span class="pre">WidgetEntry</span></code></a></li>
+</ul></details></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.entry.json_data.html">labapi.entry.json_data</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.json_data.JsonData.html">labapi.entry.json_data.JsonData</a></li>
+</ul></details></li>
+</ul></details></li>
+<li class="toctree-l2 current"><a class="reference internal" href="labapi.tree.html">labapi.tree</a>
+<details open=""><summary aria-label="Toggle submenu"></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="labapi.tree.collection.html">labapi.tree.collection</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.collection.Notebooks.html"><code class="docutils literal notranslate"><span class="pre">Notebooks</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.tree.directory.html">labapi.tree.directory</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.directory.NotebookDirectory.html"><code class="docutils literal notranslate"><span class="pre">NotebookDirectory</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.tree.mixins.html">labapi.tree.mixins</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.mixins.AbstractBaseTreeNode.html"><code class="docutils literal notranslate"><span class="pre">AbstractBaseTreeNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.mixins.AbstractTreeContainer.html"><code class="docutils literal notranslate"><span class="pre">AbstractTreeContainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.mixins.AbstractTreeNode.html"><code class="docutils literal notranslate"><span class="pre">AbstractTreeNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.mixins.HasNameMixin.html"><code class="docutils literal notranslate"><span class="pre">HasNameMixin</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.tree.notebook.html">labapi.tree.notebook</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.notebook.Notebook.html"><code class="docutils literal notranslate"><span class="pre">Notebook</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3 current"><a class="reference internal" href="labapi.tree.page.html">labapi.tree.page</a>
+<details open=""><summary aria-label="Toggle submenu"></summary><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">NotebookPage</span></code></a></li>
+</ul></details></li>
+</ul></details></li>
+<li class="toctree-l2"><a class="reference internal" href="labapi.user.html">labapi.user</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="labapi.user.User.html"><code class="docutils literal notranslate"><span class="pre">User</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l2"><a class="reference internal" href="labapi.util.html">labapi.util</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="labapi.util.behavior.html">labapi.util.behavior</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.behavior.InsertBehavior.html"><code class="docutils literal notranslate"><span class="pre">InsertBehavior</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.util.extract.html">labapi.util.extract</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.extract.EtreeExtractorDict.html">labapi.util.extract.EtreeExtractorDict</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.extract.extract_etree.html">labapi.util.extract.extract_etree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.extract.to_bool.html">labapi.util.extract.to_bool</a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.util.index.html">labapi.util.index</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.index.IdIndex.html">labapi.util.index.IdIndex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.index.NameIndex.html">labapi.util.index.NameIndex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.index.IdOrNameIndex.html">labapi.util.index.IdOrNameIndex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.index.Index.html"><code class="docutils literal notranslate"><span class="pre">Index</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.util.notebookinit.html">labapi.util.notebookinit</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.notebookinit.NotebookInit.html"><code class="docutils literal notranslate"><span class="pre">NotebookInit</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.util.part_type.html">labapi.util.part_type</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.part_type.get_normalized_part_type.html">labapi.util.part_type.get_normalized_part_type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.part_type.is_part_type.html">labapi.util.part_type.is_part_type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.part_type.is_valid_part_type.html">labapi.util.part_type.is_valid_part_type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.part_type.serialize_part_type.html">labapi.util.part_type.serialize_part_type</a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.util.path.html">labapi.util.path</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.path.NotebookPath.html"><code class="docutils literal notranslate"><span class="pre">NotebookPath</span></code></a></li>
+</ul></details></li>
+</ul></details></li>
+</ul></details></li>
+</ul>
+</nav>
+  
+
+</aside><main id="bz-main-content"><header class="bz-article-header">
+  
+  
+    <nav class="bz-breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <li class="bz-breadcrumbs-home">
+      <a href="../../index.html" aria-label="Home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8.543 2.232a.75.75 0 0 0-1.085 0l-5.25 5.5A.75.75 0 0 0 2.75 9H4v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 1 1 2 0v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V9h1.25a.75.75 0 0 0 .543-1.268l-5.25-5.5Z" />
+        </svg>
+      </a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="../index.html">API Reference</a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="labapi.html">labapi</a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="labapi.tree.html">labapi.tree</a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="labapi.tree.page.html">labapi.tree.page</a>
+    </li><li class="bz-breadcrumbs-current">
+      <span>&lt;no title&gt;</span>
+    </li>
+  </ol>
+</nav>
+  
+<label
+  class="bz-sidebar-secondary-toggle"
+  for="bz-sidebar-secondary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle table of contents"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75H20.25 M11.25 12H20.25 M7.75 17.25H20.25"
+    />
+  </svg>
+</label></header><article class="bz-article-main" role="main"><div class="bz-page-actions" role="group" aria-label="Page actions">
+  <button data-copy-source="../../_sources/reference/generated/labapi.tree.page.NotebookPage.rst.txt">
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+    <span>Copy page</span>
+  </button>
+  <div class="bz-dropdown">
+    <button
+      aria-label="More actions"
+      aria-haspopup="true"
+      aria-expanded="false"
+    ></button>
+    <ul role="menu" aria-hidden="true">
+      <li>
+        <a href="#" role="menuitem" data-copy-source="../../_sources/reference/generated/labapi.tree.page.NotebookPage.rst.txt">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+          <span>Copy page</span>
+        </a>
+      </li>
+      <li>
+        <a href="../../_sources/reference/generated/labapi.tree.page.NotebookPage.rst.txt" role="menuitem" class="bz-page-actions-external" target="_blank" rel="noopener">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3a2 2 0 0 1 2-2h9.982a2 2 0 0 1 1.414.586l4.018 4.018A2 2 0 0 1 21 7.018V21a2 2 0 0 1-2 2H4.75a.75.75 0 0 1 0-1.5H19a.5.5 0 0 0 .5-.5V8.5h-4a2 2 0 0 1-2-2v-4H5a.5.5 0 0 0-.5.5v6.25a.75.75 0 0 1-1.5 0Zm12-.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 0-.146-.336l-4.018-4.018A.5.5 0 0 0 15 2.5Z"></path><path d="M4.53 12.24a.75.75 0 0 1-.039 1.06l-2.639 2.45 2.64 2.45a.75.75 0 1 1-1.022 1.1l-3.23-3a.75.75 0 0 1 0-1.1l3.23-3a.75.75 0 0 1 1.06.04Zm3.979 1.06a.75.75 0 1 1 1.02-1.1l3.231 3a.75.75 0 0 1 0 1.1l-3.23 3a.75.75 0 1 1-1.021-1.1l2.639-2.45-2.64-2.45Z"></path></svg>
+          <span>View source</span>
+        </a>
+      </li></ul>
+  </div>
+</div><p>{<a href="#id1"><span class="problematic" id="id2">`</span></a>{ fullname | escape | underline}}</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">labapi.tree.page.</span></span><span class="sig-name descname"><span class="pre">NotebookPage</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">tree_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer" title="labapi.tree.mixins.AbstractTreeContainer"><span class="pre">AbstractTreeContainer</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer" title="labapi.tree.mixins.AbstractTreeContainer"><span class="pre">AbstractTreeContainer</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="labapi.user.User.html#labapi.user.User" title="labapi.user.User"><span class="pre">User</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="reference internal" href="../../_modules/labapi/tree/page.html#NotebookPage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.tree.page.NotebookPage" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="labapi.tree.mixins.AbstractTreeNode.html#labapi.tree.mixins.AbstractTreeNode" title="labapi.tree.mixins.AbstractTreeNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractTreeNode</span></code></a></p>
+<p>Represents a single page within a LabArchives notebook.</p>
+<p>A <cite>NotebookPage</cite> is a leaf node in the tree structure and contains
+a collection of <code class="xref py py-class docutils literal notranslate"><span class="pre">Entry</span></code> objects. It provides
+functionalities to access and manage these entries.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">tree_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer" title="labapi.tree.mixins.AbstractTreeContainer"><span class="pre">AbstractTreeContainer</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer" title="labapi.tree.mixins.AbstractTreeContainer"><span class="pre">AbstractTreeContainer</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="labapi.user.User.html#labapi.user.User" title="labapi.user.User"><span class="pre">User</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="reference internal" href="../../_modules/labapi/tree/page.html#NotebookPage.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.tree.page.NotebookPage.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initializes a NotebookPage object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tree_id</strong> – The unique ID of the page.</p></li>
+<li><p><strong>name</strong> – The name of the page.</p></li>
+<li><p><strong>root</strong> – The root node of the tree (the Notebook).</p></li>
+<li><p><strong>parent</strong> – The parent node of this page (a Directory or Notebook).</p></li>
+<li><p><strong>user</strong> – The authenticated user.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<div class="table autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.__init__" title="labapi.tree.page.NotebookPage.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(tree_id, name, root, parent, user)</p></td>
+<td><p>Initializes a NotebookPage object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.as_dir" title="labapi.tree.page.NotebookPage.as_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_dir</span></code></a>()</p></td>
+<td><p>Casts this node to an <code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractTreeContainer</span></code> if it is a directory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.as_page" title="labapi.tree.page.NotebookPage.as_page"><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_page</span></code></a>()</p></td>
+<td><p>Casts this node to a <a class="reference internal" href="#labapi.tree.page.NotebookPage" title="labapi.tree.page.NotebookPage"><code class="xref py py-class docutils literal notranslate"><span class="pre">NotebookPage</span></code></a> if it is a page.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.copy_to" title="labapi.tree.page.NotebookPage.copy_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy_to</span></code></a>(destination)</p></td>
+<td><p>Copies this page and its entries to a specified destination container.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.delete" title="labapi.tree.page.NotebookPage.delete"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete</span></code></a>()</p></td>
+<td><p>Deletes this node by moving it to a special &quot;API Deleted Items&quot; directory.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.is_dir" title="labapi.tree.page.NotebookPage.is_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_dir</span></code></a>()</p></td>
+<td><p>Indicates that this node is not a directory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.move_to" title="labapi.tree.page.NotebookPage.move_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">move_to</span></code></a>(destination)</p></td>
+<td><p>Moves this node to a specified destination container.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.refresh" title="labapi.tree.page.NotebookPage.refresh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refresh</span></code></a>()</p></td>
+<td><p>Refreshes the page by clearing its cached entries.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.traverse" title="labapi.tree.page.NotebookPage.traverse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">traverse</span></code></a>(path)</p></td>
+<td><p>Traverses the notebook's tree structure to find a node by its path.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Attributes</p>
+<div class="table autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.entries" title="labapi.tree.page.NotebookPage.entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">entries</span></code></a></p></td>
+<td><p>The collection of entries contained within this page.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.id" title="labapi.tree.page.NotebookPage.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span></code></a></p></td>
+<td><p>The unique ID of the page.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.name" title="labapi.tree.page.NotebookPage.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
+<td><p>The name of the tree node.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.parent" title="labapi.tree.page.NotebookPage.parent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parent</span></code></a></p></td>
+<td><p>The parent node of this node in the tree.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.root" title="labapi.tree.page.NotebookPage.root"><code class="xref py py-obj docutils literal notranslate"><span class="pre">root</span></code></a></p></td>
+<td><p>The root node of the tree (e.g., the Notebook).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.tree_id" title="labapi.tree.page.NotebookPage.tree_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tree_id</span></code></a></p></td>
+<td><p>The unique identifier for this node within the LabArchives tree.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.tree.page.NotebookPage.user" title="labapi.tree.page.NotebookPage.user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user</span></code></a></p></td>
+<td><p>The authenticated user associated with this node.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.id">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.id" title="Link to this definition">#</a></dt>
+<dd><p>The unique ID of the page.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The page’s ID.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.entries">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">entries</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="labapi.entry.collection.Entries.html#labapi.entry.collection.Entries" title="labapi.entry.collection.Entries"><span class="pre">Entries</span></a></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.entries" title="Link to this definition">#</a></dt>
+<dd><p>The collection of entries contained within this page.</p>
+<p>This property lazily loads the entries from the LabArchives API if they
+have not been loaded yet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An <code class="xref py py-class docutils literal notranslate"><span class="pre">Entries</span></code> object managing the page’s entries.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.copy_to">
+<span class="sig-name descname"><span class="pre">copy_to</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer" title="labapi.tree.mixins.AbstractTreeContainer"><span class="pre">AbstractTreeContainer</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#labapi.tree.page.NotebookPage" title="labapi.tree.page.NotebookPage"><span class="pre">NotebookPage</span></a></span></span><a class="reference internal" href="../../_modules/labapi/tree/page.html#NotebookPage.copy_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.tree.page.NotebookPage.copy_to" title="Link to this definition">#</a></dt>
+<dd><p>Copies this page and its entries to a specified destination container.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This method has known limitations:</p>
+<ul class="simple">
+<li><p>LabArchives may rename attachment files during copy operations</p></li>
+<li><p>Only certain entry types are fully supported (text, plain text, headers, attachments)</p></li>
+<li><p>Some entry types may fail to copy and will cause errors</p></li>
+</ul>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>destination</strong> – The target container to copy the page to.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new instance of the copied page in the destination.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#AttributeError" title="(in Python v3.14)"><strong>AttributeError</strong></a> – If an unsupported entry type is encountered</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.is_dir">
+<span class="sig-name descname"><span class="pre">is_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="k"><span class="pre">False</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/labapi/tree/page.html#NotebookPage.is_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.tree.page.NotebookPage.is_dir" title="Link to this definition">#</a></dt>
+<dd><p>Indicates that this node is not a directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Always False.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../_modules/labapi/tree/page.html#NotebookPage.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.tree.page.NotebookPage.refresh" title="Link to this definition">#</a></dt>
+<dd><p>Refreshes the page by clearing its cached entries.</p>
+<p>This method clears the internal entries cache, forcing the page
+to re-fetch its entries from the LabArchives API on the next access.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently only clears the entries cache. Future implementation should
+properly invalidate all entry objects before clearing.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.as_dir">
+<span class="sig-name descname"><span class="pre">as_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer" title="labapi.tree.mixins.AbstractTreeContainer"><span class="pre">AbstractTreeContainer</span></a></span></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.as_dir" title="Link to this definition">#</a></dt>
+<dd><p>Casts this node to an <code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractTreeContainer</span></code> if it is a directory.</p>
+<p>This method provides a convenient way to perform directory-specific
+operations on a node after checking its type, with static type
+checking support.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The node cast to an <code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractTreeContainer</span></code>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If the node is not a directory (i.e., <cite>is_dir()</cite> returns <cite>False</cite>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.as_page">
+<span class="sig-name descname"><span class="pre">as_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#labapi.tree.page.NotebookPage" title="labapi.tree.page.NotebookPage"><span class="pre">NotebookPage</span></a></span></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.as_page" title="Link to this definition">#</a></dt>
+<dd><p>Casts this node to a <a class="reference internal" href="#labapi.tree.page.NotebookPage" title="labapi.tree.page.NotebookPage"><code class="xref py py-class docutils literal notranslate"><span class="pre">NotebookPage</span></code></a> if it is a page.</p>
+<p>This method provides a convenient way to perform page-specific
+operations on a node after checking its type, with static type
+checking support.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The node cast to a <a class="reference internal" href="#labapi.tree.page.NotebookPage" title="labapi.tree.page.NotebookPage"><code class="xref py py-class docutils literal notranslate"><span class="pre">NotebookPage</span></code></a>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.14)"><strong>TypeError</strong></a> – If the node is not a page (i.e., <cite>is_dir()</cite> returns <cite>True</cite>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Self" title="(in Python v3.14)"><span class="pre">Self</span></a></span></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.delete" title="Link to this definition">#</a></dt>
+<dd><p>Deletes this node by moving it to a special “API Deleted Items” directory.</p>
+<p>If the “API Deleted Items” directory does not exist, it will be created.
+The node’s name will be updated to reflect its deletion time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The instance of the deleted node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.move_to">
+<span class="sig-name descname"><span class="pre">move_to</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer" title="labapi.tree.mixins.AbstractTreeContainer"><span class="pre">AbstractTreeContainer</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Self" title="(in Python v3.14)"><span class="pre">Self</span></a></span></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.move_to" title="Link to this definition">#</a></dt>
+<dd><p>Moves this node to a specified destination container.</p>
+<p>This operation updates the node’s parent in LabArchives via an API call
+and updates the local tree structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>destination</strong> – The target container to move the node to.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The instance of the moved node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.name">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.name" title="Link to this definition">#</a></dt>
+<dd><p>The name of the tree node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The name of the node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.parent">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parent</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer" title="labapi.tree.mixins.AbstractTreeContainer"><span class="pre">AbstractTreeContainer</span></a></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.parent" title="Link to this definition">#</a></dt>
+<dd><p>The parent node of this node in the tree.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The parent tree container.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.root">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">root</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer" title="labapi.tree.mixins.AbstractTreeContainer"><span class="pre">AbstractTreeContainer</span></a></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.root" title="Link to this definition">#</a></dt>
+<dd><p>The root node of the tree (e.g., the Notebook).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The root tree container.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.traverse">
+<span class="sig-name descname"><span class="pre">traverse</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="labapi.util.path.NotebookPath.html#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode" title="labapi.tree.mixins.AbstractBaseTreeNode"><span class="pre">AbstractBaseTreeNode</span></a></span></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.traverse" title="Link to this definition">#</a></dt>
+<dd><p>Traverses the notebook’s tree structure to find a node by its path.</p>
+<p>String path segments should be separated by ‘/’. Each segment is treated
+as a name to look up in the current container. Paths starting with ‘/’
+are absolute (relative to the notebook root), while paths without a
+leading ‘/’ are relative to the current container.</p>
+<p>Special path segments:
+- ‘..’ navigates to the parent container</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>When multiple children have the same name, this method returns the first match.</p></li>
+</ul>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Nodes with names that are literally ‘..’ cannot be accessed via
+this method, as ‘..’ is reserved for parent navigation.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> – The slash-separated path to the desired node (e.g., “My Folder/My Page” or “/Folder/Subfolder/Page”).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractTreeContainer</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractTreeNode</span></code> found at the specified path.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.14)"><strong>RuntimeError</strong></a> – If a segment in the path does not lead to a directory.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.14)"><strong>KeyError</strong></a> – If a node at any segment of the path is not found.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.tree_id">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tree_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.tree_id" title="Link to this definition">#</a></dt>
+<dd><p>The unique identifier for this node within the LabArchives tree.</p>
+<p>This is often the same as <cite>id</cite> but can be used to distinguish if needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The tree ID of the node.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="labapi.tree.page.NotebookPage.user">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">user</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="labapi.user.User.html#labapi.user.User" title="labapi.user.User"><span class="pre">User</span></a></span><a class="headerlink" href="#labapi.tree.page.NotebookPage.user" title="Link to this definition">#</a></dt>
+<dd><p>The authenticated user associated with this node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The user object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+
+</article><footer class="bz-article-footer">
+  
+  
+    <nav class="bz-related-pages" aria-label="Related pages navigation"><a class="bz-related-pages-previous" href="labapi.tree.page.html" rel="prev">
+    <span>Previous</span><span class="bz-related-pages-title">labapi.tree.page</span></a><a class="bz-related-pages-next" href="labapi.user.html" rel="next">
+    <span>Next</span>
+    <span class="bz-related-pages-title">labapi.user</span>
+  </a></nav>
+  
+
+</footer><aside class="bz-sidebar-secondary" data-drawer="bz-sidebar-secondary">
+  
+  
+    <nav class="bz-sidebar-toc" aria-label="Table of contents">
+  <p>On this page</p><ul>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.__init__"><code class="docutils literal notranslate"><span class="pre">NotebookPage​._​_​init_​_​()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.id"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.id</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.entries"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.entries</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.copy_to"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.copy_​to()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.is_dir"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.is_​dir()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.refresh"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.refresh()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.as_dir"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.as_​dir()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.as_page"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.as_​page()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.delete"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.delete()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.move_to"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.move_​to()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.name"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.name</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.parent"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.parent</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.root"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.root</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.traverse"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.traverse()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.tree_id"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.tree_​id</span></code></a></li>
+<li><a class="reference internal" href="#labapi.tree.page.NotebookPage.user"><code class="docutils literal notranslate"><span class="pre">NotebookPage​.user</span></code></a></li>
+</ul></nav>
+  
+    
+
+
+  
+    
+  
+    
+  
+
+</aside></main>
+  </div>
+<footer class="bz-footer">
+  <div class="bz-footer-copyright"><p class="bz-copyright">© Copyright 2026, Christoph Li and Joshua Lawrimore</p><p>
+    
+    
+    
+      Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/aksiome/breeze">Breeze theme</a>.
+    
+  </p>
+</div>
+</footer><a href="#" class="bz-back-to-top">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
+    </svg>
+    <span>Back to top</span>
+  </a>
+  <label class="bz-overlay bz-overlay-primary" for="bz-sidebar-primary"></label>
+  <label class="bz-overlay bz-overlay-secondary" for="bz-sidebar-secondary"></label>
+  <input type="checkbox" name="bz-sidebar-primary" id="bz-sidebar-primary" aria-label="Toggle section navigation">
+  <input type="checkbox" name="bz-sidebar-secondary" id="bz-sidebar-secondary" aria-label="Toggle table of contents"><script src="../../_static/documentation_options.js?v=01f34227"></script><script src="../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src="../../_static/clipboard.min.js?v=a7894cd8"></script><script src="../../_static/copybutton.js?v=f281be69"></script><script src="../../_static/design-tabs.js?v=f930bc37"></script></body>
+</html>

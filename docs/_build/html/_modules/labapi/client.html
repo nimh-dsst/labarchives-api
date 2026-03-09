@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8"><title>labapi.client - labapi 0.1.0 documentation</title><link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><script data-cfasync="false">(function(){
+    const m = localStorage.getItem("breeze-mode") || "auto";
+    const d = document.documentElement.dataset;
+    d.mode = m;
+    d.theme = m === "auto"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : m;
+  })();
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8e8a900e" /><link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" /><link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" /><link rel="stylesheet" type="text/css" href="../../_static/styles/breeze.css?v=227fd4f7" /><script defer="defer" src="../../_static/scripts/breeze.js?v=dac9f8c6"></script></head>
+<body>
+  
+  
+  <div class="bz-skip-to-content"><a href="#bz-main-content">Skip to main content</a></div><header class="bz-header-main">
+  <div class="bz-header-start"><a class="bz-header-brand" href="../../index.html">
+  
+  
+  <span>labapi 0.1.0 documentation</span>
+</a>
+  </div>
+  <div class="bz-header-end"><div id="docsearch" class="bz-search-button">
+  <a
+    href="../../search.html#q"
+    aria-label="Search the docs"
+    data-tooltip="Search the docs"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 -1 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </svg>
+    <span>Search</span>
+    <kbd>Ctrl+K</kbd>
+  </a>
+</div><div class="bz-theme-switcher">
+  <button aria-label="Switch theme" data-tooltip="Switch theme">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-light" fill="currentColor">
+      <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-dark" fill="currentColor">
+      <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+    </svg>
+  </button>
+</div>
+  </div>
+</header><nav class="bz-header-tabs" aria-label="Primary Navigation"><label
+  class="bz-sidebar-primary-toggle"
+  for="bz-sidebar-primary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle site navigation"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h12.5"
+    />
+  </svg>
+</label><ul><li class="toctree-l1"><a class="reference internal" href="../../quick_start/index.html">Quick Start</a></li><li class="toctree-l1"><a class="reference internal" href="../../guide/index.html">User Guide</a></li><li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Example Applications</a></li><li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li><li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">API Reference</a></li></ul><div class="bz-dropdown">
+    <button aria-haspopup="true" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <g
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </g>
+      </svg>
+    </button>
+    <ul role="menu" aria-hidden="true"></ul>
+  </div>
+</nav><hr class="bz-header-hr">
+  <div class="bz-content"><main id="bz-main-content"><header class="bz-article-header">
+  
+  
+    <nav class="bz-breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <li class="bz-breadcrumbs-home">
+      <a href="../../index.html" aria-label="Home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8.543 2.232a.75.75 0 0 0-1.085 0l-5.25 5.5A.75.75 0 0 0 2.75 9H4v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 1 1 2 0v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V9h1.25a.75.75 0 0 0 .543-1.268l-5.25-5.5Z" />
+        </svg>
+      </a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="../index.html">Module code</a>
+    </li><li class="bz-breadcrumbs-current">
+      <span>labapi.client</span>
+    </li>
+  </ol>
+</nav>
+  
+<label
+  class="bz-sidebar-secondary-toggle"
+  for="bz-sidebar-secondary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle table of contents"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75H20.25 M11.25 12H20.25 M7.75 17.25H20.25"
+    />
+  </svg>
+</label></header><article class="bz-article-main" role="main"><h1>Source code for labapi.client</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">LabArchives API Client.</span>
+
+<span class="sd">This module provides the core client for interacting with the LabArchives API,</span>
+<span class="sd">handling authentication, request signing, and various API call methods.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">override</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_qsl</span><span class="p">,</span> <span class="n">urlencode</span><span class="p">,</span> <span class="n">urlsplit</span><span class="p">,</span> <span class="n">urlunsplit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os</span><span class="w"> </span><span class="kn">import</span> <span class="n">getenv</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">cryptography.hazmat.primitives.hashes</span><span class="w"> </span><span class="kn">import</span> <span class="n">SHA512</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cryptography.hazmat.primitives.hmac</span><span class="w"> </span><span class="kn">import</span> <span class="n">HMAC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">requests</span><span class="w"> </span><span class="kn">import</span> <span class="n">codes</span> <span class="k">as</span> <span class="n">status_codes</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">requests.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPAdapter</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ssl</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.user</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_etree</span><span class="p">,</span> <span class="n">to_bool</span><span class="p">,</span> <span class="n">NotebookInit</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BufferedIOBase</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">lxml.etree</span><span class="w"> </span><span class="kn">import</span> <span class="n">Element</span><span class="p">,</span> <span class="n">fromstring</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">base64</span><span class="w"> </span><span class="kn">import</span> <span class="n">b64encode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">socketserver</span><span class="w"> </span><span class="kn">import</span> <span class="n">TCPServer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">http.server</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleHTTPRequestHandler</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.browser</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_browser</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
+
+    <span class="n">load_dotenv</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<span class="n">context</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">create_default_context</span><span class="p">()</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_313HTTPAdapter</span><span class="p">(</span><span class="n">HTTPAdapter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom HTTP adapter that disables strict X.509 certificate verification.</span>
+
+<span class="sd">    This adapter is used to work around certain SSL certificate validation issues</span>
+<span class="sd">    by disabling the VERIFY_X509_STRICT flag. This allows the client to connect</span>
+<span class="sd">    to servers with certificates that might not pass strict validation.</span>
+
+<span class="sd">    .. warning::</span>
+<span class="sd">       This reduces security by relaxing certificate validation. Use only when</span>
+<span class="sd">       necessary and with trusted servers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_poolmanager</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the connection pool manager with custom SSL context.</span>
+
+<span class="sd">        This method overrides the default pool manager initialization to inject</span>
+<span class="sd">        a custom SSL context that disables strict X.509 verification.</span>
+
+<span class="sd">        :param args: Positional arguments to pass to the parent init_poolmanager.</span>
+<span class="sd">        :param kwargs: Keyword arguments to pass to the parent init_poolmanager.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">create_default_context</span><span class="p">()</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">verify_flags</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">ssl</span><span class="o">.</span><span class="n">VERIFY_X509_STRICT</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">init_poolmanager</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">ssl_context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>  <span class="c1"># pyright: ignore[reportUnknownMemberType]</span>
+
+
+<div class="viewcode-block" id="Client">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Client</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A client for the LabArchives API.</span>
+
+<span class="sd">    This class handles the connection to the LabArchives API</span>
+<span class="sd">    and provides methods for making authenticated API calls.</span>
+<span class="sd">    It also manages the authentication flow.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Client.__init__">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">akid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">akpass</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">strict_cert</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes a new LabArchives API client.</span>
+
+<span class="sd">        If any parameter is None, the client will attempt to load values from</span>
+<span class="sd">        a ``.env`` file using ``python-dotenv``. The environment variables used are:</span>
+
+<span class="sd">        - ``API_URL``: The base URL (defaults to ``https://api.labarchives.com``).</span>
+<span class="sd">        - ``ACCESS_KEYID``: The Access Key ID.</span>
+<span class="sd">        - ``ACCESS_PWD``: The Access Key Password.</span>
+
+<span class="sd">        :param base_url: The base URL of the LabArchives API (e.g., &quot;https://mynotebook.labarchives.com&quot;).</span>
+<span class="sd">                         If None, loaded from the ``API_URL`` environment variable.</span>
+<span class="sd">        :param akid: The Access Key ID for API authentication.</span>
+<span class="sd">                     If None, loaded from the ``ACCESS_KEYID`` environment variable.</span>
+<span class="sd">        :param akpass: The Access Key Password for HMAC-SHA512 signing.</span>
+<span class="sd">                       If None, loaded from the ``ACCESS_PWD`` environment variable.</span>
+<span class="sd">        :param strict_cert: Whether to use strict X.509 certificate verification.</span>
+<span class="sd">                           If False, disables the VERIFY_X509_STRICT flag to allow connections</span>
+<span class="sd">                           to servers with certificates that may not pass strict validation.</span>
+<span class="sd">                           Defaults to True. **Warning:** Setting this to False reduces security.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">base_url</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">akid</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">akpass</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">base_url</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">base_url</span> <span class="o">=</span> <span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;API_URL&quot;</span><span class="p">,</span> <span class="s2">&quot;https://api.labarchives.com&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">akid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">akid</span> <span class="o">=</span> <span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;ACCESS_KEYID&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">akpass</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">akpass</span> <span class="o">=</span> <span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;ACCESS_PWD&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">akid</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">akpass</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;ACCESS_KEYID or ACCESS_PWD environment variables not set.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="n">base_url</span><span class="p">)</span><span class="o">.</span><span class="n">geturl</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_akid</span> <span class="o">=</span> <span class="n">akid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hmac</span> <span class="o">=</span> <span class="n">HMAC</span><span class="p">(</span>
+            <span class="nb">bytes</span><span class="p">(</span><span class="n">akpass</span><span class="p">,</span> <span class="s2">&quot;utf8&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">akpass</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">akpass</span><span class="p">,</span> <span class="n">SHA512</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">Session</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">strict_cert</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s2">&quot;https://&quot;</span><span class="p">,</span> <span class="n">_313HTTPAdapter</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="Client.generate_auth_url">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.generate_auth_url">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_auth_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redirect_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a URL for authenticating with the LabArchives API.</span>
+
+<span class="sd">        This URL is used to initiate the authorization code flow,</span>
+<span class="sd">        redirecting the user to LabArchives to grant permissions.</span>
+
+<span class="sd">        :param redirect_url: The URL to which LabArchives will redirect the user</span>
+<span class="sd">                             after successful authentication, containing the authorization code.</span>
+<span class="sd">        :returns: The full authentication URL.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">construct_url</span><span class="p">(</span>
+            <span class="s2">&quot;api_user_login&quot;</span><span class="p">,</span>
+            <span class="p">{</span><span class="s2">&quot;redirect_uri&quot;</span><span class="p">:</span> <span class="n">redirect_url</span><span class="p">},</span>
+            <span class="n">should_prefix_api</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">signature_method</span><span class="o">=</span><span class="n">redirect_url</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Client.login">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.login">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">auth_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">User</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Logs in a user using an authentication code. This can be from the standard</span>
+<span class="sd">        authentication flow or a one-hour code from the LabArchives website.</span>
+
+<span class="sd">        This method exchanges the authorization code for user access information,</span>
+<span class="sd">        including their user ID and available notebooks.</span>
+
+<span class="sd">        :param user_email: The email address of the authenticating user.</span>
+<span class="sd">        :param auth_code: The authorization code received from LabArchives.</span>
+<span class="sd">        :returns: A :class:`~labapi.user.User` object representing the authenticated user session.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uid_tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_get</span><span class="p">(</span>
+            <span class="s2">&quot;users/user_access_info&quot;</span><span class="p">,</span> <span class="n">login_or_email</span><span class="o">=</span><span class="n">user_email</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">auth_code</span>
+        <span class="p">)</span>
+
+        <span class="n">uid</span> <span class="o">=</span> <span class="n">itemgetter</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)(</span><span class="n">extract_etree</span><span class="p">(</span><span class="n">uid_tree</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">}))</span>
+
+        <span class="n">notebooks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">NotebookInit</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">notebook</span> <span class="ow">in</span> <span class="n">uid_tree</span><span class="o">.</span><span class="n">iterfind</span><span class="p">(</span><span class="s2">&quot;.//notebook&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">notebook_id</span><span class="p">,</span> <span class="n">notebook_name</span><span class="p">,</span> <span class="n">is_default</span> <span class="o">=</span> <span class="n">itemgetter</span><span class="p">(</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;is-default&quot;</span>
+                <span class="p">)(</span>
+                    <span class="n">extract_etree</span><span class="p">(</span>
+                        <span class="n">notebook</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;is-default&quot;</span><span class="p">:</span> <span class="n">to_bool</span><span class="p">}</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to parse notebook entry: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">notebooks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">NotebookInit</span><span class="p">(</span><span class="n">notebook_id</span><span class="p">,</span> <span class="n">notebook_name</span><span class="p">,</span> <span class="n">is_default</span><span class="p">))</span>
+
+        <span class="n">notebooks</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="o">.</span><span class="n">is_default</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">User</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">notebooks</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_request_status</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles the HTTP response status, raising an error for unsuccessful requests.</span>
+
+<span class="sd">        :param response: The HTTP response object from the requests library.</span>
+<span class="sd">        :raises RuntimeError: If the HTTP status code is not 200 (OK).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="n">status_codes</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;API request failed with status code </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;for URL </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="c1"># See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]</span>
+
+<div class="viewcode-block" id="Client.stream_api_get">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.stream_api_get">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stream_api_get</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">api_method_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Response</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes a GET request to the LabArchives API and returns the response as a byte stream.</span>
+
+<span class="sd">        This is useful for downloading large files or when the response content</span>
+<span class="sd">        needs to be processed incrementally.</span>
+
+<span class="sd">        :param api_method_uri: The API method URI (e.g., &quot;get_file_attachment&quot;).</span>
+<span class="sd">                               Can be a string or a sequence of strings representing path segments.</span>
+<span class="sd">        :param kwargs: Additional query parameters to pass to the API method.</span>
+<span class="sd">        :yields: Chunks of bytes from the API response.</span>
+<span class="sd">        :returns: The full requests.Response object after the stream has been consumed.</span>
+<span class="sd">        :raises RuntimeError: If the API request fails.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">construct_url</span><span class="p">(</span><span class="n">api_method_uri</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">request</span><span class="p">:</span>
+            <span class="n">Client</span><span class="o">.</span><span class="n">_handle_request_status</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">chunk</span>
+
+            <span class="k">return</span> <span class="n">request</span></div>
+
+
+<div class="viewcode-block" id="Client.stream_api_post">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.stream_api_post">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stream_api_post</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">api_method_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">body</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">BufferedIOBase</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Response</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes a POST request to the LabArchives API and returns the response as a byte stream.</span>
+
+<span class="sd">        This is useful for uploading large files or when the response content</span>
+<span class="sd">        needs to be processed incrementally.</span>
+
+<span class="sd">        :param api_method_uri: The API method URI (e.g., &quot;upload_file_attachment&quot;).</span>
+<span class="sd">                               Can be a string or a sequence of strings representing path segments.</span>
+<span class="sd">        :param body: The request body, which can be a mapping of form data or a file-like object.</span>
+<span class="sd">        :param kwargs: Additional query parameters to pass to the API method.</span>
+<span class="sd">        :yields: Chunks of bytes from the API response.</span>
+<span class="sd">        :returns: The full requests.Response object after the stream has been consumed.</span>
+<span class="sd">        :raises RuntimeError: If the API request fails.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">construct_url</span><span class="p">(</span><span class="n">api_method_uri</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">request</span><span class="p">:</span>
+            <span class="n">Client</span><span class="o">.</span><span class="n">_handle_request_status</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">chunk</span>
+
+            <span class="k">return</span> <span class="n">request</span></div>
+
+
+<div class="viewcode-block" id="Client.raw_api_get">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.raw_api_get">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">raw_api_get</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">api_method_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes a GET request to the LabArchives API and returns the raw requests.Response object.</span>
+
+<span class="sd">        This method is suitable for API calls where the full HTTP response,</span>
+<span class="sd">        including headers and status code, is needed, and the content is not</span>
+<span class="sd">        expected to be streamed.</span>
+
+<span class="sd">        :param api_method_uri: The API method URI (e.g., &quot;get_entry_data&quot;).</span>
+<span class="sd">                               Can be a string or a sequence of strings representing path segments.</span>
+<span class="sd">        :param kwargs: Additional query parameters to pass to the API method.</span>
+<span class="sd">        :returns: The requests.Response object containing the API response.</span>
+<span class="sd">        :raises RuntimeError: If the API request fails.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">construct_url</span><span class="p">(</span><span class="n">api_method_uri</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="n">Client</span><span class="o">.</span><span class="n">_handle_request_status</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">request</span></div>
+
+
+<div class="viewcode-block" id="Client.raw_api_post">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.raw_api_post">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">raw_api_post</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">api_method_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">body</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">BufferedIOBase</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes a POST request to the LabArchives API and returns the raw requests.Response object.</span>
+
+<span class="sd">        This method is suitable for API calls where the full HTTP response,</span>
+<span class="sd">        including headers and status code, is needed, and the content is not</span>
+<span class="sd">        expected to be streamed.</span>
+
+<span class="sd">        :param api_method_uri: The API method URI (e.g., &quot;create_entry&quot;).</span>
+<span class="sd">                               Can be a string or a sequence of strings representing path segments.</span>
+<span class="sd">        :param body: The request body, which can be a mapping of form data or a file-like object.</span>
+<span class="sd">        :param kwargs: Additional query parameters to pass to the API method.</span>
+<span class="sd">        :returns: The requests.Response object containing the API response.</span>
+<span class="sd">        :raises RuntimeError: If the API request fails.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">construct_url</span><span class="p">(</span><span class="n">api_method_uri</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="n">body</span>
+        <span class="p">)</span>
+        <span class="n">Client</span><span class="o">.</span><span class="n">_handle_request_status</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">request</span></div>
+
+
+<div class="viewcode-block" id="Client.api_get">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.api_get">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">api_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_method_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Element</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes a GET request to the LabArchives API and parses the XML response into an lxml Element.</span>
+
+<span class="sd">        This is the primary method for retrieving structured data from the API.</span>
+
+<span class="sd">        :param api_method_uri: The API method URI (e.g., &quot;get_notebook_info&quot;).</span>
+<span class="sd">                               Can be a string or a sequence of strings representing path segments.</span>
+<span class="sd">        :param kwargs: Additional query parameters to pass to the API method.</span>
+<span class="sd">        :returns: An lxml Element representing the root of the XML response.</span>
+<span class="sd">        :raises RuntimeError: If the API request fails or the response is not valid XML.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">fromstring</span><span class="p">(</span>
+            <span class="nb">bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_api_get</span><span class="p">(</span><span class="n">api_method_uri</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Client.api_post">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.api_post">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">api_post</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">api_method_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">body</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">BufferedIOBase</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Element</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes a POST request to the LabArchives API and parses the XML response into an lxml Element.</span>
+
+<span class="sd">        This is the primary method for sending data to the API and receiving</span>
+<span class="sd">        structured XML responses.</span>
+
+<span class="sd">        :param api_method_uri: The API method URI (e.g., &quot;create_entry&quot;).</span>
+<span class="sd">                               Can be a string or a sequence of strings representing path segments.</span>
+<span class="sd">        :param body: The request body, which can be a mapping of form data or a file-like object.</span>
+<span class="sd">        :param kwargs: Additional query parameters to pass to the API method.</span>
+<span class="sd">        :returns: An lxml Element representing the root of the XML response.</span>
+<span class="sd">        :raises RuntimeError: If the API request fails or the response is not valid XML.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">fromstring</span><span class="p">(</span>
+            <span class="nb">bytes</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">raw_api_post</span><span class="p">(</span><span class="n">api_method_uri</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Client.default_authenticate">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.default_authenticate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default_authenticate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">User</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Authenticates a user using a default browser (Chrome, Firefox, or Edge)</span>
+<span class="sd">        and a local HTTP server to capture the authentication code.</span>
+
+<span class="sd">        This method opens a browser window, directs the user to the LabArchives</span>
+<span class="sd">        authentication page, and then listens on `http://localhost:8089/` for</span>
+<span class="sd">        the redirect containing the authorization code. If no compatible browser</span>
+<span class="sd">        is detected, it falls back to printing the authentication URL to the terminal,</span>
+<span class="sd">        requiring the user to manually open it.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This method requires the ``selenium`` package for automatic browser control.</span>
+<span class="sd">           Install it with: ``pip install selenium``</span>
+
+<span class="sd">        :returns: A :class:`~labapi.user.User` object representing the authenticated user session.</span>
+<span class="sd">        :raises ImportError: If selenium is not installed.</span>
+<span class="sd">        :raises RuntimeError: If authentication fails.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">auth_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_auth_url</span><span class="p">(</span><span class="s2">&quot;http://localhost:8089/&quot;</span><span class="p">)</span>
+
+        <span class="n">driver</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">match</span> <span class="n">default_browser</span><span class="p">:</span>
+                <span class="k">case</span> <span class="s2">&quot;chrome&quot;</span><span class="p">:</span>
+                    <span class="kn">import</span><span class="w"> </span><span class="nn">selenium.webdriver</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">webdriver</span>
+
+                    <span class="n">options</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">ChromeOptions</span><span class="p">()</span>
+                    <span class="n">driver</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Chrome</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Opening Chrome for authentication...&quot;</span><span class="p">)</span>
+                <span class="k">case</span> <span class="s2">&quot;firefox&quot;</span><span class="p">:</span>
+                    <span class="kn">import</span><span class="w"> </span><span class="nn">selenium.webdriver</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">webdriver</span>
+
+                    <span class="n">options</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">FirefoxOptions</span><span class="p">()</span>
+                    <span class="n">driver</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Firefox</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Opening Firefox for authentication...&quot;</span><span class="p">)</span>
+                <span class="k">case</span> <span class="s2">&quot;edge&quot;</span><span class="p">:</span>
+                    <span class="kn">import</span><span class="w"> </span><span class="nn">selenium.webdriver</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">webdriver</span>
+
+                    <span class="n">options</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">EdgeOptions</span><span class="p">()</span>
+                    <span class="n">driver</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Edge</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Opening Edge for authentication...&quot;</span><span class="p">)</span>
+                <span class="k">case</span> <span class="s2">&quot;terminal&quot;</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Open authentication URL in your browser:&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">auth_url</span><span class="p">)</span>
+                <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="s2">&quot;WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal&quot;</span>
+                    <span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Open authentication URL in your browser:&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">auth_url</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">driver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">driver</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">auth_url</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;Please complete the authentication in the opened browser window...&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">collect_auth_response</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="s2">&quot;Selenium is required for automatic browser-based authentication. &quot;</span>
+                <span class="s2">&quot;Install it with: pip install selenium</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;Alternatively, use manual authentication with LA_AUTH_BROWSER=terminal.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">driver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">driver</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Client.collect_auth_response">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.collect_auth_response">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">collect_auth_response</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">User</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Launches a local HTTP server to capture the authentication response from LabArchives.</span>
+
+<span class="sd">        This server listens on `http://localhost:8089/` for the redirect from</span>
+<span class="sd">        LabArchives containing the authorization code and user email after</span>
+<span class="sd">        successful authentication.</span>
+
+<span class="sd">        :returns: A :class:`~labapi.user.User` object representing the authenticated user session.</span>
+<span class="sd">        :raises KeyError: If the authentication code or email is not received.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">auth_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">class</span><span class="w"> </span><span class="nc">AuthRequestHandler</span><span class="p">(</span><span class="n">SimpleHTTPRequestHandler</span><span class="p">):</span>
+            <span class="nd">@override</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">do_GET</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">send_response</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">send_header</span><span class="p">(</span><span class="s2">&quot;Content-type&quot;</span><span class="p">,</span> <span class="s2">&quot;text/html&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">end_headers</span><span class="p">()</span>
+
+                <span class="n">_s</span><span class="p">,</span> <span class="n">_n</span><span class="p">,</span> <span class="n">_p</span><span class="p">,</span> <span class="n">querystring</span><span class="p">,</span> <span class="n">_f</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+                <span class="n">query</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">parse_qsl</span><span class="p">(</span><span class="n">querystring</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">query</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">wfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                        <span class="nb">bytes</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">query</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">auth_info</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">query</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">wfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;Thanks for Authenticating. Close this Window&quot;</span><span class="p">)</span>
+                    <span class="n">auth_info</span><span class="p">[</span><span class="s2">&quot;auth_code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">query</span><span class="p">[</span><span class="s2">&quot;auth_code&quot;</span><span class="p">]</span>
+                    <span class="n">auth_info</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">query</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span>
+
+            <span class="nd">@override</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">log_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">with</span> <span class="n">TCPServer</span><span class="p">((</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="mi">8089</span><span class="p">),</span> <span class="n">AuthRequestHandler</span><span class="p">)</span> <span class="k">as</span> <span class="n">httpd</span><span class="p">:</span>
+            <span class="n">httpd</span><span class="o">.</span><span class="n">handle_request</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">auth_info</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Authentication failed: </span><span class="si">{</span><span class="n">auth_info</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;auth_code&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">auth_info</span> <span class="ow">or</span> <span class="s2">&quot;email&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">auth_info</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Authentication callback did not include both auth_code and email&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">auth_info</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">],</span> <span class="n">auth_info</span><span class="p">[</span><span class="s2">&quot;auth_code&quot;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="Client.construct_url">
+<a class="viewcode-back" href="../../reference/generated/labapi.client.Client.html#labapi.client.Client.construct_url">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct_url</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">api_method_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">query</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">expires_in</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">|</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">should_prefix_api</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">signature_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructs a fully qualified and signed URL for a LabArchives API method.</span>
+
+<span class="sd">        This method handles the assembly of the base URL, API method path,</span>
+<span class="sd">        query parameters, and the HMAC-SHA512 signature required by the LabArchives API.</span>
+
+<span class="sd">        :param api_method_uri: The API method URI (e.g., &quot;get_notebook_info&quot;).</span>
+<span class="sd">                               Can be a string or a sequence of strings representing path segments.</span>
+<span class="sd">        :param query: A dictionary of query parameters to include in the URL.</span>
+<span class="sd">        :param expires_in: The duration for which the URL should be valid. Can be a</span>
+<span class="sd">                           `timedelta` object or a specific `datetime` object. If None,</span>
+<span class="sd">                           defaults to 60 seconds from now.</span>
+<span class="sd">        :param should_prefix_api: If True, ensures the API method path starts with &quot;api/&quot;.</span>
+<span class="sd">                                  Defaults to True.</span>
+<span class="sd">        :param signature_method: An optional string to use as the API method for</span>
+<span class="sd">                                 signature generation, overriding `api_method_uri`.</span>
+<span class="sd">                                 Useful for methods like `api_user_login` where the</span>
+<span class="sd">                                 actual method name differs from the URI path.</span>
+<span class="sd">        :returns: The fully constructed and signed URL.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">api_method_uri</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">api_method_uri</span> <span class="o">=</span> <span class="n">api_method_uri</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+
+        <span class="n">method_parts</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">api_method_uri</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">should_prefix_api</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">method_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;api&quot;</span><span class="p">:</span>
+                <span class="n">method_parts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;api&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">method_parts</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">method_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;api&quot;</span><span class="p">:</span>
+                <span class="n">method_parts</span> <span class="o">=</span> <span class="n">method_parts</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="n">api_method</span> <span class="o">=</span> <span class="n">method_parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">signature_method</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">signature_method</span>
+
+        <span class="n">scheme</span><span class="p">,</span> <span class="n">netloc</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">_qs</span><span class="p">,</span> <span class="n">_f</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">+=</span> <span class="s2">&quot;/&quot;</span>
+
+        <span class="n">path</span> <span class="o">+=</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">method_parts</span><span class="p">)</span>
+
+        <span class="n">url</span> <span class="o">=</span> <span class="n">urlunsplit</span><span class="p">((</span><span class="n">scheme</span><span class="p">,</span> <span class="n">netloc</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">urlencode</span><span class="p">(</span><span class="n">query</span><span class="p">),</span> <span class="n">_f</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">expires_in</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sign_url</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">api_method</span><span class="p">,</span> <span class="n">expires_in</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sign_url</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">api_method</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_signature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">expiry</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates the HMAC-SHA512 signature for a LabArchives API request.</span>
+
+<span class="sd">        This private method is used internally by `_sign_url` to create the</span>
+<span class="sd">        cryptographic signature based on the Access Key ID, API method, and expiry.</span>
+
+<span class="sd">        :param api_method: The specific API method name used in the signature calculation.</span>
+<span class="sd">        :param expiry: The expiration timestamp (in milliseconds since epoch) for the request.</span>
+<span class="sd">        :returns: The base64-encoded HMAC-SHA512 signature.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hmac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hmac</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">hmac</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_akid</span><span class="si">}{</span><span class="n">api_method</span><span class="si">}{</span><span class="n">expiry</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+
+        <span class="n">sig_raw</span> <span class="o">=</span> <span class="n">hmac</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">b64encode</span><span class="p">(</span><span class="n">sig_raw</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sign_url</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">api_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">expires_in</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">|</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Signs a given URL with the HMAC-SHA512 signature and adds necessary query parameters.</span>
+
+<span class="sd">        This private method appends the Access Key ID, expiration timestamp, and</span>
+<span class="sd">        the generated signature to the URL&#39;s query string.</span>
+
+<span class="sd">        :param url: The unsigned URL to be signed.</span>
+<span class="sd">        :param api_method: The specific API method name used for signature generation.</span>
+<span class="sd">        :param expires_in: The duration for which the URL should be valid. Can be a</span>
+<span class="sd">                           `timedelta` object or a specific `datetime` object. Defaults</span>
+<span class="sd">                           to 60 seconds from the current time.</span>
+<span class="sd">        :returns: The fully signed URL.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scheme</span><span class="p">,</span> <span class="n">netloc</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">querystring</span><span class="p">,</span> <span class="n">_f</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">parse_qsl</span><span class="p">(</span><span class="n">querystring</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expires_in</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">):</span>
+            <span class="n">expiry</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">+</span> <span class="n">expires_in</span><span class="p">)</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">expiry</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">expires_in</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_signature</span><span class="p">(</span><span class="n">api_method</span><span class="p">,</span> <span class="n">expiry</span><span class="p">)</span>
+
+        <span class="n">query</span><span class="p">[</span><span class="s2">&quot;akid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_akid</span>
+        <span class="n">query</span><span class="p">[</span><span class="s2">&quot;expires&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">expiry</span><span class="p">)</span>
+        <span class="n">query</span><span class="p">[</span><span class="s2">&quot;sig&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sig</span>
+
+        <span class="k">return</span> <span class="n">urlunsplit</span><span class="p">((</span><span class="n">scheme</span><span class="p">,</span> <span class="n">netloc</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">urlencode</span><span class="p">(</span><span class="n">query</span><span class="p">),</span> <span class="n">_f</span><span class="p">))</span></div>
+
+</pre></div>
+</article><footer class="bz-article-footer">
+  
+  
+    <nav class="bz-related-pages" aria-label="Related pages navigation"></nav>
+  
+
+</footer></main>
+  </div>
+<footer class="bz-footer">
+  <div class="bz-footer-copyright"><p class="bz-copyright">© Copyright 2026, Christoph Li and Joshua Lawrimore</p><p>
+    
+    
+    
+      Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/aksiome/breeze">Breeze theme</a>.
+    
+  </p>
+</div>
+</footer><a href="#" class="bz-back-to-top">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
+    </svg>
+    <span>Back to top</span>
+  </a>
+  <label class="bz-overlay bz-overlay-primary" for="bz-sidebar-primary"></label>
+  <label class="bz-overlay bz-overlay-secondary" for="bz-sidebar-secondary"></label>
+  <input type="checkbox" name="bz-sidebar-primary" id="bz-sidebar-primary" aria-label="Toggle section navigation">
+  <input type="checkbox" name="bz-sidebar-secondary" id="bz-sidebar-secondary" aria-label="Toggle table of contents"><script src="../../_static/documentation_options.js?v=01f34227"></script><script src="../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src="../../_static/clipboard.min.js?v=a7894cd8"></script><script src="../../_static/copybutton.js?v=f281be69"></script><script src="../../_static/design-tabs.js?v=f930bc37"></script></body>
+</html>

@@ -486,14 +486,41 @@ class AbstractTreeContainer(
                     if node.name == key:
                         return node
                 raise KeyError(f'Node with name "{key}" not found')
+            case _:
+                raise TypeError(
+                    "Invalid key type. Use `str`, `Index.Id:<id>`, or `Index.Name:<name>`."
+                )
+
+    def is_parent_of(self, other: AbstractBaseTreeNode) -> bool:
+        """Return whether this container is a strict ancestor of ``other``.
+
+        This method returns ``True`` when ``other`` is a descendant of this
+        container at any depth (direct child or deeper). A node is not
+        considered a parent of itself.
+
+        Nodes from different notebook roots are always considered unrelated,
+        even if their relative paths happen to match.
+
+        :param other: The node to test as a potential descendant.
+        :returns: ``True`` if this container is an ancestor of ``other``,
+            otherwise ``False``.
+        """
+        curr = other
+
+        while curr is not curr.root:
+            curr = curr.parent
+            if curr is self:
+                return True
+
+        return False
 
     def enumerate_all(
         self,
-        _current_depth: int = 0,
         *,
         max_depth: int = 1,
         timeout: timedelta | None = None,
         _timeout: float | None = None,
+        _current_depth: int = 0,
     ) -> Sequence[str]:
         """Enumerates all children (directories and pages) up to a specified depth.
 
@@ -502,7 +529,7 @@ class AbstractTreeContainer(
         container (e.g., "Folder/Page" or "Folder/Subfolder/Page").
 
         :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
-        :param timeout: The maximum time to spend enumerating children.
+        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
         :returns: A sequence of relative path strings for all descendants.
         """
         current: MutableSequence[str] = []
@@ -516,7 +543,10 @@ class AbstractTreeContainer(
         if _timeout is None:
             _timeout = time.monotonic() + timeout.total_seconds()
 
-        for name, child in self.items():
+        self._ensure_populated()
+        for child in self._children:
+            name = child.name
+
             if time.monotonic() > _timeout:
                 break
 
@@ -546,7 +576,7 @@ class AbstractTreeContainer(
         directories (excluding pages). Each path is relative to this container.
 
         :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
-        :param timeout: The maximum time to spend enumerating children.
+        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
         :returns: A sequence of relative path strings for all descendant directories.
         """
         all_names = self.enumerate_all(max_depth=max_depth, timeout=timeout)
@@ -561,7 +591,7 @@ class AbstractTreeContainer(
         pages (excluding directories). Each path is relative to this container.
 
         :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
-        :param timeout: The maximum time to spend enumerating children.
+        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
         :returns: A sequence of relative path strings for all descendant pages.
         """
         all_names = self.enumerate_all(max_depth=max_depth, timeout=timeout)
@@ -594,7 +624,9 @@ class AbstractTreeContainer(
         else:
             path = (path_self / name).relative_to(self)
 
-        if len(path) == 1:
+        if len(path) == 0:
+            raise ValueError("Path cannot be empty")
+        elif len(path) == 1:
             nodes = [n for n in self[Index.Name : path.name] if isinstance(n, cls)]
 
             if nodes:
@@ -628,7 +660,9 @@ class AbstractTreeContainer(
                 new_node._populated = True
             self._children.append(new_node)
             return new_node
-        else:
+        elif parents:
+            from .directory import NotebookDirectory
+
             next_node = self.create(
                 NotebookDirectory,
                 path[0],
@@ -640,6 +674,10 @@ class AbstractTreeContainer(
                 path,
                 parents=parents,
                 if_exists=if_exists,
+            )
+        else:
+            raise RuntimeError(
+                f'Parent path for "{name}" does not exist. Set `parents=True` to create it.'
             )
 
     def create_page(self, name: str) -> NotebookPage:
@@ -658,7 +696,7 @@ class AbstractTreeContainer(
         # TODO take into account whether can write in this directory
         create_tree = self.user.api_get(
             "tree_tools/insert_node",
-            nbid=self.id,
+            nbid=self.root.id,
             parent_tree_id=self.tree_id,
             display_text=name,
             is_folder="false",
@@ -685,7 +723,7 @@ class AbstractTreeContainer(
         # TODO take into account whether can write in this directory
         create_tree = self._user.api_get(
             "tree_tools/insert_node",
-            nbid=self.id,
+            nbid=self.root.id,
             parent_tree_id=self.tree_id,
             display_text=name,
             is_folder="true",

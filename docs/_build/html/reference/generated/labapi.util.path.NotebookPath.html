@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="<no title>" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="reference/generated/labapi.util.path.NotebookPath.html" />
+<meta property="og:site_name" content="labapi" />
+<meta property="og:description" content="{`{ fullname | escape | underline}}" />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_reference_generated_labapi.util.path.NotebookPath_ccb886ce.png" />
+<meta property="og:image:alt" content="{`{ fullname | escape | underline}}" />
+<meta name="description" content="{`{ fullname | escape | underline}}" />
+<meta name="twitter:card" content="summary_large_image" />
+<title>&lt;no title&gt; - labapi 0.1.0 documentation</title><link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="prev" title="labapi.util.path" href="labapi.util.path.html"><script data-cfasync="false">(function(){
+    const m = localStorage.getItem("breeze-mode") || "auto";
+    const d = document.documentElement.dataset;
+    d.mode = m;
+    d.theme = m === "auto"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : m;
+  })();
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8e8a900e" /><link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" /><link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" /><link rel="stylesheet" type="text/css" href="../../_static/styles/breeze.css?v=227fd4f7" /><script defer="defer" src="../../_static/scripts/breeze.js?v=dac9f8c6"></script></head>
+<body>
+  
+  
+  <div class="bz-skip-to-content"><a href="#bz-main-content">Skip to main content</a></div><header class="bz-header-main">
+  <div class="bz-header-start"><a class="bz-header-brand" href="../../index.html">
+  
+  
+  <span>labapi 0.1.0 documentation</span>
+</a>
+  </div>
+  <div class="bz-header-end"><div id="docsearch" class="bz-search-button">
+  <a
+    href="../../search.html#q"
+    aria-label="Search the docs"
+    data-tooltip="Search the docs"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 -1 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </svg>
+    <span>Search</span>
+    <kbd>Ctrl+K</kbd>
+  </a>
+</div><div class="bz-theme-switcher">
+  <button aria-label="Switch theme" data-tooltip="Switch theme">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-light" fill="currentColor">
+      <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-dark" fill="currentColor">
+      <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+    </svg>
+  </button>
+</div>
+  </div>
+</header><nav class="bz-header-tabs" aria-label="Primary Navigation"><label
+  class="bz-sidebar-primary-toggle"
+  for="bz-sidebar-primary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle site navigation"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h12.5"
+    />
+  </svg>
+</label><ul><li class="toctree-l1"><a class="reference internal" href="../../quick_start/index.html">Quick Start</a></li><li class="toctree-l1"><a class="reference internal" href="../../guide/index.html">User Guide</a></li><li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Example Applications</a></li><li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li><li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a></li></ul><div class="bz-dropdown">
+    <button aria-haspopup="true" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <g
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </g>
+      </svg>
+    </button>
+    <ul role="menu" aria-hidden="true"></ul>
+  </div>
+</nav><hr class="bz-header-hr">
+  <div class="bz-content"><aside class="bz-sidebar-primary" data-drawer="bz-sidebar-primary">
+  
+  
+    <nav class="bz-sidebar-nav" aria-label="Section Navigation"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="labapi.html">labapi</a>
+<details open=""><summary aria-label="Toggle submenu"></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="labapi.browser.html">labapi.browser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="labapi.client.html">labapi.client</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="labapi.client.Client.html"><code class="docutils literal notranslate"><span class="pre">Client</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l2"><a class="reference internal" href="labapi.entry.html">labapi.entry</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="labapi.entry.attachment.html">labapi.entry.attachment</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.attachment.Attachment.html"><code class="docutils literal notranslate"><span class="pre">Attachment</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.entry.collection.html">labapi.entry.collection</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.collection.Entries.html"><code class="docutils literal notranslate"><span class="pre">Entries</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.entry.comment.html">labapi.entry.comment</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.comment.Comment.html"><code class="docutils literal notranslate"><span class="pre">Comment</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.entry.entries.html">labapi.entry.entries</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.entries.attachment.html">labapi.entry.entries.attachment</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.attachment.AttachmentEntry.html"><code class="docutils literal notranslate"><span class="pre">AttachmentEntry</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.entries.base.html">labapi.entry.entries.base</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.base.Entry.html"><code class="docutils literal notranslate"><span class="pre">Entry</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.entries.text.html">labapi.entry.entries.text</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.text.BaseTextEntry.html"><code class="docutils literal notranslate"><span class="pre">BaseTextEntry</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.text.HeaderEntry.html"><code class="docutils literal notranslate"><span class="pre">HeaderEntry</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.text.PlainTextEntry.html"><code class="docutils literal notranslate"><span class="pre">PlainTextEntry</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.text.TextEntry.html"><code class="docutils literal notranslate"><span class="pre">TextEntry</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.entries.widget.html">labapi.entry.entries.widget</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l5"><a class="reference internal" href="labapi.entry.entries.widget.WidgetEntry.html"><code class="docutils literal notranslate"><span class="pre">WidgetEntry</span></code></a></li>
+</ul></details></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.entry.json_data.html">labapi.entry.json_data</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.entry.json_data.JsonData.html">labapi.entry.json_data.JsonData</a></li>
+</ul></details></li>
+</ul></details></li>
+<li class="toctree-l2"><a class="reference internal" href="labapi.tree.html">labapi.tree</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="labapi.tree.collection.html">labapi.tree.collection</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.collection.Notebooks.html"><code class="docutils literal notranslate"><span class="pre">Notebooks</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.tree.directory.html">labapi.tree.directory</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.directory.NotebookDirectory.html"><code class="docutils literal notranslate"><span class="pre">NotebookDirectory</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.tree.mixins.html">labapi.tree.mixins</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.mixins.AbstractBaseTreeNode.html"><code class="docutils literal notranslate"><span class="pre">AbstractBaseTreeNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.mixins.AbstractTreeContainer.html"><code class="docutils literal notranslate"><span class="pre">AbstractTreeContainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.mixins.AbstractTreeNode.html"><code class="docutils literal notranslate"><span class="pre">AbstractTreeNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.mixins.HasNameMixin.html"><code class="docutils literal notranslate"><span class="pre">HasNameMixin</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.tree.notebook.html">labapi.tree.notebook</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.notebook.Notebook.html"><code class="docutils literal notranslate"><span class="pre">Notebook</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.tree.page.html">labapi.tree.page</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.tree.page.NotebookPage.html"><code class="docutils literal notranslate"><span class="pre">NotebookPage</span></code></a></li>
+</ul></details></li>
+</ul></details></li>
+<li class="toctree-l2"><a class="reference internal" href="labapi.user.html">labapi.user</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="labapi.user.User.html"><code class="docutils literal notranslate"><span class="pre">User</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l2 current"><a class="reference internal" href="labapi.util.html">labapi.util</a>
+<details open=""><summary aria-label="Toggle submenu"></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="labapi.util.behavior.html">labapi.util.behavior</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.behavior.InsertBehavior.html"><code class="docutils literal notranslate"><span class="pre">InsertBehavior</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.util.extract.html">labapi.util.extract</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.extract.EtreeExtractorDict.html">labapi.util.extract.EtreeExtractorDict</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.extract.extract_etree.html">labapi.util.extract.extract_etree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.extract.to_bool.html">labapi.util.extract.to_bool</a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.util.index.html">labapi.util.index</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.index.IdIndex.html">labapi.util.index.IdIndex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.index.NameIndex.html">labapi.util.index.NameIndex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.index.IdOrNameIndex.html">labapi.util.index.IdOrNameIndex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.index.Index.html"><code class="docutils literal notranslate"><span class="pre">Index</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.util.notebookinit.html">labapi.util.notebookinit</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.notebookinit.NotebookInit.html"><code class="docutils literal notranslate"><span class="pre">NotebookInit</span></code></a></li>
+</ul></details></li>
+<li class="toctree-l3"><a class="reference internal" href="labapi.util.part_type.html">labapi.util.part_type</a>
+<details><summary aria-label="Toggle submenu"></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.part_type.get_normalized_part_type.html">labapi.util.part_type.get_normalized_part_type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.part_type.is_part_type.html">labapi.util.part_type.is_part_type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.part_type.is_valid_part_type.html">labapi.util.part_type.is_valid_part_type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="labapi.util.part_type.serialize_part_type.html">labapi.util.part_type.serialize_part_type</a></li>
+</ul></details></li>
+<li class="toctree-l3 current"><a class="reference internal" href="labapi.util.path.html">labapi.util.path</a>
+<details open=""><summary aria-label="Toggle submenu"></summary><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">NotebookPath</span></code></a></li>
+</ul></details></li>
+</ul></details></li>
+</ul></details></li>
+</ul>
+</nav>
+  
+
+</aside><main id="bz-main-content"><header class="bz-article-header">
+  
+  
+    <nav class="bz-breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <li class="bz-breadcrumbs-home">
+      <a href="../../index.html" aria-label="Home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8.543 2.232a.75.75 0 0 0-1.085 0l-5.25 5.5A.75.75 0 0 0 2.75 9H4v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 1 1 2 0v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V9h1.25a.75.75 0 0 0 .543-1.268l-5.25-5.5Z" />
+        </svg>
+      </a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="../index.html">API Reference</a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="labapi.html">labapi</a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="labapi.util.html">labapi.util</a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="labapi.util.path.html">labapi.util.path</a>
+    </li><li class="bz-breadcrumbs-current">
+      <span>&lt;no title&gt;</span>
+    </li>
+  </ol>
+</nav>
+  
+<label
+  class="bz-sidebar-secondary-toggle"
+  for="bz-sidebar-secondary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle table of contents"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75H20.25 M11.25 12H20.25 M7.75 17.25H20.25"
+    />
+  </svg>
+</label></header><article class="bz-article-main" role="main"><div class="bz-page-actions" role="group" aria-label="Page actions">
+  <button data-copy-source="../../_sources/reference/generated/labapi.util.path.NotebookPath.rst.txt">
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+    <span>Copy page</span>
+  </button>
+  <div class="bz-dropdown">
+    <button
+      aria-label="More actions"
+      aria-haspopup="true"
+      aria-expanded="false"
+    ></button>
+    <ul role="menu" aria-hidden="true">
+      <li>
+        <a href="#" role="menuitem" data-copy-source="../../_sources/reference/generated/labapi.util.path.NotebookPath.rst.txt">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+          <span>Copy page</span>
+        </a>
+      </li>
+      <li>
+        <a href="../../_sources/reference/generated/labapi.util.path.NotebookPath.rst.txt" role="menuitem" class="bz-page-actions-external" target="_blank" rel="noopener">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3a2 2 0 0 1 2-2h9.982a2 2 0 0 1 1.414.586l4.018 4.018A2 2 0 0 1 21 7.018V21a2 2 0 0 1-2 2H4.75a.75.75 0 0 1 0-1.5H19a.5.5 0 0 0 .5-.5V8.5h-4a2 2 0 0 1-2-2v-4H5a.5.5 0 0 0-.5.5v6.25a.75.75 0 0 1-1.5 0Zm12-.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 0-.146-.336l-4.018-4.018A.5.5 0 0 0 15 2.5Z"></path><path d="M4.53 12.24a.75.75 0 0 1-.039 1.06l-2.639 2.45 2.64 2.45a.75.75 0 1 1-1.022 1.1l-3.23-3a.75.75 0 0 1 0-1.1l3.23-3a.75.75 0 0 1 1.06.04Zm3.979 1.06a.75.75 0 1 1 1.02-1.1l3.231 3a.75.75 0 0 1 0 1.1l-3.23 3a.75.75 0 1 1-1.021-1.1l2.639-2.45-2.64-2.45Z"></path></svg>
+          <span>View source</span>
+        </a>
+      </li></ul>
+  </div>
+</div><p>{<a href="#id1"><span class="problematic" id="id2">`</span></a>{ fullname | escape | underline}}</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">labapi.util.path.</span></span><span class="sig-name descname"><span class="pre">NotebookPath</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">part</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode" title="labapi.tree.mixins.AbstractBaseTreeNode"><span class="pre">AbstractBaseTreeNode</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode" title="labapi.tree.mixins.AbstractBaseTreeNode"><span class="pre">AbstractBaseTreeNode</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="reference internal" href="../../_modules/labapi/util/path.html#NotebookPath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.util.path.NotebookPath" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+<p>A structured path referencing a location in the notebook tree.</p>
+<p>Behaves like a sequence of path segments (strings) and supports Unix-style
+path semantics including absolute/relative paths and <code class="docutils literal notranslate"><span class="pre">..</span></code> parent navigation.</p>
+<p>Paths can be constructed from a tree node, another <code class="docutils literal notranslate"><span class="pre">NotebookPath</span></code>, or raw
+slash-separated strings. Segments are normalised on construction: empty
+segments and <code class="docutils literal notranslate"><span class="pre">.</span></code> are discarded, and <code class="docutils literal notranslate"><span class="pre">..</span></code> collapses the preceding segment
+(or is kept literally when at the root of a relative path).</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># From a tree node (always absolute)</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">NotebookPath</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>             <span class="c1"># e.g. /Experiments/2024</span>
+
+<span class="c1"># From a string</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">NotebookPath</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;/Experiments/2024&quot;</span><span class="p">)</span>  <span class="c1"># absolute</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">NotebookPath</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;2024/Results&quot;</span><span class="p">)</span>        <span class="c1"># relative</span>
+
+<span class="c1"># Combine with /</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">NotebookPath</span><span class="p">(</span><span class="n">notebook</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;Experiments&quot;</span> <span class="o">/</span> <span class="s2">&quot;2024&quot;</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">part</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode" title="labapi.tree.mixins.AbstractBaseTreeNode"><span class="pre">AbstractBaseTreeNode</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode" title="labapi.tree.mixins.AbstractBaseTreeNode"><span class="pre">AbstractBaseTreeNode</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="reference internal" href="../../_modules/labapi/util/path.html#NotebookPath.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.util.path.NotebookPath.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Construct a <code class="docutils literal notranslate"><span class="pre">NotebookPath</span></code>.</p>
+<p>The first argument <code class="docutils literal notranslate"><span class="pre">part</span></code> sets the base of the path; any additional
+positional <code class="docutils literal notranslate"><span class="pre">parts</span></code> are appended as extra segments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>part</strong> – The base of the path. Pass a tree node to create an
+absolute path rooted at that node’s location, a <code class="docutils literal notranslate"><span class="pre">NotebookPath</span></code>
+to extend it, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to build a path purely from <code class="docutils literal notranslate"><span class="pre">parts</span></code>.</p></li>
+<li><p><strong>parts</strong> – Additional slash-separated path segments appended after
+<code class="docutils literal notranslate"><span class="pre">part</span></code>. Segments are split on <code class="docutils literal notranslate"><span class="pre">/</span></code> and normalised.</p></li>
+<li><p><strong>parent</strong> – An absolute path (or node) that anchors a relative path
+for later resolution. Must be absolute. Only meaningful when
+<code class="docutils literal notranslate"><span class="pre">part</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> and <code class="docutils literal notranslate"><span class="pre">parts</span></code> form a relative path.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If <code class="docutils literal notranslate"><span class="pre">parent</span></code> is not absolute.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<div class="table autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.__init__" title="labapi.util.path.NotebookPath.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([part, parent])</p></td>
+<td><p>Construct a <code class="docutils literal notranslate"><span class="pre">NotebookPath</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.count" title="labapi.util.path.NotebookPath.count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">count</span></code></a>(value)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.index" title="labapi.util.path.NotebookPath.index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index</span></code></a>(value, [start, [stop]])</p></td>
+<td><p>Raises ValueError if the value is not present.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.is_absolute" title="labapi.util.path.NotebookPath.is_absolute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_absolute</span></code></a>()</p></td>
+<td><p>Return whether this path is absolute.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.is_relative_to" title="labapi.util.path.NotebookPath.is_relative_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_relative_to</span></code></a>(other)</p></td>
+<td><p>Return whether this path is located inside <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.relative_to" title="labapi.util.path.NotebookPath.relative_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">relative_to</span></code></a>(other)</p></td>
+<td><p>Return this path made relative to <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.resolve" title="labapi.util.path.NotebookPath.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>([parent, recurse])</p></td>
+<td><p>Return an absolute version of this path.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.startswith" title="labapi.util.path.NotebookPath.startswith"><code class="xref py py-obj docutils literal notranslate"><span class="pre">startswith</span></code></a>(other)</p></td>
+<td><p>Return whether this path starts with another path's segments.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.to_string" title="labapi.util.path.NotebookPath.to_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_string</span></code></a>()</p></td>
+<td><p>Return the path as a slash-separated string.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Attributes</p>
+<div class="table autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.name" title="labapi.util.path.NotebookPath.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
+<td><p>The final segment of the path.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.parent" title="labapi.util.path.NotebookPath.parent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parent</span></code></a></p></td>
+<td><p>The parent path (all segments except the last).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#labapi.util.path.NotebookPath.parts" title="labapi.util.path.NotebookPath.parts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parts</span></code></a></p></td>
+<td><p>All path segments except the last one.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.to_string">
+<span class="sig-name descname"><span class="pre">to_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></span><a class="reference internal" href="../../_modules/labapi/util/path.html#NotebookPath.to_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.util.path.NotebookPath.to_string" title="Link to this definition">#</a></dt>
+<dd><p>Return the path as a slash-separated string.</p>
+<p>Absolute paths are prefixed with <code class="docutils literal notranslate"><span class="pre">/</span></code>; relative paths are not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The string representation of this path (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;/Experiments/2024&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;2024/Results&quot;</span></code>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.is_absolute">
+<span class="sig-name descname"><span class="pre">is_absolute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../../_modules/labapi/util/path.html#NotebookPath.is_absolute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.util.path.NotebookPath.is_absolute" title="Link to this definition">#</a></dt>
+<dd><p>Return whether this path is absolute.</p>
+<p>An absolute path is rooted at the notebook level and begins with
+<code class="docutils literal notranslate"><span class="pre">/</span></code> in its string form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the path is absolute, <code class="docutils literal notranslate"><span class="pre">False</span></code> if relative.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.resolve">
+<span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">recurse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a></span></span><a class="reference internal" href="../../_modules/labapi/util/path.html#NotebookPath.resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.util.path.NotebookPath.resolve" title="Link to this definition">#</a></dt>
+<dd><p>Return an absolute version of this path.</p>
+<p>If the path is already absolute it is returned unchanged. Otherwise
+the path is resolved against <code class="docutils literal notranslate"><span class="pre">parent</span></code> (if given) or against the
+<code class="docutils literal notranslate"><span class="pre">parent</span></code> anchor stored at construction time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parent</strong> – An absolute path to resolve against. Ignored when the
+path is already absolute or has a stored parent anchor.</p></li>
+<li><p><strong>recurse</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">parent</span></code> itself is resolved before use.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new absolute <code class="docutils literal notranslate"><span class="pre">NotebookPath</span></code>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If the path is relative and no parent is available
+to resolve against.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.startswith">
+<span class="sig-name descname"><span class="pre">startswith</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../../_modules/labapi/util/path.html#NotebookPath.startswith"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.util.path.NotebookPath.startswith" title="Link to this definition">#</a></dt>
+<dd><p>Return whether this path starts with another path’s segments.</p>
+<p>Compares raw segments without resolving either path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> – The prefix path to test against.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the leading segments of this path equal all
+segments of <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.is_relative_to">
+<span class="sig-name descname"><span class="pre">is_relative_to</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode" title="labapi.tree.mixins.AbstractBaseTreeNode"><span class="pre">AbstractBaseTreeNode</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../../_modules/labapi/util/path.html#NotebookPath.is_relative_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.util.path.NotebookPath.is_relative_to" title="Link to this definition">#</a></dt>
+<dd><p>Return whether this path is located inside <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
+<p>Unanchored relative paths are considered to be relative to any
+absolute path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> – The candidate ancestor path or tree node.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this path is equal to or below <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.relative_to">
+<span class="sig-name descname"><span class="pre">relative_to</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode" title="labapi.tree.mixins.AbstractBaseTreeNode"><span class="pre">AbstractBaseTreeNode</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a></span></span><a class="reference internal" href="../../_modules/labapi/util/path.html#NotebookPath.relative_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#labapi.util.path.NotebookPath.relative_to" title="Link to this definition">#</a></dt>
+<dd><p>Return this path made relative to <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
+<p>The result is a new relative <code class="docutils literal notranslate"><span class="pre">NotebookPath</span></code> whose <code class="docutils literal notranslate"><span class="pre">parent</span></code> anchor
+is set to the resolved form of <code class="docutils literal notranslate"><span class="pre">other</span></code>, so it can be resolved back
+to an absolute path later.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> – The ancestor path or tree node to relativise against.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A relative <code class="docutils literal notranslate"><span class="pre">NotebookPath</span></code> from <code class="docutils literal notranslate"><span class="pre">other</span></code> to this path.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If this path is not located inside <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.name">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#labapi.util.path.NotebookPath.name" title="Link to this definition">#</a></dt>
+<dd><p>The final segment of the path.</p>
+<p>Equivalent to the node’s display name when the path was built from a
+tree node. Returns <code class="docutils literal notranslate"><span class="pre">&quot;.&quot;</span></code> for an empty path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The last path segment, or <code class="docutils literal notranslate"><span class="pre">&quot;.&quot;</span></code> if the path is empty.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.parts">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parts</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.14)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#labapi.util.path.NotebookPath.parts" title="Link to this definition">#</a></dt>
+<dd><p>All path segments except the last one.</p>
+<p>Analogous to the parent directory in a file path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of segment strings, empty if the path has only
+one segment.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.parent">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parent</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#labapi.util.path.NotebookPath" title="labapi.util.path.NotebookPath"><span class="pre">NotebookPath</span></a></span><a class="headerlink" href="#labapi.util.path.NotebookPath.parent" title="Link to this definition">#</a></dt>
+<dd><p>The parent path (all segments except the last).</p>
+<p>Resolves the path first, then appends <code class="docutils literal notranslate"><span class="pre">..</span></code> to obtain the parent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An absolute <code class="docutils literal notranslate"><span class="pre">NotebookPath</span></code> pointing to the parent location.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.count">
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">integer</span> <span class="pre">--</span> <span class="pre">return</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">occurrences</span> <span class="pre">of</span> <span class="pre">value</span></span></span><a class="headerlink" href="#labapi.util.path.NotebookPath.count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="labapi.util.path.NotebookPath.index">
+<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="optional">[</span>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">start</span></span></em><span class="optional">[</span>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>,<span class="optional">]</span><span class="optional">]</span></dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">integer</span> <span class="pre">--</span> <span class="pre">return</span> <span class="pre">first</span> <span class="pre">index</span> <span class="pre">of</span> <span class="pre">value.</span></span></span><a class="headerlink" href="#labapi.util.path.NotebookPath.index" title="Link to this definition">#</a></dt>
+<dd><p>Raises ValueError if the value is not present.</p>
+<p>Supporting start and stop arguments is optional, but
+recommended.</p>
+</dd></dl>
+
+</dd></dl>
+
+
+</article><footer class="bz-article-footer">
+  
+  
+    <nav class="bz-related-pages" aria-label="Related pages navigation"><a class="bz-related-pages-previous" href="labapi.util.path.html" rel="prev">
+    <span>Previous</span><span class="bz-related-pages-title">labapi.util.path</span></a></nav>
+  
+
+</footer><aside class="bz-sidebar-secondary" data-drawer="bz-sidebar-secondary">
+  
+  
+    <nav class="bz-sidebar-toc" aria-label="Table of contents">
+  <p>On this page</p><ul>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.__init__"><code class="docutils literal notranslate"><span class="pre">NotebookPath​._​_​init_​_​()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.to_string"><code class="docutils literal notranslate"><span class="pre">NotebookPath​.to_​string()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.is_absolute"><code class="docutils literal notranslate"><span class="pre">NotebookPath​.is_​absolute()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.resolve"><code class="docutils literal notranslate"><span class="pre">NotebookPath​.resolve()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.startswith"><code class="docutils literal notranslate"><span class="pre">NotebookPath​.startswith()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.is_relative_to"><code class="docutils literal notranslate"><span class="pre">NotebookPath​.is_​relative_​to()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.relative_to"><code class="docutils literal notranslate"><span class="pre">NotebookPath​.relative_​to()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.name"><code class="docutils literal notranslate"><span class="pre">NotebookPath​.name</span></code></a></li>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.parts"><code class="docutils literal notranslate"><span class="pre">NotebookPath​.parts</span></code></a></li>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.parent"><code class="docutils literal notranslate"><span class="pre">NotebookPath​.parent</span></code></a></li>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.count"><code class="docutils literal notranslate"><span class="pre">NotebookPath​.count()</span></code></a></li>
+<li><a class="reference internal" href="#labapi.util.path.NotebookPath.index"><code class="docutils literal notranslate"><span class="pre">NotebookPath​.index()</span></code></a></li>
+</ul></nav>
+  
+    
+
+
+  
+    
+  
+    
+  
+
+</aside></main>
+  </div>
+<footer class="bz-footer">
+  <div class="bz-footer-copyright"><p class="bz-copyright">© Copyright 2026, Christoph Li and Joshua Lawrimore</p><p>
+    
+    
+    
+      Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/aksiome/breeze">Breeze theme</a>.
+    
+  </p>
+</div>
+</footer><a href="#" class="bz-back-to-top">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
+    </svg>
+    <span>Back to top</span>
+  </a>
+  <label class="bz-overlay bz-overlay-primary" for="bz-sidebar-primary"></label>
+  <label class="bz-overlay bz-overlay-secondary" for="bz-sidebar-secondary"></label>
+  <input type="checkbox" name="bz-sidebar-primary" id="bz-sidebar-primary" aria-label="Toggle section navigation">
+  <input type="checkbox" name="bz-sidebar-secondary" id="bz-sidebar-secondary" aria-label="Toggle table of contents"><script src="../../_static/documentation_options.js?v=01f34227"></script><script src="../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src="../../_static/clipboard.min.js?v=a7894cd8"></script><script src="../../_static/copybutton.js?v=f281be69"></script><script src="../../_static/design-tabs.js?v=f930bc37"></script></body>
+</html>

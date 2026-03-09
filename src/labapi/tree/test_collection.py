@@ -72,6 +72,15 @@ class TestNotebooksUnit:
         ):
             notebooks["Nonexistent"]
 
+    def test_notebooks_getitem_invalid_key_type_raises(self):
+        """Test Notebooks.__getitem__ raises TypeError for unsupported key types."""
+        mock_user = Mock(spec=User)
+        notebooks_init = [NotebookInit(id="nb1", name="Test", is_default=True)]
+        notebooks = Notebooks(notebooks_init, mock_user)
+
+        with pytest.raises(TypeError, match="Invalid key type"):
+            notebooks[123]  # pyright: ignore[reportArgumentType]
+
     def test_notebooks_iter(self):
         """Test Notebooks.__iter__ returns iterator over names."""
         mock_user = Mock(spec=User)
@@ -127,7 +136,7 @@ class TestNotebooksIntegration:
         assert notebooks_list[0].id == "testnb2"
         assert notebooks_list[1].id == "testnb3"
 
-    def test_notebooks_create_notebook(self, client: MockClient, notebooks: Notebooks):
+    def test_notebooks_create_notebook(self, client, notebooks: Notebooks):
         """Test Notebooks.create_notebook creates a new notebook."""
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <notebooks>
@@ -151,7 +160,7 @@ class TestNotebooksIntegration:
         assert api_call[1]["initial_folders"] == "Empty"
 
     def test_notebooks_create_notebook_duplicate_id_raises(
-        self, client: MockClient, notebooks: Notebooks
+        self, client, notebooks: Notebooks
     ):
         """Test Notebooks.create_notebook raises RuntimeError if API returns existing ID."""
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>

@@ -32,6 +32,8 @@ wheels/
 .mcp.json
 
 docs/build/
+docs/_build/
+docs/source/reference/generated/
 
 
 .ipynb-checkpoints

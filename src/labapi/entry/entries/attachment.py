@@ -126,6 +126,8 @@ class AttachmentEntry(Entry[Attachment]):
             change_description="File updated via API",
         )
 
+        self._caption = value.caption
+
         if self._data:
             self._data.close()
         self._data = None
