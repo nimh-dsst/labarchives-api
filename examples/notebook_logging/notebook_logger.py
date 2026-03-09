@@ -51,25 +51,32 @@ class NotebookLogger:
         self.client = client or Client()
         self.notebook_name = notebook_name
         self.captured_figures: list[bytes] = []
+        self._captured_figure_data: dict[int, bytes] = {}
         self.tracked_files: list[str] = []
 
         # Register IPython display formatter to capture figures as they are shown
         ip = get_ipython()
         if ip:
-
-            def capture_fig(fig):
-                buf = BytesIO()
-                fig.savefig(buf, format="png", bbox_inches="tight")
-                data = buf.getvalue()
-                self.captured_figures.append(data)
-                return data
-
             try:
                 import matplotlib.figure
+                import matplotlib.pyplot as plt
+
+                def capture_fig(fig):
+                    return self._serialize_figure(fig)
 
                 ip.display_formatter.formatters["image/png"].for_type(
                     matplotlib.figure.Figure, capture_fig
                 )
+
+                original_show = plt.show
+
+                def capture_show(*args: Any, **kwargs: Any):
+                    # Capture currently open figures before inline backends close them.
+                    for fig_num in plt.get_fignums():
+                        self._serialize_figure(plt.figure(fig_num))
+                    return original_show(*args, **kwargs)
+
+                plt.show = capture_show
             except ImportError:
                 pass
 
@@ -123,18 +130,40 @@ class NotebookLogger:
     def _capture_figures(self) -> list[bytes]:
         """Capture all open matplotlib figures as PNG bytes."""
         figures = list(self.captured_figures)
-        self.captured_figures.clear()
+        seen_figure_ids = set(self._captured_figure_data)
 
         try:
             import matplotlib.pyplot as plt
         except ImportError:
+            self.captured_figures.clear()
+            self._captured_figure_data.clear()
             return figures
 
         for fig_num in plt.get_fignums():
-            buf = BytesIO()
-            plt.figure(fig_num).savefig(buf, format="png", bbox_inches="tight")
-            figures.append(buf.getvalue())
+            fig = plt.figure(fig_num)
+            fig_id = id(fig)
+            if fig_id in seen_figure_ids:
+                continue
+            figures.append(self._serialize_figure(fig))
+            seen_figure_ids.add(fig_id)
+
+        self.captured_figures.clear()
+        self._captured_figure_data.clear()
         return figures
+
+    def _serialize_figure(self, fig: Any) -> bytes:
+        """Serialize a matplotlib figure to PNG bytes and cache it once per cycle."""
+        figure_id = id(fig)
+        cached = self._captured_figure_data.get(figure_id)
+        if cached is not None:
+            return cached
+
+        buf = BytesIO()
+        fig.savefig(buf, format="png", bbox_inches="tight")
+        data = buf.getvalue()
+        self.captured_figures.append(data)
+        self._captured_figure_data[figure_id] = data
+        return data
 
     def _capture_cell_info(self) -> dict[str, Any]:
         """Capture recent cell sources and execution count from IPython."""
