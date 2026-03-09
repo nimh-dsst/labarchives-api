@@ -409,18 +409,16 @@ class Client:
                     "Please complete the authentication in the opened browser window..."
                 )
 
-            user = self.collect_auth_response()
-
-            if driver is not None:
-                driver.quit()
-
-            return user
+            return self.collect_auth_response()
         except ImportError as e:
             raise ImportError(
                 "Selenium is required for automatic browser-based authentication. "
                 "Install it with: pip install selenium\n"
                 "Alternatively, use manual authentication with LA_AUTH_BROWSER=terminal."
             ) from e
+        finally:
+            if driver is not None:
+                driver.quit()
 
     def collect_auth_response(self) -> User:
         """
@@ -451,6 +449,7 @@ class Client:
                     self.wfile.write(
                         bytes(f"Error: {query['error']}", encoding="utf-8")
                     )
+                    auth_info["error"] = query["error"]
                 else:
                     self.wfile.write(b"Thanks for Authenticating. Close this Window")
                     auth_info["auth_code"] = query["auth_code"]
@@ -462,6 +461,14 @@ class Client:
 
         with TCPServer(("127.0.0.1", 8089), AuthRequestHandler) as httpd:
             httpd.handle_request()
+
+        if "error" in auth_info:
+            raise RuntimeError(f"Authentication failed: {auth_info['error']}")
+
+        if "auth_code" not in auth_info or "email" not in auth_info:
+            raise RuntimeError(
+                "Authentication callback did not include both auth_code and email"
+            )
 
         return self.login(auth_info["email"], auth_info["auth_code"])
 

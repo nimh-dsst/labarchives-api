@@ -32,6 +32,12 @@ class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):
         :param destination: The target container to copy the directory to.
         :returns: A new instance of the copied directory in the destination.
         """
+
+        if self.is_parent_of(destination) or self is destination:
+            raise ValueError(
+                "Cannot copy a directory into itself or one of its descendants"
+            )
+
         new_dir = destination.create(
             NotebookDirectory, self.name, if_exists=InsertBehavior.Ignore
         )

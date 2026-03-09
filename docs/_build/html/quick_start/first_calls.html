@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Your First Entry" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="quick_start/first_calls.html" />
+<meta property="og:site_name" content="labapi" />
+<meta property="og:description" content="Making a Client: To begin, you must instantiate a Client object, which will connect to LabArchives. You will need your API URL, Access Key ID, and Access Password. There are several ways to provide..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_quick_start_first_calls_71e46ab3.png" />
+<meta property="og:image:alt" content="Making a Client: To begin, you must instantiate a Client object, which will connect to LabArchives. You will need your API URL, Access Key ID, and Access Password. There are several ways to provide..." />
+<meta name="description" content="Making a Client: To begin, you must instantiate a Client object, which will connect to LabArchives. You will need your API URL, Access Key ID, and Access Password. There are several ways to provide..." />
+<meta name="twitter:card" content="summary_large_image" />
+<title>Your First Entry - labapi 0.1.0 documentation</title><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Creating Content" href="creating_pages.html"><link rel="prev" title="Installation" href="installation.html"><script data-cfasync="false">(function(){
+    const m = localStorage.getItem("breeze-mode") || "auto";
+    const d = document.documentElement.dataset;
+    d.mode = m;
+    d.theme = m === "auto"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : m;
+  })();
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8e8a900e" /><link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" /><link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" /><link rel="stylesheet" type="text/css" href="../_static/styles/breeze.css?v=227fd4f7" /><script defer="defer" src="../_static/scripts/breeze.js?v=dac9f8c6"></script></head>
+<body>
+  
+  
+  <div class="bz-skip-to-content"><a href="#bz-main-content">Skip to main content</a></div><header class="bz-header-main">
+  <div class="bz-header-start"><a class="bz-header-brand" href="../index.html">
+  
+  
+  <span>labapi 0.1.0 documentation</span>
+</a>
+  </div>
+  <div class="bz-header-end"><div id="docsearch" class="bz-search-button">
+  <a
+    href="../search.html#q"
+    aria-label="Search the docs"
+    data-tooltip="Search the docs"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 -1 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </svg>
+    <span>Search</span>
+    <kbd>Ctrl+K</kbd>
+  </a>
+</div><div class="bz-theme-switcher">
+  <button aria-label="Switch theme" data-tooltip="Switch theme">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-light" fill="currentColor">
+      <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-dark" fill="currentColor">
+      <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+    </svg>
+  </button>
+</div>
+  </div>
+</header><nav class="bz-header-tabs" aria-label="Primary Navigation"><label
+  class="bz-sidebar-primary-toggle"
+  for="bz-sidebar-primary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle site navigation"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h12.5"
+    />
+  </svg>
+</label><ul><li class="toctree-l1 current"><a class="reference internal" href="index.html">Quick Start</a></li><li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li><li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example Applications</a></li><li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently Asked Questions</a></li><li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li></ul><div class="bz-dropdown">
+    <button aria-haspopup="true" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <g
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </g>
+      </svg>
+    </button>
+    <ul role="menu" aria-hidden="true"></ul>
+  </div>
+</nav><hr class="bz-header-hr">
+  <div class="bz-content"><aside class="bz-sidebar-primary" data-drawer="bz-sidebar-primary">
+  
+  
+    <nav class="bz-sidebar-nav" aria-label="Section Navigation"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Your First Entry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating_pages.html">Creating Content</a></li>
+<li class="toctree-l1"><a class="reference internal" href="navigating.html">Navigating the Tree</a></li>
+<li class="toctree-l1"><a class="reference internal" href="uploading_files.html">Uploading Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="writing_rich_text.html">Writing Rich Text Entries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="copying.html">Copying Pages and Directories</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deleting.html">Deleting Pages and Directories</a></li>
+</ul>
+</nav>
+  
+
+</aside><main id="bz-main-content"><header class="bz-article-header">
+  
+  
+    <nav class="bz-breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <li class="bz-breadcrumbs-home">
+      <a href="../index.html" aria-label="Home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8.543 2.232a.75.75 0 0 0-1.085 0l-5.25 5.5A.75.75 0 0 0 2.75 9H4v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 1 1 2 0v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V9h1.25a.75.75 0 0 0 .543-1.268l-5.25-5.5Z" />
+        </svg>
+      </a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="index.html">Quick Start</a>
+    </li><li class="bz-breadcrumbs-current">
+      <span>Your First Entry</span>
+    </li>
+  </ol>
+</nav>
+  
+<label
+  class="bz-sidebar-secondary-toggle"
+  for="bz-sidebar-secondary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle table of contents"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75H20.25 M11.25 12H20.25 M7.75 17.25H20.25"
+    />
+  </svg>
+</label></header><article class="bz-article-main" role="main"><div class="bz-page-actions" role="group" aria-label="Page actions">
+  <button data-copy-source="../_sources/quick_start/first_calls.rst.txt">
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+    <span>Copy page</span>
+  </button>
+  <div class="bz-dropdown">
+    <button
+      aria-label="More actions"
+      aria-haspopup="true"
+      aria-expanded="false"
+    ></button>
+    <ul role="menu" aria-hidden="true">
+      <li>
+        <a href="#" role="menuitem" data-copy-source="../_sources/quick_start/first_calls.rst.txt">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+          <span>Copy page</span>
+        </a>
+      </li>
+      <li>
+        <a href="../_sources/quick_start/first_calls.rst.txt" role="menuitem" class="bz-page-actions-external" target="_blank" rel="noopener">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3a2 2 0 0 1 2-2h9.982a2 2 0 0 1 1.414.586l4.018 4.018A2 2 0 0 1 21 7.018V21a2 2 0 0 1-2 2H4.75a.75.75 0 0 1 0-1.5H19a.5.5 0 0 0 .5-.5V8.5h-4a2 2 0 0 1-2-2v-4H5a.5.5 0 0 0-.5.5v6.25a.75.75 0 0 1-1.5 0Zm12-.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 0-.146-.336l-4.018-4.018A.5.5 0 0 0 15 2.5Z"></path><path d="M4.53 12.24a.75.75 0 0 1-.039 1.06l-2.639 2.45 2.64 2.45a.75.75 0 1 1-1.022 1.1l-3.23-3a.75.75 0 0 1 0-1.1l3.23-3a.75.75 0 0 1 1.06.04Zm3.979 1.06a.75.75 0 1 1 1.02-1.1l3.231 3a.75.75 0 0 1 0 1.1l-3.23 3a.75.75 0 1 1-1.021-1.1l2.639-2.45-2.64-2.45Z"></path></svg>
+          <span>View source</span>
+        </a>
+      </li></ul>
+  </div>
+</div><section id="your-first-entry">
+<span id="first-calls"></span><h1>Your First Entry<a class="headerlink" href="#your-first-entry" title="Link to this heading">#</a></h1>
+<section id="making-a-client">
+<h2>Making a Client<a class="headerlink" href="#making-a-client" title="Link to this heading">#</a></h2>
+<p>To begin, you must instantiate a <a class="reference internal" href="../reference/generated/labapi.client.Client.html#labapi.client.Client" title="labapi.client.Client"><code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></a> object, which will connect to LabArchives.
+You will need your API URL, Access Key ID, and Access Password. There are several ways to provide these credentials:</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="env-file" for="sd-tab-item-0">
+With .env (Recommended)</label><div class="sd-tab-content docutils">
+<p>Create a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file in your project directory:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="n">API_URL</span><span class="o">=</span><span class="s2">&quot;https://api.labarchives.com&quot;</span>
+<span class="n">ACCESS_KEYID</span><span class="o">=</span><span class="s2">&quot;your_access_key&quot;</span>
+<span class="n">ACCESS_PWD</span><span class="o">=</span><span class="s2">&quot;your_access_password&quot;</span>
+</pre></div>
+</div>
+<p>Then, in your Python code, simply initialize the client:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">labapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="env-vars" for="sd-tab-item-1">
+Environment Variables</label><div class="sd-tab-content docutils">
+<p>Set the environment variables before running your script.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">API_URL</span><span class="o">=</span><span class="s2">&quot;https://api.labarchives.com&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">ACCESS_KEYID</span><span class="o">=</span><span class="s2">&quot;your_access_key&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">ACCESS_PWD</span><span class="o">=</span><span class="s2">&quot;your_access_password&quot;</span>
+</pre></div>
+</div>
+<p>And in Python:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">labapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="explicit" for="sd-tab-item-2">
+As Constructor Arguments</label><div class="sd-tab-content docutils">
+<p>You can pass the credentials directly when creating the <a class="reference internal" href="../reference/generated/labapi.client.Client.html#labapi.client.Client" title="labapi.client.Client"><code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></a>. Note that hardcoding credentials in your scripts is generally not recommended for security reasons.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">labapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span>
+    <span class="n">base_url</span><span class="o">=</span><span class="s2">&quot;https://api.labarchives.com&quot;</span><span class="p">,</span>
+    <span class="n">akid</span><span class="o">=</span><span class="s2">&quot;your_access_key&quot;</span><span class="p">,</span>
+    <span class="n">akpass</span><span class="o">=</span><span class="s2">&quot;your_access_password&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="signing-in">
+<h2>Signing In<a class="headerlink" href="#signing-in" title="Link to this heading">#</a></h2>
+<p>To interact with the LabArchives API, you first need to authenticate. There are two main ways to do this:</p>
+<section id="auth-flow-authentication">
+<h3>Auth Flow Authentication<a class="headerlink" href="#auth-flow-authentication" title="Link to this heading">#</a></h3>
+<p>The simplest way is to use the <a class="reference internal" href="../reference/generated/labapi.client.Client.html#labapi.client.Client.default_authenticate" title="labapi.client.Client.default_authenticate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">default_authenticate()</span></code></a> method, which allows users running on the same machine
+to log in with their browser. <a class="reference internal" href="../reference/generated/labapi.client.Client.html#labapi.client.Client.default_authenticate" title="labapi.client.Client.default_authenticate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">default_authenticate()</span></code></a> relies on a local implementation of the
+<a class="reference internal" href="../guide/auth.html#authflow"><span class="std std-ref">Authentication Flow</span></a>,
+so more complex uses, like those involving a client-server model, should not use this function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">labapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
+<span class="n">user</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">default_authenticate</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If a compatible browser is not detected, the API will prompt you in the terminal to open a link.
+Simply copy the link and login.</p>
+</div>
+</section>
+<section id="external-app-authentication">
+<h3>External App Authentication<a class="headerlink" href="#external-app-authentication" title="Link to this heading">#</a></h3>
+<p>If you cannot use a browser on the machine where your script is running, or for quick testing, you can use an “External App authentication” code:</p>
+<ol class="arabic simple">
+<li><p>Log in to your LabArchives account in a web browser.</p></li>
+<li><p>Click on your name in the top right corner and select <strong>External App authentication</strong>.</p></li>
+<li><p>Copy the email address and password token and use them directly in the <a class="reference internal" href="../reference/generated/labapi.client.Client.html#labapi.client.Client.login" title="labapi.client.Client.login"><code class="xref py py-meth docutils literal notranslate"><span class="pre">login()</span></code></a> method.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">labapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
+<span class="n">user</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="s2">&quot;your.email@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;YOUR_AUTH_CODE&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The External App password token is valid for only one hour.</p>
+</div>
+</section>
+</section>
+<section id="getting-a-notebook">
+<h2>Getting a Notebook<a class="headerlink" href="#getting-a-notebook" title="Link to this heading">#</a></h2>
+<p>Once you have a <a class="reference internal" href="../reference/generated/labapi.user.User.html#labapi.user.User" title="labapi.user.User"><code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code></a> object, you can access your notebooks. You can index them up by name or get a list of all available notebooks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get a notebook by name</span>
+<span class="n">notebook</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">notebooks</span><span class="p">[</span><span class="s2">&quot;My Notebook&quot;</span><span class="p">]</span>
+
+<span class="c1"># Or list all your notebooks</span>
+<span class="k">for</span> <span class="n">notebook_name</span> <span class="ow">in</span> <span class="n">user</span><span class="o">.</span><span class="n">notebooks</span><span class="p">:</span>
+ <span class="nb">print</span><span class="p">(</span><span class="n">notebook_name</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="writing-entries">
+<h2>Writing Entries<a class="headerlink" href="#writing-entries" title="Link to this heading">#</a></h2>
+<p>You can now start writing entries to your notebook. First, navigate to an existing page, then add an entry:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Navigate to a page by path</span>
+<span class="n">page</span> <span class="o">=</span> <span class="n">notebook</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="s2">&quot;Experiments/Project A/Results&quot;</span><span class="p">)</span>
+
+<span class="c1"># Add a text entry</span>
+<span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span><span class="s2">&quot;text entry&quot;</span><span class="p">,</span> <span class="s2">&quot;Successfully ran the first trial.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+</article><footer class="bz-article-footer">
+  
+  
+    <nav class="bz-related-pages" aria-label="Related pages navigation"><a class="bz-related-pages-previous" href="installation.html" rel="prev">
+    <span>Previous</span><span class="bz-related-pages-title">Installation</span></a><a class="bz-related-pages-next" href="creating_pages.html" rel="next">
+    <span>Next</span>
+    <span class="bz-related-pages-title">Creating Content</span>
+  </a></nav>
+  
+
+</footer><aside class="bz-sidebar-secondary" data-drawer="bz-sidebar-secondary">
+  
+  
+    <nav class="bz-sidebar-toc" aria-label="Table of contents">
+  <p>On this page</p><ul>
+<li><a class="reference internal" href="#making-a-client">Making a Client</a></li>
+<li><a class="reference internal" href="#signing-in">Signing In</a><ul>
+<li><a class="reference internal" href="#auth-flow-authentication">Auth Flow Authentication</a></li>
+<li><a class="reference internal" href="#external-app-authentication">External App Authentication</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#getting-a-notebook">Getting a Notebook</a></li>
+<li><a class="reference internal" href="#writing-entries">Writing Entries</a></li>
+</ul></nav>
+  
+    
+
+
+  
+    
+  
+    
+  
+
+</aside></main>
+  </div>
+<footer class="bz-footer">
+  <div class="bz-footer-copyright"><p class="bz-copyright">© Copyright 2026, Christoph Li and Joshua Lawrimore</p><p>
+    
+    
+    
+      Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/aksiome/breeze">Breeze theme</a>.
+    
+  </p>
+</div>
+</footer><a href="#" class="bz-back-to-top">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
+    </svg>
+    <span>Back to top</span>
+  </a>
+  <label class="bz-overlay bz-overlay-primary" for="bz-sidebar-primary"></label>
+  <label class="bz-overlay bz-overlay-secondary" for="bz-sidebar-secondary"></label>
+  <input type="checkbox" name="bz-sidebar-primary" id="bz-sidebar-primary" aria-label="Toggle section navigation">
+  <input type="checkbox" name="bz-sidebar-secondary" id="bz-sidebar-secondary" aria-label="Toggle table of contents"><script src="../_static/documentation_options.js?v=01f34227"></script><script src="../_static/doctools.js?v=fd6eb6e6"></script><script src="../_static/sphinx_highlight.js?v=6ffebe34"></script><script src="../_static/clipboard.min.js?v=a7894cd8"></script><script src="../_static/copybutton.js?v=f281be69"></script><script src="../_static/design-tabs.js?v=f930bc37"></script></body>
+</html>

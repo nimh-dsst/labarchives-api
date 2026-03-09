@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8"><title>labapi.util.part_type - labapi 0.1.0 documentation</title><link rel="index" title="Index" href="../../../genindex.html"><link rel="search" title="Search" href="../../../search.html"><script data-cfasync="false">(function(){
+    const m = localStorage.getItem("breeze-mode") || "auto";
+    const d = document.documentElement.dataset;
+    d.mode = m;
+    d.theme = m === "auto"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : m;
+  })();
+  </script><link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8e8a900e" /><link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" /><link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" /><link rel="stylesheet" type="text/css" href="../../../_static/styles/breeze.css?v=227fd4f7" /><script defer="defer" src="../../../_static/scripts/breeze.js?v=dac9f8c6"></script></head>
+<body>
+  
+  
+  <div class="bz-skip-to-content"><a href="#bz-main-content">Skip to main content</a></div><header class="bz-header-main">
+  <div class="bz-header-start"><a class="bz-header-brand" href="../../../index.html">
+  
+  
+  <span>labapi 0.1.0 documentation</span>
+</a>
+  </div>
+  <div class="bz-header-end"><div id="docsearch" class="bz-search-button">
+  <a
+    href="../../../search.html#q"
+    aria-label="Search the docs"
+    data-tooltip="Search the docs"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 -1 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </svg>
+    <span>Search</span>
+    <kbd>Ctrl+K</kbd>
+  </a>
+</div><div class="bz-theme-switcher">
+  <button aria-label="Switch theme" data-tooltip="Switch theme">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-light" fill="currentColor">
+      <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-dark" fill="currentColor">
+      <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+    </svg>
+  </button>
+</div>
+  </div>
+</header><nav class="bz-header-tabs" aria-label="Primary Navigation"><label
+  class="bz-sidebar-primary-toggle"
+  for="bz-sidebar-primary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle site navigation"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h12.5"
+    />
+  </svg>
+</label><ul><li class="toctree-l1"><a class="reference internal" href="../../../quick_start/index.html">Quick Start</a></li><li class="toctree-l1"><a class="reference internal" href="../../../guide/index.html">User Guide</a></li><li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Example Applications</a></li><li class="toctree-l1"><a class="reference internal" href="../../../faq.html">Frequently Asked Questions</a></li><li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">API Reference</a></li></ul><div class="bz-dropdown">
+    <button aria-haspopup="true" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <g
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </g>
+      </svg>
+    </button>
+    <ul role="menu" aria-hidden="true"></ul>
+  </div>
+</nav><hr class="bz-header-hr">
+  <div class="bz-content"><main id="bz-main-content"><header class="bz-article-header">
+  
+  
+    <nav class="bz-breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <li class="bz-breadcrumbs-home">
+      <a href="../../../index.html" aria-label="Home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8.543 2.232a.75.75 0 0 0-1.085 0l-5.25 5.5A.75.75 0 0 0 2.75 9H4v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 1 1 2 0v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V9h1.25a.75.75 0 0 0 .543-1.268l-5.25-5.5Z" />
+        </svg>
+      </a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="../../index.html">Module code</a>
+    </li><li class="bz-breadcrumbs-current">
+      <span>labapi.util.part_type</span>
+    </li>
+  </ol>
+</nav>
+  
+<label
+  class="bz-sidebar-secondary-toggle"
+  for="bz-sidebar-secondary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle table of contents"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75H20.25 M11.25 12H20.25 M7.75 17.25H20.25"
+    />
+  </svg>
+</label></header><article class="bz-article-main" role="main"><h1>Source code for labapi.util.part_type</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Entry part type utilities.</span>
+
+<span class="sd">This module provides utilities for validating, normalizing, and serializing</span>
+<span class="sd">LabArchives entry part types (also known as content types).</span>
+
+<span class="sd">Type aliases are provided for static type checking:</span>
+<span class="sd">- :type:`PartType`: All recognized LabArchives entry types</span>
+<span class="sd">- :type:`ImplementedPartType`: Entry types with implementation support in labapi</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TypeGuard</span>
+
+<span class="c1">#: All known LabArchives entry part types.</span>
+<span class="n">_ALL_PART_TYPES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;attachment&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plain text entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;heading&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;text entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;widget entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sketch entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;reference entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;equation entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;assignment entry&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">type</span> <span class="n">PartType</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+    <span class="s2">&quot;attachment&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plain text entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;heading&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;text entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;widget entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sketch entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;reference entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;equation entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;assignment entry&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: Part types that have been implemented in labapi.</span>
+<span class="c1">#: Other types may be recognized but not fully supported.</span>
+<span class="n">_ALL_IMPLEMENTED_PART_TYPES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;attachment&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plain text entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;heading&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;text entry&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;widget entry&quot;</span><span class="p">,</span>  <span class="c1"># NOTE read-only</span>
+<span class="p">)</span>
+
+<span class="nb">type</span> <span class="n">ImplementedPartType</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+    <span class="s2">&quot;attachment&quot;</span><span class="p">,</span> <span class="s2">&quot;plain text entry&quot;</span><span class="p">,</span> <span class="s2">&quot;heading&quot;</span><span class="p">,</span> <span class="s2">&quot;text entry&quot;</span><span class="p">,</span> <span class="s2">&quot;widget entry&quot;</span>
+<span class="p">]</span>
+
+<span class="c1">#: Mapping of normalized part types to their serialized form.</span>
+<span class="c1">#: Used for special cases where the API expects different capitalization.</span>
+<span class="n">_PART_TYPE_MAPPING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;attachment&quot;</span><span class="p">:</span> <span class="s2">&quot;Attachment&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="get_normalized_part_type">
+<a class="viewcode-back" href="../../../reference/generated/labapi.util.part_type.get_normalized_part_type.html#labapi.util.part_type.get_normalized_part_type">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_normalized_part_type</span><span class="p">(</span><span class="n">part_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalizes a part type string to lowercase and strips whitespace.</span>
+
+<span class="sd">    This function ensures consistent comparison of part types by converting</span>
+<span class="sd">    them to a canonical form. Use this before calling :func:`is_part_type` or</span>
+<span class="sd">    :func:`is_valid_part_type` if the input may have mixed case or whitespace.</span>
+
+<span class="sd">    :param part_type: The raw part type string from the API or user input.</span>
+<span class="sd">    :returns: The normalized part type (lowercase, stripped).</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; get_normalized_part_type(&quot;  Attachment  &quot;)</span>
+<span class="sd">        &#39;attachment&#39;</span>
+<span class="sd">        &gt;&gt;&gt; get_normalized_part_type(&quot;TEXT ENTRY&quot;)</span>
+<span class="sd">        &#39;text entry&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">part_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="is_part_type">
+<a class="viewcode-back" href="../../../reference/generated/labapi.util.part_type.is_part_type.html#labapi.util.part_type.is_part_type">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_part_type</span><span class="p">(</span>
+    <span class="n">part_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeGuard</span><span class="p">[</span><span class="n">PartType</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks if a part type is recognized by LabArchives.</span>
+
+<span class="sd">    This function validates whether a given part type is one of the known</span>
+<span class="sd">    LabArchives entry types, regardless of whether it&#39;s implemented in labapi.</span>
+
+<span class="sd">    Acts as a :class:`~typing.TypeGuard`, narrowing the type to :type:`PartType`</span>
+<span class="sd">    when it returns True.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">       This function expects a **normalized** part type (lowercase, stripped).</span>
+<span class="sd">       Use :func:`get_normalized_part_type` first if the input may have mixed case.</span>
+
+<span class="sd">    :param part_type: The normalized part type string to check.</span>
+<span class="sd">    :returns: True if the part type is recognized, False otherwise.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; is_part_type(&quot;attachment&quot;)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; is_part_type(&quot;sketch entry&quot;)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; is_part_type(&quot;unknown type&quot;)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; is_part_type(&quot;Attachment&quot;)  # Not normalized!</span>
+<span class="sd">        False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">part_type</span> <span class="ow">in</span> <span class="n">_ALL_PART_TYPES</span></div>
+
+
+
+<div class="viewcode-block" id="is_valid_part_type">
+<a class="viewcode-back" href="../../../reference/generated/labapi.util.part_type.is_valid_part_type.html#labapi.util.part_type.is_valid_part_type">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_valid_part_type</span><span class="p">(</span><span class="n">part_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeGuard</span><span class="p">[</span><span class="n">ImplementedPartType</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks if a part type is both recognized and implemented in labapi.</span>
+
+<span class="sd">    This function validates whether a given part type is not only recognized</span>
+<span class="sd">    by LabArchives, but also has implementation support in labapi.</span>
+
+<span class="sd">    Acts as a :class:`~typing.TypeGuard`, narrowing the type to</span>
+<span class="sd">    :type:`ImplementedPartType` when it returns True.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">       This function expects a **normalized** part type (lowercase, stripped).</span>
+<span class="sd">       Use :func:`get_normalized_part_type` first if the input may have mixed case.</span>
+
+<span class="sd">    :param part_type: The normalized part type string to check.</span>
+<span class="sd">    :returns: True if the part type is recognized and implemented, False otherwise.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; is_valid_part_type(&quot;attachment&quot;)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; is_valid_part_type(&quot;text entry&quot;)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; is_valid_part_type(&quot;sketch entry&quot;)</span>
+<span class="sd">        False  # Recognized but not implemented</span>
+<span class="sd">        &gt;&gt;&gt; is_valid_part_type(&quot;unknown type&quot;)</span>
+<span class="sd">        False  # Not recognized at all</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">part_type</span> <span class="ow">in</span> <span class="n">_ALL_PART_TYPES</span> <span class="ow">and</span> <span class="n">part_type</span> <span class="ow">in</span> <span class="n">_ALL_IMPLEMENTED_PART_TYPES</span></div>
+
+
+
+<div class="viewcode-block" id="serialize_part_type">
+<a class="viewcode-back" href="../../../reference/generated/labapi.util.part_type.serialize_part_type.html#labapi.util.part_type.serialize_part_type">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">serialize_part_type</span><span class="p">(</span><span class="n">part_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Serializes a part type to the format expected by the LabArchives API.</span>
+
+<span class="sd">    Some part types require specific capitalization when sent to the API.</span>
+<span class="sd">    This function normalizes the input and handles those special cases using</span>
+<span class="sd">    the mapping table.</span>
+
+<span class="sd">    :param part_type: The part type string (normalized or raw).</span>
+<span class="sd">    :returns: The serialized part type string suitable for API requests.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; serialize_part_type(&quot;attachment&quot;)</span>
+<span class="sd">        &#39;Attachment&#39;  # Capitalized for API</span>
+<span class="sd">        &gt;&gt;&gt; serialize_part_type(&quot;text entry&quot;)</span>
+<span class="sd">        &#39;text entry&#39;  # No special mapping, returned as-is</span>
+<span class="sd">        &gt;&gt;&gt; serialize_part_type(&quot;  ATTACHMENT  &quot;)</span>
+<span class="sd">        &#39;Attachment&#39;  # Normalized then mapped</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">normalized</span> <span class="o">=</span> <span class="n">get_normalized_part_type</span><span class="p">(</span><span class="n">part_type</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_PART_TYPE_MAPPING</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">normalized</span><span class="p">,</span> <span class="n">part_type</span><span class="p">)</span></div>
+
+</pre></div>
+</article><footer class="bz-article-footer">
+  
+  
+    <nav class="bz-related-pages" aria-label="Related pages navigation"></nav>
+  
+
+</footer></main>
+  </div>
+<footer class="bz-footer">
+  <div class="bz-footer-copyright"><p class="bz-copyright">© Copyright 2026, Christoph Li and Joshua Lawrimore</p><p>
+    
+    
+    
+      Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/aksiome/breeze">Breeze theme</a>.
+    
+  </p>
+</div>
+</footer><a href="#" class="bz-back-to-top">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
+    </svg>
+    <span>Back to top</span>
+  </a>
+  <label class="bz-overlay bz-overlay-primary" for="bz-sidebar-primary"></label>
+  <label class="bz-overlay bz-overlay-secondary" for="bz-sidebar-secondary"></label>
+  <input type="checkbox" name="bz-sidebar-primary" id="bz-sidebar-primary" aria-label="Toggle section navigation">
+  <input type="checkbox" name="bz-sidebar-secondary" id="bz-sidebar-secondary" aria-label="Toggle table of contents"><script src="../../../_static/documentation_options.js?v=01f34227"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src="../../../_static/clipboard.min.js?v=a7894cd8"></script><script src="../../../_static/copybutton.js?v=f281be69"></script><script src="../../../_static/design-tabs.js?v=f930bc37"></script></body>
+</html>

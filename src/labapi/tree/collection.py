@@ -74,6 +74,10 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
                     if node.name == key:
                         return node
                 raise KeyError(f'Notebook with name "{key}" not found')
+            case _:
+                raise TypeError(
+                    "Invalid key type. Use `str`, `Index.Id:<id>`, or `Index.Name:<name>`."
+                )
 
     @override
     def __iter__(self) -> Iterator[str]:

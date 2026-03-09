@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="JSON Folder Sync" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="examples/json_sync.html" />
+<meta property="og:site_name" content="labapi" />
+<meta property="og:description" content="This example demonstrates how to synchronize JSON files between a local directory and a LabArchives page. It can upload all JSON files from a local folder to LabArchives as JSON entries, or downloa..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_examples_json_sync_37dfb554.png" />
+<meta property="og:image:alt" content="This example demonstrates how to synchronize JSON files between a local directory and a LabArchives page. It can upload all JSON files from a local folder to LabArchives as JSON entries, or downloa..." />
+<meta name="description" content="This example demonstrates how to synchronize JSON files between a local directory and a LabArchives page. It can upload all JSON files from a local folder to LabArchives as JSON entries, or downloa..." />
+<meta name="twitter:card" content="summary_large_image" />
+<title>JSON Folder Sync - labapi 0.1.0 documentation</title><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Folder Structure Download" href="folder_download.html"><link rel="prev" title="Example Applications" href="index.html"><script data-cfasync="false">(function(){
+    const m = localStorage.getItem("breeze-mode") || "auto";
+    const d = document.documentElement.dataset;
+    d.mode = m;
+    d.theme = m === "auto"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : m;
+  })();
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8e8a900e" /><link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" /><link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" /><link rel="stylesheet" type="text/css" href="../_static/styles/breeze.css?v=227fd4f7" /><script defer="defer" src="../_static/scripts/breeze.js?v=dac9f8c6"></script></head>
+<body>
+  
+  
+  <div class="bz-skip-to-content"><a href="#bz-main-content">Skip to main content</a></div><header class="bz-header-main">
+  <div class="bz-header-start"><a class="bz-header-brand" href="../index.html">
+  
+  
+  <span>labapi 0.1.0 documentation</span>
+</a>
+  </div>
+  <div class="bz-header-end"><div id="docsearch" class="bz-search-button">
+  <a
+    href="../search.html#q"
+    aria-label="Search the docs"
+    data-tooltip="Search the docs"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 -1 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </svg>
+    <span>Search</span>
+    <kbd>Ctrl+K</kbd>
+  </a>
+</div><div class="bz-theme-switcher">
+  <button aria-label="Switch theme" data-tooltip="Switch theme">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-light" fill="currentColor">
+      <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-dark" fill="currentColor">
+      <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+    </svg>
+  </button>
+</div>
+  </div>
+</header><nav class="bz-header-tabs" aria-label="Primary Navigation"><label
+  class="bz-sidebar-primary-toggle"
+  for="bz-sidebar-primary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle site navigation"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h12.5"
+    />
+  </svg>
+</label><ul><li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start</a></li><li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li><li class="toctree-l1 current"><a class="reference internal" href="index.html">Example Applications</a></li><li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently Asked Questions</a></li><li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li></ul><div class="bz-dropdown">
+    <button aria-haspopup="true" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <g
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </g>
+      </svg>
+    </button>
+    <ul role="menu" aria-hidden="true"></ul>
+  </div>
+</nav><hr class="bz-header-hr">
+  <div class="bz-content"><aside class="bz-sidebar-primary" data-drawer="bz-sidebar-primary">
+  
+  
+    <nav class="bz-sidebar-nav" aria-label="Section Navigation"><ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">JSON Folder Sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="folder_download.html">Folder Structure Download</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csv_table.html">CSV Table Upload/Download</a></li>
+</ul>
+</nav>
+  
+
+</aside><main id="bz-main-content"><header class="bz-article-header">
+  
+  
+    <nav class="bz-breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <li class="bz-breadcrumbs-home">
+      <a href="../index.html" aria-label="Home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8.543 2.232a.75.75 0 0 0-1.085 0l-5.25 5.5A.75.75 0 0 0 2.75 9H4v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 1 1 2 0v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V9h1.25a.75.75 0 0 0 .543-1.268l-5.25-5.5Z" />
+        </svg>
+      </a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="index.html">Example Applications</a>
+    </li><li class="bz-breadcrumbs-current">
+      <span>JSON Folder Sync</span>
+    </li>
+  </ol>
+</nav>
+  
+<label
+  class="bz-sidebar-secondary-toggle"
+  for="bz-sidebar-secondary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle table of contents"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75H20.25 M11.25 12H20.25 M7.75 17.25H20.25"
+    />
+  </svg>
+</label></header><article class="bz-article-main" role="main"><div class="bz-page-actions" role="group" aria-label="Page actions">
+  <button data-copy-source="../_sources/examples/json_sync.rst.txt">
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+    <span>Copy page</span>
+  </button>
+  <div class="bz-dropdown">
+    <button
+      aria-label="More actions"
+      aria-haspopup="true"
+      aria-expanded="false"
+    ></button>
+    <ul role="menu" aria-hidden="true">
+      <li>
+        <a href="#" role="menuitem" data-copy-source="../_sources/examples/json_sync.rst.txt">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+          <span>Copy page</span>
+        </a>
+      </li>
+      <li>
+        <a href="../_sources/examples/json_sync.rst.txt" role="menuitem" class="bz-page-actions-external" target="_blank" rel="noopener">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3a2 2 0 0 1 2-2h9.982a2 2 0 0 1 1.414.586l4.018 4.018A2 2 0 0 1 21 7.018V21a2 2 0 0 1-2 2H4.75a.75.75 0 0 1 0-1.5H19a.5.5 0 0 0 .5-.5V8.5h-4a2 2 0 0 1-2-2v-4H5a.5.5 0 0 0-.5.5v6.25a.75.75 0 0 1-1.5 0Zm12-.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 0-.146-.336l-4.018-4.018A.5.5 0 0 0 15 2.5Z"></path><path d="M4.53 12.24a.75.75 0 0 1-.039 1.06l-2.639 2.45 2.64 2.45a.75.75 0 1 1-1.022 1.1l-3.23-3a.75.75 0 0 1 0-1.1l3.23-3a.75.75 0 0 1 1.06.04Zm3.979 1.06a.75.75 0 1 1 1.02-1.1l3.231 3a.75.75 0 0 1 0 1.1l-3.23 3a.75.75 0 1 1-1.021-1.1l2.639-2.45-2.64-2.45Z"></path></svg>
+          <span>View source</span>
+        </a>
+      </li></ul>
+  </div>
+</div><section id="json-folder-sync">
+<span id="example-json-sync"></span><h1>JSON Folder Sync<a class="headerlink" href="#json-folder-sync" title="Link to this heading">#</a></h1>
+<p>This example demonstrates how to synchronize JSON files between a local directory and a LabArchives page.
+It can upload all JSON files from a local folder to LabArchives as JSON entries, or download JSON entries
+from LabArchives to local JSON files.</p>
+<section id="use-case">
+<h2>Use Case<a class="headerlink" href="#use-case" title="Link to this heading">#</a></h2>
+<p>This is useful for:</p>
+<ul class="simple">
+<li><p>Backing up structured data from LabArchives to your local machine</p></li>
+<li><p>Uploading batches of JSON data files to a LabArchives page</p></li>
+<li><p>Syncing experimental data stored as JSON between local and LabArchives</p></li>
+<li><p>Archiving API responses or structured datasets</p></li>
+</ul>
+</section>
+<section id="example-code">
+<h2>Example Code<a class="headerlink" href="#example-code" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">JSON Folder Sync</span>
+
+<span class="sd">Synchronize JSON files between a local directory and a LabArchives page.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    # Upload all JSON files from local folder to LabArchives page</span>
+<span class="sd">    python json_sync.py upload /path/to/json/folder &quot;Data/Results&quot; --notebook &quot;My Notebook&quot;</span>
+
+<span class="sd">    # Download all JSON entries from LabArchives page to local folder</span>
+<span class="sd">    python json_sync.py download &quot;Data/Results&quot; /path/to/output/folder --notebook &quot;My Notebook&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">labapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span><span class="p">,</span> <span class="n">InsertBehavior</span><span class="p">,</span> <span class="n">NotebookDirectory</span><span class="p">,</span> <span class="n">NotebookPage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">labapi.entry</span><span class="w"> </span><span class="kn">import</span> <span class="n">AttachmentEntry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">labapi.tree.mixins</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractTreeContainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">labapi.user</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_or_create_page</span><span class="p">(</span><span class="n">container</span><span class="p">:</span> <span class="n">AbstractTreeContainer</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NotebookPage</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Traverse a path in the notebook, creating directories as needed,</span>
+<span class="sd">    and returning the page at the end of the path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">segments</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+    <span class="n">curr</span> <span class="o">=</span> <span class="n">container</span>
+
+    <span class="c1"># Handle all but the last segment (directories)</span>
+    <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span><span class="o">.</span><span class="n">as_dir</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Creating directory: </span><span class="si">{</span><span class="n">segment</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">NotebookDirectory</span><span class="p">,</span> <span class="n">segment</span><span class="p">)</span>
+
+    <span class="c1"># Handle the last segment (the page)</span>
+    <span class="n">last_segment</span> <span class="o">=</span> <span class="n">segments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">curr</span><span class="p">[</span><span class="n">last_segment</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&#39; refers to a directory, but a page is required&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">as_page</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Creating page: </span><span class="si">{</span><span class="n">last_segment</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">curr</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">NotebookPage</span><span class="p">,</span> <span class="n">last_segment</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">upload_json_folder</span><span class="p">(</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span> <span class="n">notebook_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">page_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">local_folder</span><span class="p">:</span> <span class="n">Path</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Upload all JSON files from a local folder to a LabArchives page.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">local_folder</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: Local folder &#39;</span><span class="si">{</span><span class="n">local_folder</span><span class="si">}</span><span class="s2">&#39; does not exist&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">local_folder</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: &#39;</span><span class="si">{</span><span class="n">local_folder</span><span class="si">}</span><span class="s2">&#39; is not a directory&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Get the target page</span>
+    <span class="n">notebooks</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">notebooks</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">notebook</span> <span class="o">=</span> <span class="n">notebooks</span><span class="p">[</span><span class="n">notebook_name</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ensuring page path exists: </span><span class="si">{</span><span class="n">page_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="n">get_or_create_page</span><span class="p">(</span><span class="n">notebook</span><span class="p">,</span> <span class="n">page_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: Could not access or create path &#39;</span><span class="si">{</span><span class="n">page_path</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Find all JSON files</span>
+    <span class="n">json_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">local_folder</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">json_files</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No JSON files found in &#39;</span><span class="si">{</span><span class="n">local_folder</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">json_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> JSON file(s) to upload&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Upload each JSON file</span>
+    <span class="k">for</span> <span class="n">json_file</span> <span class="ow">in</span> <span class="n">json_files</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Uploading </span><span class="si">{</span><span class="n">json_file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="c1"># Create JSON entry</span>
+            <span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">create_json_entry</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✓&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✗ (Invalid JSON: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✗ (Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Upload complete! </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">json_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> files processed.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">download_json_entries</span><span class="p">(</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span> <span class="n">notebook_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">page_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">local_folder</span><span class="p">:</span> <span class="n">Path</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download all JSON entries from a LabArchives page to local files.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Create output folder if it doesn&#39;t exist</span>
+    <span class="n">local_folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Get the source page</span>
+    <span class="n">notebooks</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">notebooks</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">notebook</span> <span class="o">=</span> <span class="n">notebooks</span><span class="p">[</span><span class="n">notebook_name</span><span class="p">]</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="n">notebook</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">page_path</span><span class="p">)</span><span class="o">.</span><span class="n">as_page</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Error: Could not find notebook &#39;</span><span class="si">{</span><span class="n">notebook_name</span><span class="si">}</span><span class="s2">&#39; or page &#39;</span><span class="si">{</span><span class="n">page_path</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available notebooks: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">notebooks</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Find all JSON entries</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">entries</span>
+    <span class="n">json_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AttachmentEntry</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+        <span class="c1"># JSON entries are stored as attachments. We check both MIME type and filename.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">AttachmentEntry</span><span class="p">):</span>
+            <span class="n">attachment</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">content</span>
+            <span class="n">is_json_mime</span> <span class="o">=</span> <span class="n">attachment</span><span class="o">.</span><span class="n">mime_type</span> <span class="o">==</span> <span class="s2">&quot;application/json&quot;</span>
+            <span class="n">is_json_ext</span> <span class="o">=</span> <span class="n">attachment</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">is_json_mime</span> <span class="ow">or</span> <span class="n">is_json_ext</span><span class="p">:</span>
+                <span class="n">json_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">json_entries</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No JSON entries found on page &#39;</span><span class="si">{</span><span class="n">page_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">json_entries</span><span class="p">)</span><span class="si">}</span><span class="s2"> JSON entry/entries to download&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Download each JSON entry</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">json_entries</span><span class="p">:</span>
+        <span class="n">attachment</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">content</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">attachment</span><span class="o">.</span><span class="n">filename</span>
+        <span class="n">output_path</span> <span class="o">=</span> <span class="n">local_folder</span> <span class="o">/</span> <span class="n">filename</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloading </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Read JSON data from attachment</span>
+            <span class="n">attachment</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">attachment</span><span class="p">)</span>
+
+            <span class="c1"># Write to local file</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✓&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✗ (Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Download complete! </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">json_entries</span><span class="p">)</span><span class="si">}</span><span class="s2"> file(s) saved to &#39;</span><span class="si">{</span><span class="n">local_folder</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Sync JSON files between local folder and LabArchives page&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;action&quot;</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;upload&quot;</span><span class="p">,</span> <span class="s2">&quot;download&quot;</span><span class="p">],</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Action to perform: upload to LabArchives or download from LabArchives&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;source&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Source: local folder path (upload) or LabArchives page path (download)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;destination&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Destination: LabArchives page path (upload) or local folder path (download)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--notebook&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;-n&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the LabArchives notebook to use&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="c1"># Initialize client and authenticate</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Connecting to LabArchives...&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>  <span class="c1"># Loads credentials from .env</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Authenticating...&quot;</span><span class="p">)</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">default_authenticate</span><span class="p">()</span>  <span class="c1"># Opens browser for OAuth</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✓ Authenticated successfully&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Authentication error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Make sure you have a .env file with your credentials:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  ACCESS_KEYID=your_access_key_id&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  ACCESS_PWD=your_password&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Perform requested action</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;upload&quot;</span><span class="p">:</span>
+        <span class="n">local_folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">page_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">destination</span>
+        <span class="n">upload_json_folder</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">notebook</span><span class="p">,</span> <span class="n">page_path</span><span class="p">,</span> <span class="n">local_folder</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># download</span>
+        <span class="n">page_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">source</span>
+        <span class="n">local_folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">destination</span><span class="p">)</span>
+        <span class="n">download_json_entries</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">notebook</span><span class="p">,</span> <span class="n">page_path</span><span class="p">,</span> <span class="n">local_folder</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="usage-examples">
+<h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Link to this heading">#</a></h2>
+<p><strong>Upload JSON files to LabArchives:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Upload all JSON files from ./data to a page in LabArchives</span>
+python<span class="w"> </span>json_sync.py<span class="w"> </span>upload<span class="w"> </span>./data<span class="w"> </span><span class="s2">&quot;Experiments/2024/Data Analysis&quot;</span><span class="w"> </span>--notebook<span class="w"> </span><span class="s2">&quot;My Notebook&quot;</span>
+</pre></div>
+</div>
+<p><strong>Download JSON entries from LabArchives:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Download all JSON entries from a page to ./output</span>
+python<span class="w"> </span>json_sync.py<span class="w"> </span>download<span class="w"> </span><span class="s2">&quot;Experiments/2024/Data Analysis&quot;</span><span class="w"> </span>./output<span class="w"> </span>--notebook<span class="w"> </span><span class="s2">&quot;My Notebook&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h2>
+<p>This example requires a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file with your LabArchives credentials:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">API_URL</span><span class="o">=</span>https://api.labarchives.com
+<span class="nv">ACCESS_KEYID</span><span class="o">=</span>your_access_key_id
+<span class="nv">ACCESS_PWD</span><span class="o">=</span>your_password
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="../quick_start/first_calls.html#first-calls"><span class="std std-ref">Your First Entry</span></a> for more information on setting up credentials.</p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>JSON files are uploaded using the <a class="reference internal" href="../reference/generated/labapi.entry.collection.Entries.html#labapi.entry.collection.Entries.create_json_entry" title="labapi.entry.collection.Entries.create_json_entry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_json_entry()</span></code></a> method</p></li>
+<li><p>JSON entries are stored as attachments with <code class="docutils literal notranslate"><span class="pre">application/json</span></code> MIME type</p></li>
+<li><p>Invalid JSON files are skipped with an error message</p></li>
+<li><p>The script creates the output folder if it doesn’t exist during download</p></li>
+</ul>
+</section>
+<section id="enhancements">
+<h2>Enhancements<a class="headerlink" href="#enhancements" title="Link to this heading">#</a></h2>
+<p>You could enhance this example to:</p>
+<ol class="arabic simple">
+<li><p><strong>Implement diff/sync</strong>: Only upload changed files (compare timestamps or content hashes)</p></li>
+<li><p><strong>Handle subdirectories</strong>: Recursively process JSON files in subdirectories</p></li>
+<li><p><strong>Add filtering</strong>: Only sync files matching certain patterns</p></li>
+<li><p><strong>Add progress bars</strong>: Use <code class="docutils literal notranslate"><span class="pre">tqdm</span></code> for large file operations</p></li>
+<li><p><strong>Error recovery</strong>: Implement retry logic for failed uploads/downloads</p></li>
+</ol>
+</section>
+</section>
+
+</article><footer class="bz-article-footer">
+  
+  
+    <nav class="bz-related-pages" aria-label="Related pages navigation"><a class="bz-related-pages-previous" href="index.html" rel="prev">
+    <span>Previous</span><span class="bz-related-pages-title">Example Applications</span></a><a class="bz-related-pages-next" href="folder_download.html" rel="next">
+    <span>Next</span>
+    <span class="bz-related-pages-title">Folder Structure Download</span>
+  </a></nav>
+  
+
+</footer><aside class="bz-sidebar-secondary" data-drawer="bz-sidebar-secondary">
+  
+  
+    <nav class="bz-sidebar-toc" aria-label="Table of contents">
+  <p>On this page</p><ul>
+<li><a class="reference internal" href="#use-case">Use Case</a></li>
+<li><a class="reference internal" href="#example-code">Example Code</a></li>
+<li><a class="reference internal" href="#usage-examples">Usage Examples</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#notes">Notes</a></li>
+<li><a class="reference internal" href="#enhancements">Enhancements</a></li>
+</ul></nav>
+  
+    
+
+
+  
+    
+  
+    
+  
+
+</aside></main>
+  </div>
+<footer class="bz-footer">
+  <div class="bz-footer-copyright"><p class="bz-copyright">© Copyright 2026, Christoph Li and Joshua Lawrimore</p><p>
+    
+    
+    
+      Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/aksiome/breeze">Breeze theme</a>.
+    
+  </p>
+</div>
+</footer><a href="#" class="bz-back-to-top">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
+    </svg>
+    <span>Back to top</span>
+  </a>
+  <label class="bz-overlay bz-overlay-primary" for="bz-sidebar-primary"></label>
+  <label class="bz-overlay bz-overlay-secondary" for="bz-sidebar-secondary"></label>
+  <input type="checkbox" name="bz-sidebar-primary" id="bz-sidebar-primary" aria-label="Toggle section navigation">
+  <input type="checkbox" name="bz-sidebar-secondary" id="bz-sidebar-secondary" aria-label="Toggle table of contents"><script src="../_static/documentation_options.js?v=01f34227"></script><script src="../_static/doctools.js?v=fd6eb6e6"></script><script src="../_static/sphinx_highlight.js?v=6ffebe34"></script><script src="../_static/clipboard.min.js?v=a7894cd8"></script><script src="../_static/copybutton.js?v=f281be69"></script><script src="../_static/design-tabs.js?v=f930bc37"></script></body>
+</html>

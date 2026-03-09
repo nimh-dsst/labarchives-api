@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from labapi import Index, Notebook, NotebookPage
+from labapi import Index, Notebook, NotebookPage, NotebookDirectory
+from labapi.util import InsertBehavior
 from labapi.tree.mixins import (
     AbstractTreeContainer,
 )
@@ -44,6 +45,23 @@ class TestTreeMixinsIntegration:
         """Test traversing through a non-directory node."""
         with pytest.raises(RuntimeError, match="is not a directory"):
             notebook_tree.traverse("Test Page 1/Something")
+
+    def test_getitem_invalid_key_type_raises(self, notebook_tree: Notebook):
+        """Test __getitem__ raises TypeError for unsupported key types."""
+        with pytest.raises(TypeError, match="Invalid key type"):
+            notebook_tree[123]  # pyright: ignore[reportArgumentType]
+
+    def test_is_parent_of(self, notebook_tree: Notebook, notebooks):
+        """Test ancestor checks for nodes in the same and different roots."""
+        folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
+        page_a = notebook_tree.traverse("/Test Folder A/Dir1 Test Page A")
+        other_notebook = notebooks[Index.Id : "testnb2"]
+
+        assert notebook_tree.is_parent_of(folder_a)
+        assert notebook_tree.is_parent_of(page_a)
+        assert folder_a.is_parent_of(page_a)
+        assert not folder_a.is_parent_of(folder_a)
+        assert not notebook_tree.is_parent_of(other_notebook)
 
     def test_as_dir_success(self, notebook_tree: Notebook):
         """Test casting a directory node to AbstractTreeContainer."""
@@ -160,3 +178,129 @@ class TestTreeMixinsIntegration:
         pages = notebook_tree.enumerate_pages(max_depth=2)
         assert "Test Page 1" in pages
         assert "Test Folder A/Dir1 Test Page A" in pages
+
+    def test_create_page(self, client, notebook_tree: Notebook):
+        """Test creating a new page."""
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>new-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_page = notebook_tree.create(NotebookPage, "New Page")
+
+        assert isinstance(new_page, NotebookPage)
+        assert new_page.name == "New Page"
+        assert new_page.id == "new-page-id"
+        assert new_page in notebook_tree.children
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "New Page"
+        assert api_call[1]["is_folder"] == "false"
+
+    def test_create_directory(self, client, notebook_tree: Notebook):
+        """Test creating a new directory."""
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>new-dir-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_dir = notebook_tree.create(NotebookDirectory, "New Folder")
+
+        assert isinstance(new_dir, NotebookDirectory)
+        assert new_dir.name == "New Folder"
+        assert new_dir.id == "new-dir-id"
+        assert new_dir in notebook_tree.children
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "New Folder"
+        assert api_call[1]["is_folder"] == "true"
+
+    def test_create_nested_with_parents(self, client, notebook_tree: Notebook):
+        """Test creating a nested page with parents=True."""
+        # 1. Create parent folder "Parent"
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>parent-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+        # 2. Create child page "Child"
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>child-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_page = notebook_tree.create(NotebookPage, "Parent/Child", parents=True)
+
+        assert new_page.name == "Child"
+        assert new_page.parent.name == "Parent"
+        assert new_page.parent.parent is notebook_tree
+
+        # Verify API calls
+        # The recursive create first checks if "Parent" exists
+        # In this test, it doesn't, so it calls insert_node for "Parent"
+        # then it calls create on the new parent which checks if "Child" exists
+        # then it calls insert_node for "Child"
+
+        # We need to be careful with how many calls are made.
+        # notebook_tree.create(NotebookPage, "Parent/Child", parents=True)
+        #   -> path is ["Parent", "Child"]
+        #   -> len(path) != 1
+        #   -> self.create(NotebookDirectory, "Parent", parents=True, if_exists=Retain)
+        #      -> path is ["Parent"]
+        #      -> len(path) == 1
+        #      -> self["Parent"] -> returns []
+        #      -> insert_node "Parent" -> returns parent-id
+        #      -> returns new NotebookDirectory "Parent"
+        #   -> next_node.create(NotebookPage, ["Parent", "Child"], parents=True, if_exists=Raise)
+        #      -> path is ["Child"] (relative to next_node)
+        #      -> len(path) == 1
+        #      -> self["Child"] -> returns []
+        #      -> insert_node "Child" -> returns child-id
+        #      -> returns new NotebookPage "Child"
+
+        api_call1 = client.api_log
+        assert api_call1[0] == "tree_tools/insert_node"
+        assert api_call1[1]["display_text"] == "Parent"
+
+        api_call2 = client.api_log
+        assert api_call2[0] == "tree_tools/insert_node"
+        assert api_call2[1]["display_text"] == "Child"
+
+    def test_create_empty_path_raises(self, notebook_tree: Notebook):
+        """Test create rejects empty paths."""
+        with pytest.raises(ValueError, match="Path cannot be empty"):
+            notebook_tree.create(NotebookPage, "")
+
+    def test_create_nested_without_parents_raises(self, notebook_tree: Notebook):
+        """Test create rejects nested paths when parents=False."""
+        with pytest.raises(RuntimeError, match="parents=True"):
+            notebook_tree.create(NotebookPage, "Parent/Child", parents=False)
+
+    def test_create_if_exists_raise(self, notebook_tree: Notebook):
+        """Test InsertBehavior.Raise when node exists."""
+        with pytest.raises(RuntimeError, match="already exists"):
+            notebook_tree.create(
+                NotebookPage, "Test Page 1", if_exists=InsertBehavior.Raise
+            )
+
+    def test_create_if_exists_retain(self, notebook_tree: Notebook):
+        """Test InsertBehavior.Retain when node exists."""
+        existing_page = notebook_tree[Index.Id : "page-1"]
+        new_page = notebook_tree.create(
+            NotebookPage, "Test Page 1", if_exists=InsertBehavior.Retain
+        )
+
+        assert new_page is existing_page

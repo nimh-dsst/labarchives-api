@@ -117,23 +117,40 @@ class Entry(ABC, Generic[T]):
 
     @property
     def id(self):
-        """The ID of the entry."""
+        """The unique identifier of the entry.
+
+        :returns: The entry's ID as a string.
+        """
         return self._id
 
     @property
     @abstractmethod
     def content_type(self) -> str:
-        """The content type of the entry."""
+        """The content type identifier for the entry.
+
+        :returns: A string representing the entry's type (e.g., "text entry", "Attachment").
+        """
         raise NotImplementedError
 
     @property
     @abstractmethod
     def content(self) -> T:
-        """The content of the entry."""
+        """The content of the entry.
+
+        The specific type of the content depends on the entry type
+        (e.g., string for text entries, :class:`~labapi.entry.attachment.Attachment` for attachments).
+
+        :returns: The content of the entry.
+        """
         raise NotImplementedError
 
     @content.setter
     @abstractmethod
     def content(self, value: T) -> None:
-        """Setting the content of the entry"""
+        """Sets the content of the entry.
+
+        This operation typically updates the entry in LabArchives via an API call.
+
+        :param value: The new content for the entry.
+        """
         raise NotImplementedError

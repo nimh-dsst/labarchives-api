@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="CSV Table Upload/Download" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="examples/csv_table.html" />
+<meta property="og:site_name" content="labapi" />
+<meta property="og:description" content="This example demonstrates how to upload CSV files as rich text HTML tables in LabArchives, and download those tables back as CSV files. This is useful for displaying tabular data in a formatted, re..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_examples_csv_table_78743200.png" />
+<meta property="og:image:alt" content="This example demonstrates how to upload CSV files as rich text HTML tables in LabArchives, and download those tables back as CSV files. This is useful for displaying tabular data in a formatted, re..." />
+<meta name="description" content="This example demonstrates how to upload CSV files as rich text HTML tables in LabArchives, and download those tables back as CSV files. This is useful for displaying tabular data in a formatted, re..." />
+<meta name="twitter:card" content="summary_large_image" />
+<title>CSV Table Upload/Download - labapi 0.1.0 documentation</title><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Frequently Asked Questions" href="../faq.html"><link rel="prev" title="Folder Structure Download" href="folder_download.html"><script data-cfasync="false">(function(){
+    const m = localStorage.getItem("breeze-mode") || "auto";
+    const d = document.documentElement.dataset;
+    d.mode = m;
+    d.theme = m === "auto"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : m;
+  })();
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8e8a900e" /><link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" /><link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" /><link rel="stylesheet" type="text/css" href="../_static/styles/breeze.css?v=227fd4f7" /><script defer="defer" src="../_static/scripts/breeze.js?v=dac9f8c6"></script></head>
+<body>
+  
+  
+  <div class="bz-skip-to-content"><a href="#bz-main-content">Skip to main content</a></div><header class="bz-header-main">
+  <div class="bz-header-start"><a class="bz-header-brand" href="../index.html">
+  
+  
+  <span>labapi 0.1.0 documentation</span>
+</a>
+  </div>
+  <div class="bz-header-end"><div id="docsearch" class="bz-search-button">
+  <a
+    href="../search.html#q"
+    aria-label="Search the docs"
+    data-tooltip="Search the docs"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 -1 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </svg>
+    <span>Search</span>
+    <kbd>Ctrl+K</kbd>
+  </a>
+</div><div class="bz-theme-switcher">
+  <button aria-label="Switch theme" data-tooltip="Switch theme">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-light" fill="currentColor">
+      <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-dark" fill="currentColor">
+      <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+    </svg>
+  </button>
+</div>
+  </div>
+</header><nav class="bz-header-tabs" aria-label="Primary Navigation"><label
+  class="bz-sidebar-primary-toggle"
+  for="bz-sidebar-primary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle site navigation"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h12.5"
+    />
+  </svg>
+</label><ul><li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start</a></li><li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li><li class="toctree-l1 current"><a class="reference internal" href="index.html">Example Applications</a></li><li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently Asked Questions</a></li><li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li></ul><div class="bz-dropdown">
+    <button aria-haspopup="true" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <g
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </g>
+      </svg>
+    </button>
+    <ul role="menu" aria-hidden="true"></ul>
+  </div>
+</nav><hr class="bz-header-hr">
+  <div class="bz-content"><aside class="bz-sidebar-primary" data-drawer="bz-sidebar-primary">
+  
+  
+    <nav class="bz-sidebar-nav" aria-label="Section Navigation"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="json_sync.html">JSON Folder Sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="folder_download.html">Folder Structure Download</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CSV Table Upload/Download</a></li>
+</ul>
+</nav>
+  
+
+</aside><main id="bz-main-content"><header class="bz-article-header">
+  
+  
+    <nav class="bz-breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <li class="bz-breadcrumbs-home">
+      <a href="../index.html" aria-label="Home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8.543 2.232a.75.75 0 0 0-1.085 0l-5.25 5.5A.75.75 0 0 0 2.75 9H4v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 1 1 2 0v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V9h1.25a.75.75 0 0 0 .543-1.268l-5.25-5.5Z" />
+        </svg>
+      </a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="index.html">Example Applications</a>
+    </li><li class="bz-breadcrumbs-current">
+      <span>CSV Table Upload/Download</span>
+    </li>
+  </ol>
+</nav>
+  
+<label
+  class="bz-sidebar-secondary-toggle"
+  for="bz-sidebar-secondary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle table of contents"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75H20.25 M11.25 12H20.25 M7.75 17.25H20.25"
+    />
+  </svg>
+</label></header><article class="bz-article-main" role="main"><div class="bz-page-actions" role="group" aria-label="Page actions">
+  <button data-copy-source="../_sources/examples/csv_table.rst.txt">
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+    <span>Copy page</span>
+  </button>
+  <div class="bz-dropdown">
+    <button
+      aria-label="More actions"
+      aria-haspopup="true"
+      aria-expanded="false"
+    ></button>
+    <ul role="menu" aria-hidden="true">
+      <li>
+        <a href="#" role="menuitem" data-copy-source="../_sources/examples/csv_table.rst.txt">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+          <span>Copy page</span>
+        </a>
+      </li>
+      <li>
+        <a href="../_sources/examples/csv_table.rst.txt" role="menuitem" class="bz-page-actions-external" target="_blank" rel="noopener">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3a2 2 0 0 1 2-2h9.982a2 2 0 0 1 1.414.586l4.018 4.018A2 2 0 0 1 21 7.018V21a2 2 0 0 1-2 2H4.75a.75.75 0 0 1 0-1.5H19a.5.5 0 0 0 .5-.5V8.5h-4a2 2 0 0 1-2-2v-4H5a.5.5 0 0 0-.5.5v6.25a.75.75 0 0 1-1.5 0Zm12-.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 0-.146-.336l-4.018-4.018A.5.5 0 0 0 15 2.5Z"></path><path d="M4.53 12.24a.75.75 0 0 1-.039 1.06l-2.639 2.45 2.64 2.45a.75.75 0 1 1-1.022 1.1l-3.23-3a.75.75 0 0 1 0-1.1l3.23-3a.75.75 0 0 1 1.06.04Zm3.979 1.06a.75.75 0 1 1 1.02-1.1l3.231 3a.75.75 0 0 1 0 1.1l-3.23 3a.75.75 0 1 1-1.021-1.1l2.639-2.45-2.64-2.45Z"></path></svg>
+          <span>View source</span>
+        </a>
+      </li></ul>
+  </div>
+</div><section id="csv-table-upload-download">
+<span id="example-csv-table"></span><h1>CSV Table Upload/Download<a class="headerlink" href="#csv-table-upload-download" title="Link to this heading">#</a></h1>
+<p>This example demonstrates how to upload CSV files as rich text HTML tables in LabArchives,
+and download those tables back as CSV files. This is useful for displaying tabular data
+in a formatted, readable way while maintaining the ability to extract it back to CSV.</p>
+<section id="use-case">
+<h2>Use Case<a class="headerlink" href="#use-case" title="Link to this heading">#</a></h2>
+<p>This is useful for:</p>
+<ul class="simple">
+<li><p>Uploading experimental data tables for visual display in notebooks</p></li>
+<li><p>Creating formatted data tables that are readable in the web interface</p></li>
+<li><p>Maintaining the ability to extract tabular data back to CSV for analysis</p></li>
+<li><p>Documenting datasets with proper formatting and structure</p></li>
+<li><p>Sharing data tables with collaborators in a readable format</p></li>
+</ul>
+</section>
+<section id="how-it-works">
+<h2>How It Works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt><strong>Upload:</strong></dt><dd><ol class="arabic simple">
+<li><p>Read CSV file from disk</p></li>
+<li><p>Convert to HTML table with proper formatting</p></li>
+<li><p>Upload as a rich text entry to LabArchives</p></li>
+</ol>
+</dd>
+<dt><strong>Download:</strong></dt><dd><ol class="arabic simple">
+<li><p>Find text entries containing HTML tables</p></li>
+<li><p>Parse HTML tables back to structured data</p></li>
+<li><p>Write to CSV file</p></li>
+</ol>
+</dd>
+</dl>
+</section>
+<section id="example-code">
+<h2>Example Code<a class="headerlink" href="#example-code" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">CSV Table Upload/Download</span>
+
+<span class="sd">Upload CSV files as formatted HTML tables in LabArchives,</span>
+<span class="sd">and download HTML tables back as CSV files.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    # Upload CSV as HTML table</span>
+<span class="sd">    python csv_table.py upload data.csv &quot;Results/Table 1&quot; --notebook &quot;My Notebook&quot;</span>
+
+<span class="sd">    # Download HTML table as CSV</span>
+<span class="sd">    python csv_table.py download &quot;Results/Table 1&quot; output.csv --notebook &quot;My Notebook&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bs4</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeautifulSoup</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">labapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span><span class="p">,</span> <span class="n">NotebookDirectory</span><span class="p">,</span> <span class="n">NotebookPage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">labapi.entry</span><span class="w"> </span><span class="kn">import</span> <span class="n">TextEntry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">labapi.tree.mixins</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractTreeContainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">labapi.user</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_or_create_page</span><span class="p">(</span><span class="n">container</span><span class="p">:</span> <span class="n">AbstractTreeContainer</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NotebookPage</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Traverse a path in the notebook, creating directories as needed,</span>
+<span class="sd">    and returning the page at the end of the path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">segments</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+    <span class="n">curr</span> <span class="o">=</span> <span class="n">container</span>
+
+    <span class="c1"># Handle all but the last segment (directories)</span>
+    <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span><span class="o">.</span><span class="n">as_dir</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Creating directory: </span><span class="si">{</span><span class="n">segment</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">NotebookDirectory</span><span class="p">,</span> <span class="n">segment</span><span class="p">)</span>
+
+    <span class="c1"># Handle the last segment (the page)</span>
+    <span class="n">last_segment</span> <span class="o">=</span> <span class="n">segments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">curr</span><span class="p">[</span><span class="n">last_segment</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&#39; refers to a directory, but a page is required&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">as_page</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Creating page: </span><span class="si">{</span><span class="n">last_segment</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">curr</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">NotebookPage</span><span class="p">,</span> <span class="n">last_segment</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">csv_to_html_table</span><span class="p">(</span><span class="n">csv_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">has_header</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a CSV file to an HTML table.</span>
+
+<span class="sd">    :param csv_file: Path to the CSV file</span>
+<span class="sd">    :param has_header: Whether the first row is a header</span>
+<span class="sd">    :returns: HTML string containing the table</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">csv_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;p&gt;Empty CSV file&lt;/p&gt;&quot;</span>
+
+    <span class="n">html_parts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&lt;table&gt;&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Process header row</span>
+    <span class="k">if</span> <span class="n">has_header</span> <span class="ow">and</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">html_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  &lt;thead&gt;&quot;</span><span class="p">)</span>
+        <span class="n">html_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;    &lt;tr&gt;&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">html_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      &lt;th&gt;</span><span class="si">{</span><span class="n">cell</span><span class="si">}</span><span class="s2">&lt;/th&gt;&quot;</span><span class="p">)</span>
+        <span class="n">html_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;    &lt;/tr&gt;&quot;</span><span class="p">)</span>
+        <span class="n">html_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  &lt;/thead&gt;&quot;</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>  <span class="c1"># Remove header from data rows</span>
+
+    <span class="c1"># Process data rows</span>
+    <span class="k">if</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">html_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  &lt;tbody&gt;&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="n">html_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;    &lt;tr&gt;&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+                <span class="n">html_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      &lt;td&gt;</span><span class="si">{</span><span class="n">cell</span><span class="si">}</span><span class="s2">&lt;/td&gt;&quot;</span><span class="p">)</span>
+            <span class="n">html_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;    &lt;/tr&gt;&quot;</span><span class="p">)</span>
+        <span class="n">html_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  &lt;/tbody&gt;&quot;</span><span class="p">)</span>
+
+    <span class="n">html_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&lt;/table&gt;&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">html_parts</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">html_table_to_csv</span><span class="p">(</span><span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">output_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract HTML tables from HTML content and save as CSV.</span>
+
+<span class="sd">    :param html: HTML content containing tables</span>
+<span class="sd">    :param output_file: Path to save the CSV file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;table&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tables</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No tables found in HTML content&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tables</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tables</span><span class="p">)</span><span class="si">}</span><span class="s2"> tables, using the first one&quot;</span><span class="p">)</span>
+
+    <span class="n">table</span> <span class="o">=</span> <span class="n">tables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Extract header if present</span>
+    <span class="n">thead</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;thead&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">thead</span><span class="p">:</span>
+        <span class="n">header_row</span> <span class="o">=</span> <span class="n">thead</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;tr&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">header_row</span><span class="p">:</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="n">th</span><span class="o">.</span><span class="n">get_text</span><span class="p">(</span><span class="n">strip</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">header_row</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;th&quot;</span><span class="p">)]</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+
+    <span class="c1"># Extract body rows</span>
+    <span class="n">tbody</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;tbody&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tbody</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">tbody</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;tr&quot;</span><span class="p">):</span>
+            <span class="n">cells</span> <span class="o">=</span> <span class="p">[</span><span class="n">td</span><span class="o">.</span><span class="n">get_text</span><span class="p">(</span><span class="n">strip</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">td</span> <span class="ow">in</span> <span class="n">tr</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;td&quot;</span><span class="p">)]</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cells</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># No tbody, just get all tr elements after thead</span>
+        <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;tr&quot;</span><span class="p">):</span>
+            <span class="c1"># Skip if this is the header row we already processed</span>
+            <span class="k">if</span> <span class="n">thead</span> <span class="ow">and</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">thead</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;tr&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">cells</span> <span class="o">=</span> <span class="p">[</span><span class="n">td</span><span class="o">.</span><span class="n">get_text</span><span class="p">(</span><span class="n">strip</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">td</span> <span class="ow">in</span> <span class="n">tr</span><span class="o">.</span><span class="n">find_all</span><span class="p">([</span><span class="s2">&quot;td&quot;</span><span class="p">,</span> <span class="s2">&quot;th&quot;</span><span class="p">])]</span>
+            <span class="k">if</span> <span class="n">cells</span><span class="p">:</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cells</span><span class="p">)</span>
+
+    <span class="c1"># Write to CSV</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">upload_csv_as_table</span><span class="p">(</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span> <span class="n">notebook_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">csv_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">page_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">has_header</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Upload a CSV file as an HTML table to a LabArchives page.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">csv_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: CSV file &#39;</span><span class="si">{</span><span class="n">csv_file</span><span class="si">}</span><span class="s2">&#39; does not exist&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">notebooks</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">notebooks</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">notebook</span> <span class="o">=</span> <span class="n">notebooks</span><span class="p">[</span><span class="n">notebook_name</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ensuring page path exists: </span><span class="si">{</span><span class="n">page_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="n">get_or_create_page</span><span class="p">(</span><span class="n">notebook</span><span class="p">,</span> <span class="n">page_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: Could not access or create path &#39;</span><span class="si">{</span><span class="n">page_path</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converting &#39;</span><span class="si">{</span><span class="n">csv_file</span><span class="si">}</span><span class="s2">&#39; to HTML table...&quot;</span><span class="p">)</span>
+    <span class="n">html_table</span> <span class="o">=</span> <span class="n">csv_to_html_table</span><span class="p">(</span><span class="n">csv_file</span><span class="p">,</span> <span class="n">has_header</span><span class="o">=</span><span class="n">has_header</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Uploading table to &#39;</span><span class="si">{</span><span class="n">page_path</span><span class="si">}</span><span class="s2">&#39;...&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span><span class="s2">&quot;text entry&quot;</span><span class="p">,</span> <span class="n">html_table</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ Table uploaded successfully (Entry ID: </span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✗ Error uploading table: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">download_table_as_csv</span><span class="p">(</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="n">notebook_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">page_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">output_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">entry_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download an HTML table from a LabArchives page as a CSV file.&quot;&quot;&quot;</span>
+
+    <span class="n">notebooks</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">notebooks</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">notebook</span> <span class="o">=</span> <span class="n">notebooks</span><span class="p">[</span><span class="n">notebook_name</span><span class="p">]</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="n">notebook</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">page_path</span><span class="p">)</span><span class="o">.</span><span class="n">as_page</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Error: Could not find notebook &#39;</span><span class="si">{</span><span class="n">notebook_name</span><span class="si">}</span><span class="s2">&#39; or page &#39;</span><span class="si">{</span><span class="n">page_path</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available notebooks: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">notebooks</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">entries</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">entries</span>
+
+    <span class="c1"># Find text entries that contain tables</span>
+    <span class="n">table_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">TextEntry</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">TextEntry</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;&lt;table&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">table_entries</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No table entries found on page &#39;</span><span class="si">{</span><span class="n">page_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Note: Only text entries containing &lt;table&gt; tags are considered&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">table_entries</span><span class="p">)</span><span class="si">}</span><span class="s2"> entry/entries with tables&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Select entry</span>
+    <span class="k">if</span> <span class="n">entry_index</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Use the most recent table entry</span>
+        <span class="n">entry_idx</span><span class="p">,</span> <span class="n">entry</span> <span class="o">=</span> <span class="n">table_entries</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using most recent table entry (entry </span><span class="si">{</span><span class="n">entry_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">entry_index</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Error: Entry index </span><span class="si">{</span><span class="n">entry_index</span><span class="si">}</span><span class="s2"> out of range (page has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span><span class="si">}</span><span class="s2"> entries)&quot;</span>
+            <span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">entries</span><span class="p">[</span><span class="n">entry_index</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">TextEntry</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: Entry </span><span class="si">{</span><span class="n">entry_index</span><span class="si">}</span><span class="s2"> is not a text entry&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extracting table from entry...&quot;</span><span class="p">)</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="n">html_table_to_csv</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ Table saved to &#39;</span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✗ Failed to extract table&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Upload CSV files as HTML tables or download HTML tables as CSV&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;upload&quot;</span><span class="p">,</span> <span class="s2">&quot;download&quot;</span><span class="p">],</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Action to perform&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;CSV file (upload) or LabArchives page path (download)&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;LabArchives page path (upload) or output CSV file (download)&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--notebook&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;-n&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the LabArchives notebook to use&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--entry-index&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Entry index to download (default: most recent table entry)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--no-header&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;CSV file has no header row&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="c1"># Initialize client and authenticate</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Connecting to LabArchives...&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>  <span class="c1"># Loads credentials from .env</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Authenticating...&quot;</span><span class="p">)</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">default_authenticate</span><span class="p">()</span>  <span class="c1"># Opens browser for OAuth</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✓ Authenticated successfully&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Authentication error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Make sure you have a .env file with your credentials:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  ACCESS_KEYID=your_access_key_id&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  ACCESS_PWD=your_password&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Perform requested action</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;upload&quot;</span><span class="p">:</span>
+        <span class="n">csv_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">page_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">target</span>
+        <span class="n">upload_csv_as_table</span><span class="p">(</span>
+            <span class="n">user</span><span class="p">,</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">notebook</span><span class="p">,</span>
+            <span class="n">csv_file</span><span class="p">,</span>
+            <span class="n">page_path</span><span class="p">,</span>
+            <span class="n">has_header</span><span class="o">=</span><span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">no_header</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># download</span>
+        <span class="n">page_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span>
+        <span class="n">output_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="n">download_table_as_csv</span><span class="p">(</span>
+            <span class="n">user</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">notebook</span><span class="p">,</span> <span class="n">page_path</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">entry_index</span>
+        <span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="usage-examples">
+<h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Link to this heading">#</a></h2>
+<p><strong>Upload a CSV file as a table:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Basic upload</span>
+python<span class="w"> </span>csv_table.py<span class="w"> </span>upload<span class="w"> </span>data.csv<span class="w"> </span><span class="s2">&quot;Experiments/Results&quot;</span><span class="w"> </span>--notebook<span class="w"> </span><span class="s2">&quot;My Notebook&quot;</span>
+
+<span class="c1"># Upload CSV without header row</span>
+python<span class="w"> </span>csv_table.py<span class="w"> </span>upload<span class="w"> </span>data.csv<span class="w"> </span><span class="s2">&quot;Experiments/Results&quot;</span><span class="w"> </span>--notebook<span class="w"> </span><span class="s2">&quot;My Notebook&quot;</span><span class="w"> </span>--no-header
+</pre></div>
+</div>
+<p><strong>Download a table as CSV:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Download the most recent table from a page</span>
+python<span class="w"> </span>csv_table.py<span class="w"> </span>download<span class="w"> </span><span class="s2">&quot;Experiments/Results&quot;</span><span class="w"> </span>output.csv<span class="w"> </span>--notebook<span class="w"> </span><span class="s2">&quot;My Notebook&quot;</span>
+
+<span class="c1"># Download a specific entry by index (0-based)</span>
+python<span class="w"> </span>csv_table.py<span class="w"> </span>download<span class="w"> </span><span class="s2">&quot;Experiments/Results&quot;</span><span class="w"> </span>output.csv<span class="w"> </span>--notebook<span class="w"> </span><span class="s2">&quot;My Notebook&quot;</span><span class="w"> </span>--entry-index<span class="w"> </span><span class="m">2</span>
+</pre></div>
+</div>
+</section>
+<section id="example-csv-input">
+<h2>Example CSV Input<a class="headerlink" href="#example-csv-input" title="Link to this heading">#</a></h2>
+<p>Given this CSV file (<code class="docutils literal notranslate"><span class="pre">data.csv</span></code>):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Experiment,Temperature,Pressure,Result
+Trial 1,25.0,101.3,Success
+Trial 2,30.0,101.3,Success
+Trial 3,35.0,102.1,Failure
+</pre></div>
+</div>
+<p>The script will generate this HTML table:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">table</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">thead</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">th</span><span class="p">&gt;</span>Experiment<span class="p">&lt;/</span><span class="nt">th</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">th</span><span class="p">&gt;</span>Temperature<span class="p">&lt;/</span><span class="nt">th</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">th</span><span class="p">&gt;</span>Pressure<span class="p">&lt;/</span><span class="nt">th</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">th</span><span class="p">&gt;</span>Result<span class="p">&lt;/</span><span class="nt">th</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">thead</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">tbody</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>Trial 1<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>25.0<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>101.3<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>Success<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>Trial 2<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>30.0<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>101.3<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>Success<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>Trial 3<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>35.0<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>102.1<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>Failure<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">tbody</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">table</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>The table will be displayed with LabArchives’ default styling.</p>
+</section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h2>
+<p>This example requires the <code class="docutils literal notranslate"><span class="pre">beautifulsoup4</span></code> package for HTML parsing:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>beautifulsoup4
+</pre></div>
+</div>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h2>
+<p>This example requires a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file with your LabArchives credentials:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">API_URL</span><span class="o">=</span>https://api.labarchives.com
+<span class="nv">ACCESS_KEYID</span><span class="o">=</span>your_access_key_id
+<span class="nv">ACCESS_PWD</span><span class="o">=</span>your_password
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="../quick_start/first_calls.html#first-calls"><span class="std std-ref">Your First Entry</span></a> for more information on setting up credentials.</p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Tables are uploaded as rich text entries, making them readable in the LabArchives web interface</p></li>
+<li><p>Tables are rendered with LabArchives’ default styling (no inline CSS)</p></li>
+<li><p>The script preserves table structure and can round-trip CSV → HTML → CSV</p></li>
+<li><p>Multiple tables on one page are supported; by default, the download uses the most recent table</p></li>
+<li><p>Empty cells in CSV files are preserved in the HTML table</p></li>
+<li><p>The script handles CSV files with or without header rows</p></li>
+</ul>
+</section>
+<section id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Cell formatting (bold, italic, colors) in existing tables may be lost during CSV export</p></li>
+<li><p>Complex nested tables are not supported</p></li>
+<li><p>Only the first table is extracted if an entry contains multiple tables</p></li>
+<li><p>CSV files with special characters should use UTF-8 encoding</p></li>
+</ul>
+</section>
+<section id="enhancements">
+<h2>Enhancements<a class="headerlink" href="#enhancements" title="Link to this heading">#</a></h2>
+<p>You could enhance this example to:</p>
+<ol class="arabic simple">
+<li><p><strong>Support multiple tables</strong>: Export all tables from a page to separate CSV files</p></li>
+<li><p><strong>Support merged cells</strong>: Handle colspan and rowspan attributes</p></li>
+<li><p><strong>Add data validation</strong>: Validate CSV structure before upload</p></li>
+<li><p><strong>Support Excel files</strong>: Read from and write to XLSX format</p></li>
+<li><p><strong>Add chart generation</strong>: Create charts from CSV data and upload as images</p></li>
+<li><p><strong>Add table captions</strong>: Support HTML caption elements for table titles</p></li>
+</ol>
+</section>
+</section>
+
+</article><footer class="bz-article-footer">
+  
+  
+    <nav class="bz-related-pages" aria-label="Related pages navigation"><a class="bz-related-pages-previous" href="folder_download.html" rel="prev">
+    <span>Previous</span><span class="bz-related-pages-title">Folder Structure Download</span></a><a class="bz-related-pages-next" href="../faq.html" rel="next">
+    <span>Next</span>
+    <span class="bz-related-pages-title">Frequently Asked Questions</span>
+  </a></nav>
+  
+
+</footer><aside class="bz-sidebar-secondary" data-drawer="bz-sidebar-secondary">
+  
+  
+    <nav class="bz-sidebar-toc" aria-label="Table of contents">
+  <p>On this page</p><ul>
+<li><a class="reference internal" href="#use-case">Use Case</a></li>
+<li><a class="reference internal" href="#how-it-works">How It Works</a></li>
+<li><a class="reference internal" href="#example-code">Example Code</a></li>
+<li><a class="reference internal" href="#usage-examples">Usage Examples</a></li>
+<li><a class="reference internal" href="#example-csv-input">Example CSV Input</a></li>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#notes">Notes</a></li>
+<li><a class="reference internal" href="#limitations">Limitations</a></li>
+<li><a class="reference internal" href="#enhancements">Enhancements</a></li>
+</ul></nav>
+  
+    
+
+
+  
+    
+  
+    
+  
+
+</aside></main>
+  </div>
+<footer class="bz-footer">
+  <div class="bz-footer-copyright"><p class="bz-copyright">© Copyright 2026, Christoph Li and Joshua Lawrimore</p><p>
+    
+    
+    
+      Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/aksiome/breeze">Breeze theme</a>.
+    
+  </p>
+</div>
+</footer><a href="#" class="bz-back-to-top">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
+    </svg>
+    <span>Back to top</span>
+  </a>
+  <label class="bz-overlay bz-overlay-primary" for="bz-sidebar-primary"></label>
+  <label class="bz-overlay bz-overlay-secondary" for="bz-sidebar-secondary"></label>
+  <input type="checkbox" name="bz-sidebar-primary" id="bz-sidebar-primary" aria-label="Toggle section navigation">
+  <input type="checkbox" name="bz-sidebar-secondary" id="bz-sidebar-secondary" aria-label="Toggle table of contents"><script src="../_static/documentation_options.js?v=01f34227"></script><script src="../_static/doctools.js?v=fd6eb6e6"></script><script src="../_static/sphinx_highlight.js?v=6ffebe34"></script><script src="../_static/clipboard.min.js?v=a7894cd8"></script><script src="../_static/copybutton.js?v=f281be69"></script><script src="../_static/design-tabs.js?v=f930bc37"></script></body>
+</html>

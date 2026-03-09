@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8"><title>labapi.tree.mixins - labapi 0.1.0 documentation</title><link rel="index" title="Index" href="../../../genindex.html"><link rel="search" title="Search" href="../../../search.html"><script data-cfasync="false">(function(){
+    const m = localStorage.getItem("breeze-mode") || "auto";
+    const d = document.documentElement.dataset;
+    d.mode = m;
+    d.theme = m === "auto"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : m;
+  })();
+  </script><link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8e8a900e" /><link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" /><link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" /><link rel="stylesheet" type="text/css" href="../../../_static/styles/breeze.css?v=227fd4f7" /><script defer="defer" src="../../../_static/scripts/breeze.js?v=dac9f8c6"></script></head>
+<body>
+  
+  
+  <div class="bz-skip-to-content"><a href="#bz-main-content">Skip to main content</a></div><header class="bz-header-main">
+  <div class="bz-header-start"><a class="bz-header-brand" href="../../../index.html">
+  
+  
+  <span>labapi 0.1.0 documentation</span>
+</a>
+  </div>
+  <div class="bz-header-end"><div id="docsearch" class="bz-search-button">
+  <a
+    href="../../../search.html#q"
+    aria-label="Search the docs"
+    data-tooltip="Search the docs"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 -1 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </svg>
+    <span>Search</span>
+    <kbd>Ctrl+K</kbd>
+  </a>
+</div><div class="bz-theme-switcher">
+  <button aria-label="Switch theme" data-tooltip="Switch theme">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-light" fill="currentColor">
+      <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-dark" fill="currentColor">
+      <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+    </svg>
+  </button>
+</div>
+  </div>
+</header><nav class="bz-header-tabs" aria-label="Primary Navigation"><label
+  class="bz-sidebar-primary-toggle"
+  for="bz-sidebar-primary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle site navigation"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h12.5"
+    />
+  </svg>
+</label><ul><li class="toctree-l1"><a class="reference internal" href="../../../quick_start/index.html">Quick Start</a></li><li class="toctree-l1"><a class="reference internal" href="../../../guide/index.html">User Guide</a></li><li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Example Applications</a></li><li class="toctree-l1"><a class="reference internal" href="../../../faq.html">Frequently Asked Questions</a></li><li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">API Reference</a></li></ul><div class="bz-dropdown">
+    <button aria-haspopup="true" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <g
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </g>
+      </svg>
+    </button>
+    <ul role="menu" aria-hidden="true"></ul>
+  </div>
+</nav><hr class="bz-header-hr">
+  <div class="bz-content"><main id="bz-main-content"><header class="bz-article-header">
+  
+  
+    <nav class="bz-breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <li class="bz-breadcrumbs-home">
+      <a href="../../../index.html" aria-label="Home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8.543 2.232a.75.75 0 0 0-1.085 0l-5.25 5.5A.75.75 0 0 0 2.75 9H4v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 1 1 2 0v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V9h1.25a.75.75 0 0 0 .543-1.268l-5.25-5.5Z" />
+        </svg>
+      </a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="../../index.html">Module code</a>
+    </li><li class="bz-breadcrumbs-current">
+      <span>labapi.tree.mixins</span>
+    </li>
+  </ol>
+</nav>
+  
+<label
+  class="bz-sidebar-secondary-toggle"
+  for="bz-sidebar-secondary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle table of contents"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75H20.25 M11.25 12H20.25 M7.75 17.25H20.25"
+    />
+  </svg>
+</label></header><article class="bz-article-main" role="main"><h1>Source code for labapi.tree.mixins</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tree Mixins Module.</span>
+
+<span class="sd">This module defines abstract base classes and mixins that form the hierarchical</span>
+<span class="sd">structure of LabArchives notebooks, directories, and pages. These classes</span>
+<span class="sd">provide common functionalities and properties for tree nodes and containers.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ItemsView</span><span class="p">,</span>
+    <span class="n">Iterator</span><span class="p">,</span>
+    <span class="n">KeysView</span><span class="p">,</span>
+    <span class="n">Mapping</span><span class="p">,</span>
+    <span class="n">MutableSequence</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">ValuesView</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">overload</span><span class="p">,</span> <span class="n">override</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Type</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">labapi.util</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">IdIndex</span><span class="p">,</span>
+    <span class="n">IdOrNameIndex</span><span class="p">,</span>
+    <span class="n">Index</span><span class="p">,</span>
+    <span class="n">NameIndex</span><span class="p">,</span>
+    <span class="n">extract_etree</span><span class="p">,</span>
+    <span class="n">to_bool</span><span class="p">,</span>
+    <span class="n">InsertBehavior</span><span class="p">,</span>
+    <span class="n">NotebookPath</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">labapi.user</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.directory</span><span class="w"> </span><span class="kn">import</span> <span class="n">NotebookDirectory</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.page</span><span class="w"> </span><span class="kn">import</span> <span class="n">NotebookPage</span>
+
+
+<div class="viewcode-block" id="HasNameMixin">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.HasNameMixin.html#labapi.tree.mixins.HasNameMixin">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HasNameMixin</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A mixin class that provides a `name` attribute for tree nodes.</span>
+
+<span class="sd">    Classes inheriting from this mixin are expected to have a `_name` instance</span>
+<span class="sd">    variable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="HasNameMixin.__init__">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.HasNameMixin.html#labapi.tree.mixins.HasNameMixin.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the HasNameMixin with a given name.</span>
+
+<span class="sd">        :param name: The name of the tree node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The name of the tree node.</span>
+
+<span class="sd">        :returns: The name of the node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+
+
+
+<div class="viewcode-block" id="AbstractBaseTreeNode">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbstractBaseTreeNode</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">HasNameMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for any node within the LabArchives tree structure.</span>
+
+<span class="sd">    This class provides fundamental properties and methods common to all</span>
+<span class="sd">    tree nodes, such as ID, name, references to parent and root, and the</span>
+<span class="sd">    associated user.</span>
+
+<span class="sd">    :param tree_id: The unique identifier for this node within the LabArchives tree.</span>
+<span class="sd">    :param name: The display name of the node.</span>
+<span class="sd">    :param root: The root node of the tree (e.g., the Notebook).</span>
+<span class="sd">    :param parent: The parent node of this node in the tree.</span>
+<span class="sd">    :param user: The authenticated user associated with this node.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AbstractBaseTreeNode.__init__">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tree_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">root</span><span class="p">:</span> <span class="n">AbstractTreeContainer</span><span class="p">,</span>
+        <span class="n">parent</span><span class="p">:</span> <span class="n">AbstractTreeContainer</span><span class="p">,</span>
+        <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="p">:</span> <span class="n">AbstractTreeContainer</span> <span class="o">=</span> <span class="n">root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">:</span> <span class="n">AbstractTreeContainer</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tree_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">tree_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user</span> <span class="o">=</span> <span class="n">user</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">root</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractTreeContainer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The root node of the tree (e.g., the Notebook).</span>
+
+<span class="sd">        :returns: The root tree container.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractTreeContainer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The parent node of this node in the tree.</span>
+
+<span class="sd">        :returns: The parent tree container.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">user</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">User</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The authenticated user associated with this node.</span>
+
+<span class="sd">        :returns: The user object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The unique identifier of the node.</span>
+
+<span class="sd">        :returns: The node&#39;s ID.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tree_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tree_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The unique identifier for this node within the LabArchives tree.</span>
+
+<span class="sd">        This is often the same as `id` but can be used to distinguish if needed.</span>
+
+<span class="sd">        :returns: The tree ID of the node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree_id</span>
+
+<div class="viewcode-block" id="AbstractBaseTreeNode.is_dir">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode.is_dir">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Method to determine if the node is a directory.</span>
+
+<span class="sd">        :returns: True if the node is a directory, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="AbstractBaseTreeNode.refresh">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode.refresh">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refreshes the node&#39;s data from the LabArchives API.</span>
+
+<span class="sd">        This method updates the node&#39;s properties (such as name, ID, and children)</span>
+<span class="sd">        by fetching the latest data from the server. This is useful when the</span>
+<span class="sd">        node&#39;s state may have changed externally.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="AbstractBaseTreeNode.traverse">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode.traverse">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">traverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">NotebookPath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractBaseTreeNode</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Traverses the notebook&#39;s tree structure to find a node by its path.</span>
+
+<span class="sd">        String path segments should be separated by &#39;/&#39;. Each segment is treated</span>
+<span class="sd">        as a name to look up in the current container. Paths starting with &#39;/&#39;</span>
+<span class="sd">        are absolute (relative to the notebook root), while paths without a</span>
+<span class="sd">        leading &#39;/&#39; are relative to the current container.</span>
+
+<span class="sd">        Special path segments:</span>
+<span class="sd">        - &#39;..&#39; navigates to the parent container</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           - When multiple children have the same name, this method returns the first match.</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">           Nodes with names that are literally &#39;..&#39; cannot be accessed via</span>
+<span class="sd">           this method, as &#39;..&#39; is reserved for parent navigation.</span>
+
+<span class="sd">        :param path: The slash-separated path to the desired node (e.g., &quot;My Folder/My Page&quot; or &quot;/Folder/Subfolder/Page&quot;).</span>
+<span class="sd">        :returns: The :class:`AbstractTreeContainer` or :class:`AbstractTreeNode` found at the specified path.</span>
+<span class="sd">        :raises RuntimeError: If a segment in the path does not lead to a directory.</span>
+<span class="sd">        :raises KeyError: If a node at any segment of the path is not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO rewrite to use NotebookPath (or str that is converted to NotebookPath internally)</span>
+
+        <span class="n">canonical</span> <span class="o">=</span> <span class="n">NotebookPath</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">path</span>
+        <span class="n">canonical</span> <span class="o">=</span> <span class="n">canonical</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">NotebookPath</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+        <span class="n">curr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span>
+
+        <span class="n">parsed_segments</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">canonical</span><span class="p">:</span>
+            <span class="n">parsed_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">segment</span> <span class="o">==</span> <span class="s2">&quot;..&quot;</span><span class="p">:</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">.</span><span class="n">parent</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">curr</span><span class="p">,</span> <span class="n">AbstractTreeContainer</span><span class="p">):</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parsed_segments</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not a directory&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">curr</span></div>
+
+
+<div class="viewcode-block" id="AbstractBaseTreeNode.as_dir">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode.as_dir">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractTreeContainer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Casts this node to an :class:`AbstractTreeContainer` if it is a directory.</span>
+
+<span class="sd">        This method provides a convenient way to perform directory-specific</span>
+<span class="sd">        operations on a node after checking its type, with static type</span>
+<span class="sd">        checking support.</span>
+
+<span class="sd">        :returns: The node cast to an :class:`AbstractTreeContainer`.</span>
+<span class="sd">        :raises TypeError: If the node is not a directory (i.e., `is_dir()` returns `False`).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">AbstractTreeContainer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Node is not a directory&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbstractBaseTreeNode.as_page">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractBaseTreeNode.html#labapi.tree.mixins.AbstractBaseTreeNode.as_page">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_page</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NotebookPage</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Casts this node to a :class:`NotebookPage` if it is a page.</span>
+
+<span class="sd">        This method provides a convenient way to perform page-specific</span>
+<span class="sd">        operations on a node after checking its type, with static type</span>
+<span class="sd">        checking support.</span>
+
+<span class="sd">        :returns: The node cast to a :class:`NotebookPage`.</span>
+<span class="sd">        :raises TypeError: If the node is not a page (i.e., `is_dir()` returns `True`).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">page</span>
+
+            <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">NotebookPage</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Node is not a page&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AbstractTreeNode">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeNode.html#labapi.tree.mixins.AbstractTreeNode">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbstractTreeNode</span><span class="p">(</span><span class="n">AbstractBaseTreeNode</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for a non-container node within the LabArchives tree structure.</span>
+
+<span class="sd">    This class extends :class:`AbstractBaseTreeNode` with functionalities for</span>
+<span class="sd">    modifying the node&#39;s name, copying, moving, and deleting the node.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@HasNameMixin</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the name of the tree node.</span>
+
+<span class="sd">        This operation updates the node&#39;s name in LabArchives via an API call.</span>
+
+<span class="sd">        :param value: The new name for the node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">api_get</span><span class="p">(</span>
+            <span class="s2">&quot;tree_tools/update_node&quot;</span><span class="p">,</span>
+            <span class="n">nbid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">tree_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tree_id</span><span class="p">,</span>
+            <span class="n">display_text</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="AbstractTreeNode.copy_to">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeNode.html#labapi.tree.mixins.AbstractTreeNode.copy_to">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">AbstractTreeContainer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Method to copy this node to a specified destination container.</span>
+
+<span class="sd">        :param destination: The target container to copy the node to.</span>
+<span class="sd">        :returns: A new instance of the copied node in the destination.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeNode.move_to">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeNode.html#labapi.tree.mixins.AbstractTreeNode.move_to">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">move_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">AbstractTreeContainer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Moves this node to a specified destination container.</span>
+
+<span class="sd">        This operation updates the node&#39;s parent in LabArchives via an API call</span>
+<span class="sd">        and updates the local tree structure.</span>
+
+<span class="sd">        :param destination: The target container to move the node to.</span>
+<span class="sd">        :returns: The instance of the moved node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user</span><span class="o">.</span><span class="n">api_get</span><span class="p">(</span>
+            <span class="s2">&quot;tree_tools/update_node&quot;</span><span class="p">,</span>
+            <span class="n">nbid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">tree_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tree_id</span><span class="p">,</span>
+            <span class="n">parent_tree_id</span><span class="o">=</span><span class="n">destination</span><span class="o">.</span><span class="n">tree_id</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span>  <span class="c1"># pyright: ignore[reportPrivateUsage]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="p">]</span>  <span class="c1"># This removes current node from old parent in-place</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="n">destination</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>  <span class="c1"># pyright: ignore[reportPrivateUsage]</span>
+        <span class="c1"># This adds current node to new parent in-place</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeNode.delete">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeNode.html#labapi.tree.mixins.AbstractTreeNode.delete">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deletes this node by moving it to a special &quot;API Deleted Items&quot; directory.</span>
+
+<span class="sd">        If the &quot;API Deleted Items&quot; directory does not exist, it will be created.</span>
+<span class="sd">        The node&#39;s name will be updated to reflect its deletion time.</span>
+
+<span class="sd">        :returns: The instance of the deleted node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># XXX: should the creation of the deleted directory be singletoned by the Client</span>
+        <span class="c1"># on its instantiation into a Notebook?</span>
+        <span class="n">api_deleted_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">[</span><span class="n">Index</span><span class="o">.</span><span class="n">Name</span> <span class="p">:</span> <span class="s2">&quot;API Deleted Items&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">api_deleted_items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">.directory</span><span class="w"> </span><span class="kn">import</span> <span class="n">NotebookDirectory</span>
+
+            <span class="n">api_deleted_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="n">NotebookDirectory</span><span class="p">,</span> <span class="s2">&quot;API Deleted Items&quot;</span><span class="p">,</span> <span class="n">if_exists</span><span class="o">=</span><span class="n">InsertBehavior</span><span class="o">.</span><span class="n">Retain</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">api_deleted_items</span> <span class="o">=</span> <span class="n">api_deleted_items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">api_deleted_items</span><span class="p">,</span> <span class="n">AbstractTreeContainer</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> - Deleted at </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">api_deleted_items</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+</div>
+
+
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">AbstractTreeNode</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="AbstractTreeContainer">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbstractTreeContainer</span><span class="p">(</span>
+    <span class="n">AbstractBaseTreeNode</span><span class="p">,</span>
+    <span class="n">Mapping</span><span class="p">[</span><span class="n">IdOrNameIndex</span><span class="p">,</span> <span class="n">AbstractBaseTreeNode</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">AbstractBaseTreeNode</span><span class="p">]],</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for a tree node that can contain other tree nodes (e.g., Notebooks, Directories).</span>
+
+<span class="sd">    This class extends :class:`AbstractBaseTreeNode` and implements `collections.abc.Mapping`</span>
+<span class="sd">    to allow access to its children by ID or name. It provides methods for managing</span>
+<span class="sd">    its children, such as creating new pages or directories.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AbstractTreeContainer.__init__">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tree_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">root</span><span class="p">:</span> <span class="n">AbstractTreeContainer</span><span class="p">,</span>
+        <span class="n">parent</span><span class="p">:</span> <span class="n">AbstractTreeContainer</span><span class="p">,</span>
+        <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes an AbstractTreeContainer.</span>
+
+<span class="sd">        :param tree_id: The unique identifier for this container within the LabArchives tree.</span>
+<span class="sd">        :param name: The display name of the container.</span>
+<span class="sd">        :param root: The root node of the tree (e.g., the Notebook).</span>
+<span class="sd">        :param parent: The parent node of this container in the tree.</span>
+<span class="sd">        :param user: The authenticated user associated with this container.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="n">AbstractTreeNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_populated</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">AbstractTreeNode</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A sequence of the direct children nodes within this container.</span>
+
+<span class="sd">        :returns: A sequence of :class:`AbstractTreeNode` objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_populated</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_populated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensures that the children of this container have been loaded from the API.</span>
+
+<span class="sd">        If the children have not been loaded yet, it makes an API call to</span>
+<span class="sd">        retrieve the tree level and populates the `_children` list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">directory</span><span class="p">,</span> <span class="n">page</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_populated</span><span class="p">:</span>
+            <span class="n">xml_tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">api_get</span><span class="p">(</span>
+                <span class="s2">&quot;tree_tools/get_tree_level&quot;</span><span class="p">,</span>
+                <span class="n">nbid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">parent_tree_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tree_id</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">nodes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AbstractTreeNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">subtree</span> <span class="ow">in</span> <span class="n">xml_tree</span><span class="o">.</span><span class="n">iterfind</span><span class="p">(</span><span class="s2">&quot;.//level-node&quot;</span><span class="p">):</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">extract_etree</span><span class="p">(</span>
+                    <span class="n">subtree</span><span class="p">,</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;is-page&quot;</span><span class="p">:</span> <span class="n">to_bool</span><span class="p">,</span>
+                        <span class="s2">&quot;tree-id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                        <span class="s2">&quot;display-text&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">)</span>  <span class="c1"># TODO do we want to handle errors here?</span>
+
+                <span class="n">args</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">node</span><span class="p">[</span><span class="s2">&quot;tree-id&quot;</span><span class="p">],</span>
+                    <span class="n">node</span><span class="p">[</span><span class="s2">&quot;display-text&quot;</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_user</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;is-page&quot;</span><span class="p">]:</span>
+                    <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">NotebookPage</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">directory</span><span class="o">.</span><span class="n">NotebookDirectory</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="n">nodes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_populated</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of children in this container.</span>
+
+<span class="sd">        :returns: The count of direct child nodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_populated</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An iterator over the names of the children in this container.</span>
+
+<span class="sd">        :returns: An iterator yielding name strings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AbstractTreeContainer.keys">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.keys">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KeysView</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A view of the names of the children within this container.</span>
+
+<span class="sd">        :returns: A keys view of child names.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_populated</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">KeysView</span><span class="p">({</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeContainer.items">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.items">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ItemsView</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AbstractBaseTreeNode</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A view of the names and child nodes within this container.</span>
+
+<span class="sd">        :returns: An items view of (name, node) pairs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_populated</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">ItemsView</span><span class="p">({</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeContainer.values">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.values">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValuesView</span><span class="p">[</span><span class="n">AbstractBaseTreeNode</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A view of the child nodes within this container.</span>
+
+<span class="sd">        :returns: A values view of child nodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_populated</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">ValuesView</span><span class="p">({</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">})</span></div>
+
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractBaseTreeNode</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">IdIndex</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractBaseTreeNode</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">NameIndex</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">AbstractBaseTreeNode</span><span class="p">]:</span> <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">IdOrNameIndex</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractBaseTreeNode</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">AbstractBaseTreeNode</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Allows accessing child nodes by their ID or name.</span>
+
+<span class="sd">        - If `key` is a string, it attempts to find a single child with that name.</span>
+<span class="sd">        - If `key` is a slice with start of :class:`~labapi.util.index.IdIndex` (e.g., ``Index.Id:&quot;some_id&quot;``),</span>
+<span class="sd">          it returns the child with the matching ID.</span>
+<span class="sd">        - If `key` is a slice with start of :class:`~labapi.util.index.NameIndex` (e.g., ``Index.Name:&quot;some_name&quot;``),</span>
+<span class="sd">          it returns a list of all children with the matching name (as names are not unique).</span>
+
+<span class="sd">        This method ensures the children are populated before attempting to access them.</span>
+
+<span class="sd">        :param key: The index to use for accessing children.</span>
+<span class="sd">        :returns: A single :class:`AbstractBaseTreeNode` or a sequence of :class:`AbstractBaseTreeNode`.</span>
+<span class="sd">        :raises KeyError: If a single node is requested by ID or unique name and not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_populated</span><span class="p">()</span>
+
+        <span class="k">match</span> <span class="n">key</span><span class="p">:</span>
+            <span class="k">case</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">Index</span><span class="o">.</span><span class="n">Id</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">val</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">val</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">node</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Node with id &quot;</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s1">&quot; not found&#39;</span><span class="p">)</span>
+            <span class="k">case</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">Index</span><span class="o">.</span><span class="n">Name</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">val</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">val</span><span class="p">]</span>
+            <span class="k">case</span> <span class="nb">str</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">key</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">node</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Node with name &quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&quot; not found&#39;</span><span class="p">)</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Invalid key type. Use `str`, `Index.Id:&lt;id&gt;`, or `Index.Name:&lt;name&gt;`.&quot;</span>
+                <span class="p">)</span>
+            
+<div class="viewcode-block" id="AbstractTreeContainer.is_parent_of">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.is_parent_of">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_parent_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">AbstractBaseTreeNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return whether this container is a strict ancestor of ``other``.</span>
+
+<span class="sd">        This method returns ``True`` when ``other`` is a descendant of this</span>
+<span class="sd">        container at any depth (direct child or deeper). A node is not</span>
+<span class="sd">        considered a parent of itself.</span>
+
+<span class="sd">        Nodes from different notebook roots are always considered unrelated,</span>
+<span class="sd">        even if their relative paths happen to match.</span>
+
+<span class="sd">        :param other: The node to test as a potential descendant.</span>
+<span class="sd">        :returns: ``True`` if this container is an ancestor of ``other``,</span>
+<span class="sd">            otherwise ``False``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">curr</span> <span class="o">=</span> <span class="n">other</span>
+
+        <span class="k">while</span> <span class="n">curr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">curr</span><span class="o">.</span><span class="n">root</span><span class="p">:</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">.</span><span class="n">parent</span>
+            <span class="k">if</span> <span class="n">curr</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeContainer.enumerate_all">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.enumerate_all">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">enumerate_all</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">_current_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enumerates all children (directories and pages) up to a specified depth.</span>
+
+<span class="sd">        Returns relative path strings from the current container for all descendant</span>
+<span class="sd">        nodes, including both directories and pages. Each path is relative to this</span>
+<span class="sd">        container (e.g., &quot;Folder/Page&quot; or &quot;Folder/Subfolder/Page&quot;).</span>
+
+<span class="sd">        :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).</span>
+<span class="sd">        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.</span>
+<span class="sd">        :returns: A sequence of relative path strings for all descendants.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">current</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">_current_depth</span> <span class="o">&gt;=</span> <span class="n">max_depth</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">current</span>
+
+        <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">timeout</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_timeout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_timeout</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">+</span> <span class="n">timeout</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_populated</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">name</span>
+
+            <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">_timeout</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="n">current</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">container</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">as_dir</span><span class="p">()</span>
+                <span class="n">current</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">child_path</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="k">for</span> <span class="n">child_path</span> <span class="ow">in</span> <span class="n">container</span><span class="o">.</span><span class="n">enumerate_all</span><span class="p">(</span>
+                            <span class="n">_current_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">_timeout</span><span class="o">=</span><span class="n">_timeout</span>
+                        <span class="p">)</span>
+                    <span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">current</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeContainer.enumerate_dirs">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.enumerate_dirs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">enumerate_dirs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enumerates only directories up to a specified depth.</span>
+
+<span class="sd">        Returns relative path strings from the current container for all descendant</span>
+<span class="sd">        directories (excluding pages). Each path is relative to this container.</span>
+
+<span class="sd">        :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).</span>
+<span class="sd">        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.</span>
+<span class="sd">        :returns: A sequence of relative path strings for all descendant directories.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enumerate_all</span><span class="p">(</span><span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">all_names</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeContainer.enumerate_pages">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.enumerate_pages">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">enumerate_pages</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enumerates only pages up to a specified depth.</span>
+
+<span class="sd">        Returns relative path strings from the current container for all descendant</span>
+<span class="sd">        pages (excluding directories). Each path is relative to this container.</span>
+
+<span class="sd">        :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).</span>
+<span class="sd">        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.</span>
+<span class="sd">        :returns: A sequence of relative path strings for all descendant pages.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enumerate_all</span><span class="p">(</span><span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">all_names</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeContainer.create">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.create">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">NotebookPath</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">parents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">if_exists</span><span class="p">:</span> <span class="n">InsertBehavior</span> <span class="o">=</span> <span class="n">InsertBehavior</span><span class="o">.</span><span class="n">Raise</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a new child node (page or directory) within this container.</span>
+
+<span class="sd">        This method allows for more flexible creation of tree nodes compared to</span>
+<span class="sd">        the deprecated :meth:`create_page` and :meth:`create_directory` methods.</span>
+<span class="sd">        It also supports different behaviors if a node with the same name already exists.</span>
+
+<span class="sd">        :param cls: The class of the node to create (e.g., :class:`~labapi.tree.page.NotebookPage` or :class:`~labapi.tree.directory.NotebookDirectory`).</span>
+<span class="sd">        :param name: The name of the new node.</span>
+<span class="sd">        :param if_exists: The behavior to take if a node with the same name and type already exists. Default is to raise a RuntimeError.</span>
+<span class="sd">        :returns: The newly created (or existing) node of type `cls`.</span>
+<span class="sd">        :raises RuntimeError: If `if_exists` is `InsertBehavior.Raise` and the node already exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path_self</span> <span class="o">=</span> <span class="n">NotebookPath</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="p">(</span><span class="n">path_self</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Path cannot be empty&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="n">Index</span><span class="o">.</span><span class="n">Name</span> <span class="p">:</span> <span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)]</span>
+
+            <span class="k">if</span> <span class="n">nodes</span><span class="p">:</span>
+                <span class="k">match</span> <span class="n">if_exists</span><span class="p">:</span>
+                    <span class="k">case</span> <span class="n">InsertBehavior</span><span class="o">.</span><span class="n">Raise</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> with name &quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&quot; already exists&#39;</span>
+                        <span class="p">)</span>
+                    <span class="k">case</span> <span class="n">InsertBehavior</span><span class="o">.</span><span class="n">Ignore</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="k">case</span> <span class="n">InsertBehavior</span><span class="o">.</span><span class="n">Retain</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">case</span> <span class="n">InsertBehavior</span><span class="o">.</span><span class="n">Replace</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                            <span class="n">node</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+
+            <span class="n">create_tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">api_get</span><span class="p">(</span>
+                <span class="s2">&quot;tree_tools/insert_node&quot;</span><span class="p">,</span>
+                <span class="n">nbid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">parent_tree_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tree_id</span><span class="p">,</span>
+                <span class="n">display_text</span><span class="o">=</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">is_folder</span><span class="o">=</span><span class="s2">&quot;false&quot;</span>
+                <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;NotebookPage&quot;</span>
+                <span class="k">else</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>  <span class="c1"># TODO make more resilient</span>
+            <span class="p">)</span>
+
+            <span class="n">tree_id</span> <span class="o">=</span> <span class="n">extract_etree</span><span class="p">(</span><span class="n">create_tree</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;tree-id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">}})[</span><span class="s2">&quot;tree-id&quot;</span><span class="p">]</span>
+
+            <span class="n">new_node</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_node</span><span class="p">,</span> <span class="n">AbstractTreeContainer</span><span class="p">):</span>
+                <span class="n">new_node</span><span class="o">.</span><span class="n">_populated</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">new_node</span>
+        <span class="k">elif</span> <span class="n">parents</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">.directory</span><span class="w"> </span><span class="kn">import</span> <span class="n">NotebookDirectory</span>
+
+            <span class="n">next_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="n">NotebookDirectory</span><span class="p">,</span>
+                <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">if_exists</span><span class="o">=</span><span class="n">InsertBehavior</span><span class="o">.</span><span class="n">Retain</span> <span class="k">if</span> <span class="n">parents</span> <span class="k">else</span> <span class="n">InsertBehavior</span><span class="o">.</span><span class="n">Raise</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">next_node</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="bp">cls</span><span class="p">,</span>
+                <span class="n">path</span><span class="p">,</span>
+                <span class="n">parents</span><span class="o">=</span><span class="n">parents</span><span class="p">,</span>
+                <span class="n">if_exists</span><span class="o">=</span><span class="n">if_exists</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Parent path for &quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&quot; does not exist. Set `parents=True` to create it.&#39;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeContainer.create_page">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.create_page">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_page</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NotebookPage</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a new page within this container.</span>
+
+<span class="sd">        .. deprecated:: 0.1.0</span>
+
+<span class="sd">            Use :py:meth:`~labapi.tree.mixins.AbstractTreeContainer.create` instead.</span>
+
+<span class="sd">        :param name: The name of the new page.</span>
+<span class="sd">        :returns: The newly created :class:`~labapi.tree.page.NotebookPage` object.</span>
+<span class="sd">        :raises RuntimeError: If the API call to create the page fails.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">page</span>
+
+        <span class="c1"># TODO take into account whether can write in this directory</span>
+        <span class="n">create_tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">api_get</span><span class="p">(</span>
+            <span class="s2">&quot;tree_tools/insert_node&quot;</span><span class="p">,</span>
+            <span class="n">nbid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">parent_tree_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tree_id</span><span class="p">,</span>
+            <span class="n">display_text</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">is_folder</span><span class="o">=</span><span class="s2">&quot;false&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">tree_id</span> <span class="o">=</span> <span class="n">extract_etree</span><span class="p">(</span><span class="n">create_tree</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;tree-id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">}})[</span><span class="s2">&quot;tree-id&quot;</span><span class="p">]</span>
+
+        <span class="n">new_page</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">NotebookPage</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_page</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_page</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeContainer.create_directory">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.create_directory">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NotebookDirectory</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a new directory within this container.</span>
+
+<span class="sd">        .. deprecated:: 0.1.0</span>
+
+<span class="sd">            Use :py:meth:`~labapi.tree.mixins.AbstractTreeContainer.create` instead.</span>
+
+<span class="sd">        :param name: The name of the new directory.</span>
+<span class="sd">        :returns: The newly created :class:`~labapi.tree.directory.NotebookDirectory` object.</span>
+<span class="sd">        :raises RuntimeError: If the API call to create the directory fails.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">directory</span>
+
+        <span class="c1"># TODO take into account whether can write in this directory</span>
+        <span class="n">create_tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user</span><span class="o">.</span><span class="n">api_get</span><span class="p">(</span>
+            <span class="s2">&quot;tree_tools/insert_node&quot;</span><span class="p">,</span>
+            <span class="n">nbid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">parent_tree_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tree_id</span><span class="p">,</span>
+            <span class="n">display_text</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">is_folder</span><span class="o">=</span><span class="s2">&quot;true&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">tree_id</span> <span class="o">=</span> <span class="n">extract_etree</span><span class="p">(</span><span class="n">create_tree</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;tree-id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">}})[</span><span class="s2">&quot;tree-id&quot;</span><span class="p">]</span>
+
+        <span class="n">new_dir</span> <span class="o">=</span> <span class="n">directory</span><span class="o">.</span><span class="n">NotebookDirectory</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_dir</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeContainer.is_dir">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.is_dir">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Indicates that this node is a directory (container).</span>
+
+<span class="sd">        :returns: Always True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="AbstractTreeContainer.refresh">
+<a class="viewcode-back" href="../../../reference/generated/labapi.tree.mixins.AbstractTreeContainer.html#labapi.tree.mixins.AbstractTreeContainer.refresh">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refreshes the container by clearing its cached children.</span>
+
+<span class="sd">        This method clears the internal children cache, forcing the container</span>
+<span class="sd">        to re-fetch its children from the LabArchives API on the next access.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           Currently only clears the children list. Future implementation should</span>
+<span class="sd">           invalidate all children before clearing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO invalidate all children first</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_populated</span> <span class="o">=</span> <span class="kc">False</span></div>
+</div>
+
+</pre></div>
+</article><footer class="bz-article-footer">
+  
+  
+    <nav class="bz-related-pages" aria-label="Related pages navigation"></nav>
+  
+
+</footer></main>
+  </div>
+<footer class="bz-footer">
+  <div class="bz-footer-copyright"><p class="bz-copyright">© Copyright 2026, Christoph Li and Joshua Lawrimore</p><p>
+    
+    
+    
+      Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/aksiome/breeze">Breeze theme</a>.
+    
+  </p>
+</div>
+</footer><a href="#" class="bz-back-to-top">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
+    </svg>
+    <span>Back to top</span>
+  </a>
+  <label class="bz-overlay bz-overlay-primary" for="bz-sidebar-primary"></label>
+  <label class="bz-overlay bz-overlay-secondary" for="bz-sidebar-secondary"></label>
+  <input type="checkbox" name="bz-sidebar-primary" id="bz-sidebar-primary" aria-label="Toggle section navigation">
+  <input type="checkbox" name="bz-sidebar-secondary" id="bz-sidebar-secondary" aria-label="Toggle table of contents"><script src="../../../_static/documentation_options.js?v=01f34227"></script><script src="../../../_static/doctools.js?v=fd6eb6e6"></script><script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script><script src="../../../_static/clipboard.min.js?v=a7894cd8"></script><script src="../../../_static/copybutton.js?v=f281be69"></script><script src="../../../_static/design-tabs.js?v=f930bc37"></script></body>
+</html>

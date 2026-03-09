@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import Mock
 
+import pytest
 
 from labapi import Index, Notebook, NotebookDirectory
 from labapi.user import User
@@ -125,3 +126,21 @@ class TestNotebookDirectoryIntegration:
         client.api_log
         client.api_log
         client.clear_log()
+
+    def test_directory_copy_to_self_raises(self, notebook_tree: Notebook):
+        """Test NotebookDirectory.copy_to rejects copying into itself."""
+        source_dir = notebook_tree[Index.Id : "dir-1"]
+        assert isinstance(source_dir, NotebookDirectory)
+
+        with pytest.raises(ValueError, match="Cannot copy"):
+            source_dir.copy_to(source_dir)
+
+    def test_directory_copy_to_descendant_raises(self, notebook_tree: Notebook):
+        """Test NotebookDirectory.copy_to rejects copying into a descendant."""
+        source_dir = notebook_tree[Index.Id : "dir-2"]
+        descendant_dir = source_dir[Index.Id : "dir-2-1"]
+        assert isinstance(source_dir, NotebookDirectory)
+        assert isinstance(descendant_dir, NotebookDirectory)
+
+        with pytest.raises(ValueError, match="Cannot copy"):
+            source_dir.copy_to(descendant_dir)

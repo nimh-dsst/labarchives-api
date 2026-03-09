@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Working with Entries" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="guide/entries.html" />
+<meta property="og:site_name" content="labapi" />
+<meta property="og:description" content="Entries are the fundamental building blocks of a LabArchives page. They contain the actual data, such as rich text, plain text, headers, file attachments, and widgets. Accessing Entries: You can ac..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_guide_entries_fe5d5767.png" />
+<meta property="og:image:alt" content="Entries are the fundamental building blocks of a LabArchives page. They contain the actual data, such as rich text, plain text, headers, file attachments, and widgets. Accessing Entries: You can ac..." />
+<meta name="description" content="Entries are the fundamental building blocks of a LabArchives page. They contain the actual data, such as rich text, plain text, headers, file attachments, and widgets. Accessing Entries: You can ac..." />
+<meta name="twitter:card" content="summary_large_image" />
+<title>Working with Entries - labapi 0.1.0 documentation</title><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="JSON Entries" href="json_entries.html"><link rel="prev" title="Authentication" href="auth.html"><script data-cfasync="false">(function(){
+    const m = localStorage.getItem("breeze-mode") || "auto";
+    const d = document.documentElement.dataset;
+    d.mode = m;
+    d.theme = m === "auto"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : m;
+  })();
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8e8a900e" /><link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" /><link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" /><link rel="stylesheet" type="text/css" href="../_static/styles/breeze.css?v=227fd4f7" /><script defer="defer" src="../_static/scripts/breeze.js?v=dac9f8c6"></script></head>
+<body>
+  
+  
+  <div class="bz-skip-to-content"><a href="#bz-main-content">Skip to main content</a></div><header class="bz-header-main">
+  <div class="bz-header-start"><a class="bz-header-brand" href="../index.html">
+  
+  
+  <span>labapi 0.1.0 documentation</span>
+</a>
+  </div>
+  <div class="bz-header-end"><div id="docsearch" class="bz-search-button">
+  <a
+    href="../search.html#q"
+    aria-label="Search the docs"
+    data-tooltip="Search the docs"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 -1 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </svg>
+    <span>Search</span>
+    <kbd>Ctrl+K</kbd>
+  </a>
+</div><div class="bz-theme-switcher">
+  <button aria-label="Switch theme" data-tooltip="Switch theme">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-light" fill="currentColor">
+      <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"></path>
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="only-dark" fill="currentColor">
+      <path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"></path>
+    </svg>
+  </button>
+</div>
+  </div>
+</header><nav class="bz-header-tabs" aria-label="Primary Navigation"><label
+  class="bz-sidebar-primary-toggle"
+  for="bz-sidebar-primary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle site navigation"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h12.5"
+    />
+  </svg>
+</label><ul><li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start</a></li><li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a></li><li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example Applications</a></li><li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently Asked Questions</a></li><li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li></ul><div class="bz-dropdown">
+    <button aria-haspopup="true" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <g
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </g>
+      </svg>
+    </button>
+    <ul role="menu" aria-hidden="true"></ul>
+  </div>
+</nav><hr class="bz-header-hr">
+  <div class="bz-content"><aside class="bz-sidebar-primary" data-drawer="bz-sidebar-primary">
+  
+  
+    <nav class="bz-sidebar-nav" aria-label="Section Navigation"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="auth.html">Authentication</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with Entries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="json_entries.html">JSON Entries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_calls.html">Making Arbitrary API Calls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index_access.html">Accessing Items with Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paths.html">Working with Paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clearing_cache.html">Clearing Cache</a></li>
+</ul>
+</nav>
+  
+
+</aside><main id="bz-main-content"><header class="bz-article-header">
+  
+  
+    <nav class="bz-breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <li class="bz-breadcrumbs-home">
+      <a href="../index.html" aria-label="Home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8.543 2.232a.75.75 0 0 0-1.085 0l-5.25 5.5A.75.75 0 0 0 2.75 9H4v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 1 1 2 0v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V9h1.25a.75.75 0 0 0 .543-1.268l-5.25-5.5Z" />
+        </svg>
+      </a>
+    </li><li class="bz-breadcrumbs-parent">
+      <a href="index.html">User Guide</a>
+    </li><li class="bz-breadcrumbs-current">
+      <span>Working with Entries</span>
+    </li>
+  </ol>
+</nav>
+  
+<label
+  class="bz-sidebar-secondary-toggle"
+  for="bz-sidebar-secondary"
+  role="button"
+  tabindex="0"
+  aria-label="Toggle table of contents"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3.75 6.75H20.25 M11.25 12H20.25 M7.75 17.25H20.25"
+    />
+  </svg>
+</label></header><article class="bz-article-main" role="main"><div class="bz-page-actions" role="group" aria-label="Page actions">
+  <button data-copy-source="../_sources/guide/entries.rst.txt">
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+    <span>Copy page</span>
+  </button>
+  <div class="bz-dropdown">
+    <button
+      aria-label="More actions"
+      aria-haspopup="true"
+      aria-expanded="false"
+    ></button>
+    <ul role="menu" aria-hidden="true">
+      <li>
+        <a href="#" role="menuitem" data-copy-source="../_sources/guide/entries.rst.txt">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M7.024 3.75c0-.966.784-1.75 1.75-1.75H20.25c.966 0 1.75.784 1.75 1.75v11.498a1.75 1.75 0 0 1-1.75 1.75H8.774a1.75 1.75 0 0 1-1.75-1.75Zm1.75-.25a.25.25 0 0 0-.25.25v11.498c0 .139.112.25.25.25H20.25a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25Z"></path><path d="M1.995 10.749a1.75 1.75 0 0 1 1.75-1.751H5.25a.75.75 0 1 1 0 1.5H3.745a.25.25 0 0 0-.25.25L3.5 20.25c0 .138.111.25.25.25h9.5a.25.25 0 0 0 .25-.25v-1.51a.75.75 0 1 1 1.5 0v1.51A1.75 1.75 0 0 1 13.25 22h-9.5A1.75 1.75 0 0 1 2 20.25l-.005-9.501Z"></path></svg>
+          <span>Copy page</span>
+        </a>
+      </li>
+      <li>
+        <a href="../_sources/guide/entries.rst.txt" role="menuitem" class="bz-page-actions-external" target="_blank" rel="noopener">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3a2 2 0 0 1 2-2h9.982a2 2 0 0 1 1.414.586l4.018 4.018A2 2 0 0 1 21 7.018V21a2 2 0 0 1-2 2H4.75a.75.75 0 0 1 0-1.5H19a.5.5 0 0 0 .5-.5V8.5h-4a2 2 0 0 1-2-2v-4H5a.5.5 0 0 0-.5.5v6.25a.75.75 0 0 1-1.5 0Zm12-.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 0-.146-.336l-4.018-4.018A.5.5 0 0 0 15 2.5Z"></path><path d="M4.53 12.24a.75.75 0 0 1-.039 1.06l-2.639 2.45 2.64 2.45a.75.75 0 1 1-1.022 1.1l-3.23-3a.75.75 0 0 1 0-1.1l3.23-3a.75.75 0 0 1 1.06.04Zm3.979 1.06a.75.75 0 1 1 1.02-1.1l3.231 3a.75.75 0 0 1 0 1.1l-3.23 3a.75.75 0 1 1-1.021-1.1l2.639-2.45-2.64-2.45Z"></path></svg>
+          <span>View source</span>
+        </a>
+      </li></ul>
+  </div>
+</div><section id="working-with-entries">
+<span id="entries"></span><h1>Working with Entries<a class="headerlink" href="#working-with-entries" title="Link to this heading">#</a></h1>
+<p>Entries are the fundamental building blocks of a LabArchives page. They contain the actual data, such as rich text, plain text, headers, file attachments, and widgets.</p>
+<section id="accessing-entries">
+<h2>Accessing Entries<a class="headerlink" href="#accessing-entries" title="Link to this heading">#</a></h2>
+<p>You can access the entries of a <a class="reference internal" href="../reference/generated/labapi.tree.page.NotebookPage.html#labapi.tree.page.NotebookPage" title="labapi.tree.page.NotebookPage"><code class="xref py py-class docutils literal notranslate"><span class="pre">NotebookPage</span></code></a> through its <code class="docutils literal notranslate"><span class="pre">entries</span></code> property. This property returns an <a class="reference internal" href="../reference/generated/labapi.entry.collection.Entries.html#labapi.entry.collection.Entries" title="labapi.entry.collection.Entries"><code class="xref py py-class docutils literal notranslate"><span class="pre">Entries</span></code></a> object, which behaves like a sequence.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">page</span> <span class="o">=</span> <span class="n">notebook</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="s2">&quot;Project A/Experiment 1/Results&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get the number of entries</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="p">))</span>
+
+<span class="c1"># Iterate over entries</span>
+<span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ID: </span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">, Type: </span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">content_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Access an entry by index</span>
+<span class="n">first_entry</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="entry-types">
+<h2>Entry Types<a class="headerlink" href="#entry-types" title="Link to this heading">#</a></h2>
+<p>LabArchives supports several entry types. In <code class="docutils literal notranslate"><span class="pre">labapi</span></code>, each type is represented by a specific class inheriting from <a class="reference internal" href="../reference/generated/labapi.entry.entries.base.Entry.html#labapi.entry.entries.base.Entry" title="labapi.entry.entries.base.Entry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Entry</span></code></a>.</p>
+<section id="text-based-entries">
+<h3>Text-based Entries<a class="headerlink" href="#text-based-entries" title="Link to this heading">#</a></h3>
+<p>Text-based entries store their content as strings.</p>
+<ul class="simple">
+<li><p><strong>Rich Text Entry</strong> (<a class="reference internal" href="../reference/generated/labapi.entry.entries.text.TextEntry.html#labapi.entry.entries.text.TextEntry" title="labapi.entry.entries.text.TextEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextEntry</span></code></a>): Used for formatted text, typically HTML. Content type: <code class="docutils literal notranslate"><span class="pre">&quot;text</span> <span class="pre">entry&quot;</span></code>.</p></li>
+<li><p><strong>Plain Text Entry</strong> (<a class="reference internal" href="../reference/generated/labapi.entry.entries.text.PlainTextEntry.html#labapi.entry.entries.text.PlainTextEntry" title="labapi.entry.entries.text.PlainTextEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">PlainTextEntry</span></code></a>): Used for unformatted, raw text. Content type: <code class="docutils literal notranslate"><span class="pre">&quot;plain</span> <span class="pre">text</span> <span class="pre">entry&quot;</span></code>.</p></li>
+<li><p><strong>Header Entry</strong> (<a class="reference internal" href="../reference/generated/labapi.entry.entries.text.HeaderEntry.html#labapi.entry.entries.text.HeaderEntry" title="labapi.entry.entries.text.HeaderEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">HeaderEntry</span></code></a>): Used for headings or titles within a page. Content type: <code class="docutils literal notranslate"><span class="pre">&quot;heading&quot;</span></code>.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Accessing text content</span>
+<span class="n">text_entry</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">text_entry</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+
+<span class="c1"># Updating text content</span>
+<span class="n">text_entry</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="s2">&quot;&lt;p&gt;Updated rich text content&lt;/p&gt;&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="attachment-entries">
+<h3>Attachment Entries<a class="headerlink" href="#attachment-entries" title="Link to this heading">#</a></h3>
+<p>Attachment entries (<a class="reference internal" href="../reference/generated/labapi.entry.entries.attachment.AttachmentEntry.html#labapi.entry.entries.attachment.AttachmentEntry" title="labapi.entry.entries.attachment.AttachmentEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">AttachmentEntry</span></code></a>) represent file attachments. Their content is an <a class="reference internal" href="../reference/generated/labapi.entry.attachment.Attachment.html#labapi.entry.attachment.Attachment" title="labapi.entry.attachment.Attachment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attachment</span></code></a> object.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">attachment_entry</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">attachment</span> <span class="o">=</span> <span class="n">attachment_entry</span><span class="o">.</span><span class="n">content</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filename: </span><span class="si">{</span><span class="n">attachment</span><span class="o">.</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MIME Type: </span><span class="si">{</span><span class="n">attachment</span><span class="o">.</span><span class="n">mime_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Caption: </span><span class="si">{</span><span class="n">attachment</span><span class="o">.</span><span class="n">caption</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Read the file data</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">attachment</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="widget-entries">
+<h3>Widget Entries<a class="headerlink" href="#widget-entries" title="Link to this heading">#</a></h3>
+<p>Widget entries (<a class="reference internal" href="../reference/generated/labapi.entry.entries.widget.WidgetEntry.html#labapi.entry.entries.widget.WidgetEntry" title="labapi.entry.entries.widget.WidgetEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">WidgetEntry</span></code></a>) embed interactive content or external applications. Like text entries, their content is represented as a string (often JSON or HTML).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Widget entries are currently read-only in <code class="docutils literal notranslate"><span class="pre">labapi</span></code>. Their <code class="docutils literal notranslate"><span class="pre">content</span></code> property returns the widget’s internal data as a JSON-formatted string.</p>
+</div>
+</section>
+</section>
+<section id="creating-new-entries">
+<h2>Creating New Entries<a class="headerlink" href="#creating-new-entries" title="Link to this heading">#</a></h2>
+<p>You can create new entries using the <a class="reference internal" href="../reference/generated/labapi.entry.collection.Entries.html#labapi.entry.collection.Entries.create_entry" title="labapi.entry.collection.Entries.create_entry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_entry()</span></code></a> method.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a rich text entry</span>
+<span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span><span class="s2">&quot;text entry&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;h1&gt;New Section&lt;/h1&gt;&lt;p&gt;Some content...&lt;/p&gt;&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create a heading</span>
+<span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span><span class="s2">&quot;heading&quot;</span><span class="p">,</span> <span class="s2">&quot;Experiment Notes&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create a plain text entry</span>
+<span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span><span class="s2">&quot;plain text entry&quot;</span><span class="p">,</span> <span class="s2">&quot;Raw data string&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="creating-attachments">
+<h3>Creating Attachments<a class="headerlink" href="#creating-attachments" title="Link to this heading">#</a></h3>
+<p>To create an attachment entry, you first need to create an <a class="reference internal" href="../reference/generated/labapi.entry.attachment.Attachment.html#labapi.entry.attachment.Attachment" title="labapi.entry.attachment.Attachment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attachment</span></code></a> object.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">labapi.entry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attachment</span>
+
+<span class="c1"># Create attachment from in-memory data</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;Hello, LabArchives!&quot;</span><span class="p">)</span>
+<span class="n">attachment</span> <span class="o">=</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;text/plain&quot;</span><span class="p">,</span> <span class="s2">&quot;hello.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;A simple text file&quot;</span><span class="p">)</span>
+
+<span class="c1"># Upload as a new entry</span>
+<span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span><span class="s2">&quot;attachment&quot;</span><span class="p">,</span> <span class="n">attachment</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can also create an attachment directly from a file on disk:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">attachment</span> <span class="o">=</span> <span class="n">Attachment</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span><span class="s2">&quot;attachment&quot;</span><span class="p">,</span> <span class="n">attachment</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="working-with-json-data">
+<h2>Working with JSON Data<a class="headerlink" href="#working-with-json-data" title="Link to this heading">#</a></h2>
+<p>A common pattern is to store structured data as a JSON attachment with a formatted preview in a companion text entry. The <a class="reference internal" href="../reference/generated/labapi.entry.collection.Entries.html#labapi.entry.collection.Entries.create_json_entry" title="labapi.entry.collection.Entries.create_json_entry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_json_entry()</span></code></a> method simplifies this.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;experiment_id&quot;</span><span class="p">:</span> <span class="s2">&quot;EXP-123&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.2</span><span class="p">,</span> <span class="mf">3.4</span><span class="p">,</span> <span class="mf">5.6</span><span class="p">],</span>
+    <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;complete&quot;</span>
+<span class="p">}</span>
+
+<span class="c1"># Creates both an attachment entry and a text entry preview</span>
+<span class="n">file_entry</span><span class="p">,</span> <span class="n">text_entry</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">create_json_entry</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="modifying-entries">
+<h2>Modifying Entries<a class="headerlink" href="#modifying-entries" title="Link to this heading">#</a></h2>
+<p>To modify an entry, simply set its <code class="docutils literal notranslate"><span class="pre">content</span></code> property. The change is automatically synchronized with the LabArchives server.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">entry</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">entry</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="s2">&quot;New content for the entry&quot;</span>
+</pre></div>
+</div>
+<p>For attachments, setting the <code class="docutils literal notranslate"><span class="pre">content</span></code> property with a new <a class="reference internal" href="../reference/generated/labapi.entry.attachment.Attachment.html#labapi.entry.attachment.Attachment" title="labapi.entry.attachment.Attachment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attachment</span></code></a> object will update the file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;updated_data.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">new_attachment</span> <span class="o">=</span> <span class="n">Attachment</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">attachment_entry</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="n">new_attachment</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+</article><footer class="bz-article-footer">
+  
+  
+    <nav class="bz-related-pages" aria-label="Related pages navigation"><a class="bz-related-pages-previous" href="auth.html" rel="prev">
+    <span>Previous</span><span class="bz-related-pages-title">Authentication</span></a><a class="bz-related-pages-next" href="json_entries.html" rel="next">
+    <span>Next</span>
+    <span class="bz-related-pages-title">JSON Entries</span>
+  </a></nav>
+  
+
+</footer><aside class="bz-sidebar-secondary" data-drawer="bz-sidebar-secondary">
+  
+  
+    <nav class="bz-sidebar-toc" aria-label="Table of contents">
+  <p>On this page</p><ul>
+<li><a class="reference internal" href="#accessing-entries">Accessing Entries</a></li>
+<li><a class="reference internal" href="#entry-types">Entry Types</a><ul>
+<li><a class="reference internal" href="#text-based-entries">Text-based Entries</a></li>
+<li><a class="reference internal" href="#attachment-entries">Attachment Entries</a></li>
+<li><a class="reference internal" href="#widget-entries">Widget Entries</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#creating-new-entries">Creating New Entries</a><ul>
+<li><a class="reference internal" href="#creating-attachments">Creating Attachments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#working-with-json-data">Working with JSON Data</a></li>
+<li><a class="reference internal" href="#modifying-entries">Modifying Entries</a></li>
+</ul></nav>
+  
+    
+
+
+  
+    
+  
+    
+  
+
+</aside></main>
+  </div>
+<footer class="bz-footer">
+  <div class="bz-footer-copyright"><p class="bz-copyright">© Copyright 2026, Christoph Li and Joshua Lawrimore</p><p>
+    
+    
+    
+      Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a href="https://github.com/aksiome/breeze">Breeze theme</a>.
+    
+  </p>
+</div>
+</footer><a href="#" class="bz-back-to-top">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
+    </svg>
+    <span>Back to top</span>
+  </a>
+  <label class="bz-overlay bz-overlay-primary" for="bz-sidebar-primary"></label>
+  <label class="bz-overlay bz-overlay-secondary" for="bz-sidebar-secondary"></label>
+  <input type="checkbox" name="bz-sidebar-primary" id="bz-sidebar-primary" aria-label="Toggle section navigation">
+  <input type="checkbox" name="bz-sidebar-secondary" id="bz-sidebar-secondary" aria-label="Toggle table of contents"><script src="../_static/documentation_options.js?v=01f34227"></script><script src="../_static/doctools.js?v=fd6eb6e6"></script><script src="../_static/sphinx_highlight.js?v=6ffebe34"></script><script src="../_static/clipboard.min.js?v=a7894cd8"></script><script src="../_static/copybutton.js?v=f281be69"></script><script src="../_static/design-tabs.js?v=f930bc37"></script></body>
+</html>
