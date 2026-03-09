@@ -29,7 +29,7 @@ and accepts a slash-separated path string.
 Absolute vs Relative Paths
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Paths starting with ``/`` are **absolute** -- they are resolved from the notebook root regardless
+Paths starting with ``/`` are **absolute** — they are resolved from the notebook root regardless
 of where you call ``traverse``.
 
 .. code-block:: python
