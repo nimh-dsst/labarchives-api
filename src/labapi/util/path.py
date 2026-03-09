@@ -10,12 +10,50 @@ if TYPE_CHECKING:
 
 
 class NotebookPath(Sequence[str]):
+    """A structured path referencing a location in the notebook tree.
+
+    Behaves like a sequence of path segments (strings) and supports Unix-style
+    path semantics including absolute/relative paths and ``..`` parent navigation.
+
+    Paths can be constructed from a tree node, another ``NotebookPath``, or raw
+    slash-separated strings. Segments are normalised on construction: empty
+    segments and ``.`` are discarded, and ``..`` collapses the preceding segment
+    (or is kept literally when at the root of a relative path).
+
+    Examples::
+
+        # From a tree node (always absolute)
+        path = NotebookPath(folder)             # e.g. /Experiments/2024
+
+        # From a string
+        path = NotebookPath(None, "/Experiments/2024")  # absolute
+        path = NotebookPath(None, "2024/Results")        # relative
+
+        # Combine with /
+        path = NotebookPath(notebook) / "Experiments" / "2024"
+    """
+
     def __init__(
         self,
         part: NotebookPath | AbstractBaseTreeNode | None = None,
         *parts: str,
         parent: NotebookPath | AbstractBaseTreeNode | None = None,
     ):
+        """Construct a ``NotebookPath``.
+
+        The first argument ``part`` sets the base of the path; any additional
+        positional ``parts`` are appended as extra segments.
+
+        :param part: The base of the path. Pass a tree node to create an
+            absolute path rooted at that node's location, a ``NotebookPath``
+            to extend it, or ``None`` to build a path purely from ``parts``.
+        :param parts: Additional slash-separated path segments appended after
+            ``part``. Segments are split on ``/`` and normalised.
+        :param parent: An absolute path (or node) that anchors a relative path
+            for later resolution. Must be absolute. Only meaningful when
+            ``part`` is ``None`` and ``parts`` form a relative path.
+        :raises ValueError: If ``parent`` is not absolute.
+        """
         if parent is not None:
             self._parent = NotebookPath(parent)
             if not self._parent.is_absolute():
@@ -41,22 +79,58 @@ class NotebookPath(Sequence[str]):
             self._absolute = True
 
     def __truediv__(self, other: str | NotebookPath) -> NotebookPath:
+        """Append a segment or another path using the ``/`` operator.
+
+        When ``other`` is a string it is appended as a new segment. When
+        ``other`` is a relative ``NotebookPath`` it is resolved against
+        ``self``; when it is absolute it is returned as-is.
+
+        :param other: A path segment string or another ``NotebookPath``.
+        :returns: A new ``NotebookPath`` with ``other`` appended or resolved.
+        """
         if isinstance(other, str):
             return NotebookPath(self, other)
         return other.resolve(self)
 
-    def to_string(self):
+    def to_string(self) -> str:
+        """Return the path as a slash-separated string.
+
+        Absolute paths are prefixed with ``/``; relative paths are not.
+
+        :returns: The string representation of this path (e.g.
+            ``"/Experiments/2024"`` or ``"2024/Results"``).
+        """
         if self._absolute:
             return f"/{'/'.join(self._parts)}"
         else:
             return "/".join(self._parts)
 
     def is_absolute(self) -> bool:
+        """Return whether this path is absolute.
+
+        An absolute path is rooted at the notebook level and begins with
+        ``/`` in its string form.
+
+        :returns: ``True`` if the path is absolute, ``False`` if relative.
+        """
         return self._absolute
 
     def resolve(
         self, parent: NotebookPath | None = None, recurse: bool = False
     ) -> NotebookPath:
+        """Return an absolute version of this path.
+
+        If the path is already absolute it is returned unchanged. Otherwise
+        the path is resolved against ``parent`` (if given) or against the
+        ``parent`` anchor stored at construction time.
+
+        :param parent: An absolute path to resolve against. Ignored when the
+            path is already absolute or has a stored parent anchor.
+        :param recurse: If ``True``, ``parent`` itself is resolved before use.
+        :returns: A new absolute ``NotebookPath``.
+        :raises ValueError: If the path is relative and no parent is available
+            to resolve against.
+        """
         if self.is_absolute():
             return self
         elif self._parent is None:
@@ -72,12 +146,28 @@ class NotebookPath(Sequence[str]):
             return NotebookPath(self._parent, *self._parts)
 
     def startswith(self, other: NotebookPath) -> bool:
+        """Return whether this path starts with another path's segments.
+
+        Compares raw segments without resolving either path.
+
+        :param other: The prefix path to test against.
+        :returns: ``True`` if the leading segments of this path equal all
+            segments of ``other``.
+        """
         # NOTE does not resolve paths
         if len(self) < len(other):
             return False
         return self[: len(other)] == other[: len(other)]
 
     def is_relative_to(self, other: NotebookPath | AbstractBaseTreeNode) -> bool:
+        """Return whether this path is located inside ``other``.
+
+        Unanchored relative paths are considered to be relative to any
+        absolute path.
+
+        :param other: The candidate ancestor path or tree node.
+        :returns: ``True`` if this path is equal to or below ``other``.
+        """
         if not isinstance(other, NotebookPath):
             other = NotebookPath(other)
 
@@ -92,6 +182,16 @@ class NotebookPath(Sequence[str]):
         return self.resolve().startswith(other.resolve())
 
     def relative_to(self, other: NotebookPath | AbstractBaseTreeNode) -> NotebookPath:
+        """Return this path made relative to ``other``.
+
+        The result is a new relative ``NotebookPath`` whose ``parent`` anchor
+        is set to the resolved form of ``other``, so it can be resolved back
+        to an absolute path later.
+
+        :param other: The ancestor path or tree node to relativise against.
+        :returns: A relative ``NotebookPath`` from ``other`` to this path.
+        :raises ValueError: If this path is not located inside ``other``.
+        """
         # # TODO walk_up param
 
         if not isinstance(other, NotebookPath):
@@ -110,16 +210,36 @@ class NotebookPath(Sequence[str]):
 
     @property
     def name(self) -> str:
+        """The final segment of the path.
+
+        Equivalent to the node's display name when the path was built from a
+        tree node. Returns ``"."`` for an empty path.
+
+        :returns: The last path segment, or ``"."`` if the path is empty.
+        """
         if len(self._parts):
             return self._parts[-1]
         return "."
 
     @property
     def parts(self) -> Sequence[str]:
+        """All path segments except the last one.
+
+        Analogous to the parent directory in a file path.
+
+        :returns: A sequence of segment strings, empty if the path has only
+            one segment.
+        """
         return self._parts[:-1]
 
     @property
     def parent(self) -> NotebookPath:
+        """The parent path (all segments except the last).
+
+        Resolves the path first, then appends ``..`` to obtain the parent.
+
+        :returns: An absolute ``NotebookPath`` pointing to the parent location.
+        """
         return self.resolve() / ".."
 
     @override
