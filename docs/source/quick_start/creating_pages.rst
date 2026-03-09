@@ -12,10 +12,10 @@ LabArchives organizes content hierarchically:
 Creating Directories and Pages
 ------------------------------
 
-Use the :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` method to add new 
-:class:`NotebookDirectories <labapi.tree.directory.NotebookDirectory` or 
-:class:`NotebookPages <labapi.tree.page.NotebookPage>` to your notebook. This method is 
-available on any :class:`~labapi.tree.notebook.Notebook` or 
+Use the :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` method to add new
+:class:`NotebookDirectories <labapi.tree.directory.NotebookDirectory>` or
+:class:`NotebookPages <labapi.tree.page.NotebookPage>` to your notebook. This method is
+available on any :class:`~labapi.tree.notebook.Notebook` or
 :class:`~labapi.tree.directory.NotebookDirectory`.
 
 .. code-block:: python
