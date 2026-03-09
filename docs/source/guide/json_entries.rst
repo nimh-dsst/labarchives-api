@@ -20,8 +20,8 @@ When you create a "JSON entry" using ``labapi``, you are actually creating two s
 Creating a JSON Entry
 ---------------------
 
-To create a JSON entry, you use the :meth:`~labapi.entry.collection.Entries.create_json_entry` method, which is 
-available on entry collections (like a :class:`~labapi.entry.page.NotebookPage` or :class:`~labapi.entry.directory.NotebookDirectory`).
+To create a JSON entry, use the :meth:`~labapi.entry.collection.Entries.create_json_entry` method on a
+page's :class:`~labapi.entry.collection.Entries` collection (``page.entries``).
 
 This method takes your :class:`~labapi.entry.json_data.JsonData` object and handles the process of creating both the file 
 attachment and the text preview.

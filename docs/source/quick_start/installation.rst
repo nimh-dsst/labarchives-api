@@ -59,19 +59,20 @@ Optional Dependencies
 
       .. code-block:: bash
 
-        uv add labapi --optional builtin-auth
+        uv add "labapi[builtin-auth]"
 
     .. tab-item:: poetry
 
       .. code-block:: bash
 
-        poetry install labapi --with builtin-auth
+        poetry add "labapi[builtin-auth]"
     
     .. tab-item:: pip
       
       .. code-block:: bash
         
         pip install 'labapi[builtin-auth]'
+
 .. dropdown:: dotenv
 
   This group of dependencies allows the :class:`~labapi.client.Client` constructor to use environment variables 
@@ -83,13 +84,13 @@ Optional Dependencies
 
       .. code-block:: bash
 
-        uv add labapi --optional dotenv
+        uv add "labapi[dotenv]"
 
     .. tab-item:: poetry
 
       .. code-block:: bash
 
-        poetry install labapi --with dotenv
+        poetry add "labapi[dotenv]"
     
     .. tab-item:: pip
       

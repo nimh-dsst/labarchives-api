@@ -92,11 +92,11 @@ Listing All Children
    Given this tree structure::
 
       Notebook/
-      ├── Experiments/
-      │   ├── 2024/
-      │   │   └── Results
-      │   └── Archive
-      └── Notes
+      |- Experiments/
+      |  |- 2024/
+      |  |  \- Results
+      |  \- Archive
+      \- Notes
 
    - ``max_depth=1`` returns: ``['Experiments', 'Notes']``
    - ``max_depth=2`` returns: ``['Experiments', 'Experiments/2024', 'Experiments/Archive', 'Notes']``

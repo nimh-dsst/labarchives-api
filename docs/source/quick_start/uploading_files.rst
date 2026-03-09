@@ -18,7 +18,7 @@ file-like object (e.g., a file opened in binary mode).
 
     from labapi.entry.attachment import Attachment
 
-    with open("my_file.txt", "rb") as f:
+    with open("my_file.txt", "rb+") as f:
         attachment = Attachment.from_file(f)
 
 .. note::

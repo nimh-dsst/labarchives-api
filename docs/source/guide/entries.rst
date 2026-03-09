@@ -109,7 +109,7 @@ You can also create an attachment directly from a file on disk:
 
 .. code-block:: python
 
-   with open("data.csv", "rb") as f:
+   with open("data.csv", "rb+") as f:
        attachment = Attachment.from_file(f)
        page.entries.create_entry("attachment", attachment)
 

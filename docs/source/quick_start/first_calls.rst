@@ -119,7 +119,7 @@ Once you have a :class:`~labapi.user.User` object, you can access your notebooks
 
    # Or list all your notebooks
    for notebook_name in user.notebooks:
-    print(notebook_name)
+       print(notebook_name)
 
 
 
