@@ -20,7 +20,7 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup
 
-from labapi import Client
+from labapi import Client, InsertBehavior
 from labapi.entry import TextEntry
 from labapi.tree.mixins import AbstractTreeContainer
 from labapi.tree.page import NotebookPage
@@ -28,31 +28,21 @@ from labapi.user import User
 
 
 def get_or_create_page(container: AbstractTreeContainer, path: str) -> NotebookPage:
-    """
-    Traverse a path in the notebook, creating directories as needed,
-    and returning the page at the end of the path.
-    """
-    segments = path.strip("/").split("/")
-    curr = container
-
-    # Handle all but the last segment (directories)
-    for segment in segments[:-1]:
-        try:
-            curr = curr[segment].as_dir()
-        except (KeyError, TypeError):
-            print(f"  Creating directory: {segment}")
-            curr = curr.create_directory(segment)
-
-    # Handle the last segment (the page)
-    last_segment = segments[-1]
+    """Return an existing page at ``path`` or create it with missing parents."""
     try:
-        node = curr[last_segment]
-        if node.is_dir():
-            raise TypeError(f"'{path}' refers to a directory, but a page is required")
-        return node.as_page()
-    except KeyError:
-        print(f"  Creating page: {last_segment}")
-        return curr.create_page(last_segment)
+        node = container.traverse(path)
+    except (KeyError, RuntimeError):
+        return container.create(
+            NotebookPage,
+            path,
+            parents=True,
+            if_exists=InsertBehavior.Retain,
+        )
+
+    if node.is_dir():
+        raise TypeError(f"'{path}' refers to a directory, but a page is required")
+
+    return node.as_page()
 
 
 def csv_to_html_table(csv_file: Path, has_header: bool = True) -> str:
