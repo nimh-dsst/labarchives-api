@@ -19,7 +19,7 @@ from io import BytesIO
 from mimetypes import guess_type
 from typing import Any
 
-from labapi import Client
+from labapi import Client, InsertBehavior, NotebookDirectory, NotebookPage
 from labapi.tree.mixins import AbstractTreeContainer
 from labapi.user import User
 
@@ -119,13 +119,7 @@ class NotebookLogger:
         self, parent: AbstractTreeContainer, name: str
     ) -> AbstractTreeContainer:
         """Get or create a directory by name under parent."""
-        try:
-            node = parent[name]
-            if not node.is_dir():
-                raise RuntimeError(f"'{name}' exists but is not a directory")
-            return node.as_dir()
-        except KeyError:
-            return parent.create_directory(name)
+        return parent.create(NotebookDirectory, name, if_exists=InsertBehavior.Retain)
 
     def _capture_figures(self) -> list[bytes]:
         """Capture all open matplotlib figures as PNG bytes."""
@@ -234,7 +228,7 @@ class NotebookLogger:
         user_dir = self._get_or_create_dir(notebook_log_dir, self.user.email)
 
         timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
-        page = user_dir.create_page(timestamp)
+        page = user_dir.create(NotebookPage, timestamp)
         entries = page.entries
 
         print(

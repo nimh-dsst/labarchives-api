@@ -13,7 +13,7 @@ import argparse
 import sys
 from io import BytesIO
 
-from labapi import Client
+from labapi import Client, NotebookDirectory, NotebookPage
 from labapi.entry import Attachment
 from labapi.user import User
 
@@ -42,15 +42,15 @@ def populate_notebook(notebook_name: str) -> None:
 
     # 1. Create a top-level folder
     print("  Creating folder: Experiments")
-    experiments = notebook.create_directory("Experiments")
+    experiments = notebook.create(NotebookDirectory, "Experiments")
 
     # 2. Create a subfolder
     print("  Creating folder: 2024")
-    year_folder = experiments.create_directory("2024")
+    year_folder = experiments.create(NotebookDirectory, "2024")
 
     # 3. Create a page with various entry types
     print("  Creating page: Experiment 1")
-    page = year_folder.create_page("Experiment 1")
+    page = year_folder.create(NotebookPage, "Experiment 1")
 
     # Add a heading
     print("    Adding heading...")
@@ -75,7 +75,7 @@ def populate_notebook(notebook_name: str) -> None:
 
     # 4. Create another page in a different folder
     print("  Creating page: General Notes")
-    notes_page = experiments.create_page("General Notes")
+    notes_page = experiments.create(NotebookPage, "General Notes")
     notes_page.entries.create_entry(
         "plain text entry", "These are some general notes for the experiments folder."
     )
