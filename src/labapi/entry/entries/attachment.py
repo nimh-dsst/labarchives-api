@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from labapi.user import User
 
 
-class AttachmentEntry(Entry[Attachment]):
+class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
     """Represents an attachment entry on a LabArchives page.
 
     This class handles the retrieval and updating of file attachments,
@@ -33,20 +33,10 @@ class AttachmentEntry(Entry[Attachment]):
         :param caption: The caption associated with the attachment.
         :param user: The authenticated user.
         """
-        super().__init__(eid, user)
-        self._caption = caption
-        self._data = None
+        super().__init__(eid, caption, user)
+        self._filedata = None
         self._filename = None
         self._mime_type = None
-
-    @property
-    @override
-    def content_type(self) -> str:
-        """The content type identifier for an attachment entry.
-
-        :returns: The string "Attachment".
-        """
-        return "Attachment"
 
     def get_attachment(self, use_tempfile: bool = False) -> Attachment:
         """Retrieves the attachment data.
@@ -61,7 +51,7 @@ class AttachmentEntry(Entry[Attachment]):
         """
         # BUG: currently the implementation means that the backing buffer can be used while a reference is maintained
         #      to it
-        if self._data is None or self._data.closed:
+        if self._filedata is None or self._filedata.closed:
             attachment = self._user.client.stream_api_get(
                 "entries/entry_attachment", uid=self._user.id, eid=self.id
             )
@@ -89,9 +79,9 @@ class AttachmentEntry(Entry[Attachment]):
 
             output.seek(0)
 
-            self._data = Attachment(output, mime_type, filename, self._caption)
+            self._filedata = Attachment(output, mime_type, filename, self._data)
 
-        return self._data
+        return self._filedata
 
     @property
     @override
@@ -126,11 +116,11 @@ class AttachmentEntry(Entry[Attachment]):
             change_description="File updated via API",
         )
 
-        self._caption = value.caption
+        self._data = value.caption
 
-        if self._data:
-            self._data.close()
-        self._data = None
+        if self._filedata:
+            self._filedata.close()
+        self._filedata = None
 
     @property
     def caption(self) -> str:
@@ -138,4 +128,4 @@ class AttachmentEntry(Entry[Attachment]):
 
         :returns: The caption string.
         """
-        return self._caption
+        return self._data

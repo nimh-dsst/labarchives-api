@@ -56,7 +56,7 @@ def get_or_create_dir(
     if existing:
         assert isinstance(existing[0], LA.NotebookDirectory)
         return existing[0]
-    return parent.create_directory(name)
+    return parent.create(LA.NotebookDirectory, name)
 
 
 @pytest.fixture(scope="session")
@@ -73,7 +73,7 @@ def tests_dir(root_test_dir: LA.NotebookDirectory):
 
 def add_readme(workspace: LA.NotebookDirectory, scenario: str, actions: str):
     """Helper to add the required README to the test workspace."""
-    readme_page = workspace.create_page("README")
+    readme_page = workspace.create(LA.NotebookPage, "README")
     content = f"SCENARIO: {scenario}\n\nACTIONS TAKEN:\n{actions}"
     readme_page.entries.create_entry("plain text entry", content)
 
@@ -98,7 +98,7 @@ def get_or_create_page_with_entry(
         assert isinstance(existing[0], LA.NotebookPage)
         return existing[0]
 
-    new_page = parent.create_page(name)
+    new_page = parent.create(LA.NotebookPage, name)
     new_page.entries.create_entry(entry_type, data)  # type: ignore
     return new_page
 
@@ -113,7 +113,7 @@ def get_or_create_page_with_json(
     if len(existing) > 0:
         return existing[0]
 
-    new_page = parent.create_page(name)
+    new_page = parent.create(LA.NotebookPage, name)
     # create_json_entry returns (AttachmentEntry, TextEntry)
     new_page.entries.create_json_entry(data)
     return new_page
@@ -148,13 +148,13 @@ def data_dir_structure(root_test_dir: LA.NotebookDirectory):
 
             with open(Path(__file__).parent / "test_entry.json", "rb") as f:
                 data_att = LA.Attachment.from_file(f)
-                sess_1.create_page("data.json").entries.create_entry(
+                sess_1.create(LA.NotebookPage, "data.json").entries.create_entry(
                     "attachment", data_att
                 )
 
         # notes.txt
         if not sess_1[Index.Name : "notes.txt"]:
-            n_page = sess_1.create_page("notes.txt")
+            n_page = sess_1.create(LA.NotebookPage, "notes.txt")
             n_page.entries.create_entry(
                 "attachment",
                 LA.Attachment(BytesIO(b""), "text/plain", "notes.txt", "Notes"),
@@ -176,7 +176,7 @@ def test_env(
     test_folder_name = f"test: {request.node.name} {timestamp}"  # pyright: ignore[reportUnknownMemberType]
 
     # Create the isolated workspace
-    workspace = tests_dir.create_directory(test_folder_name)
+    workspace = tests_dir.create(LA.NotebookDirectory, test_folder_name)
 
     # Copy the baseline data structure into this workspace
     # Note: Using your MixinTreeCopy logic
@@ -253,8 +253,8 @@ def test_upload_new_session(test_env):
     sess_root = subj2[Index.Name : "sessions"][0]
 
     # Create session 2
-    sess_2 = sess_root.create_directory("2")
-    notes_page = sess_2.create_page("notes.txt")
+    sess_2 = sess_root.create(LA.NotebookDirectory, "2")
+    notes_page = sess_2.create(LA.NotebookPage, "notes.txt")
     notes_page.entries.create_entry("plain text entry", "New session started.")
 
     assert len(sess_root[Index.Name : "2"]) > 0

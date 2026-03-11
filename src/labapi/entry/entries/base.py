@@ -3,20 +3,16 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, overload
-
-from labapi.util import get_normalized_part_type
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, Type
+from inspect import isabstract
 
 if TYPE_CHECKING:
     from labapi.user import User
-    from labapi.util.part_type import ImplementedPartType
-
-    from .attachment import AttachmentEntry
-    from .text import HeaderEntry, PlainTextEntry, TextEntry
-    from .widget import WidgetEntry
 
 
 T = TypeVar("T")
+
+_entries_registry: dict[str, Type[Entry[Any]]] = {}
 
 
 class Entry(ABC, Generic[T]):
@@ -29,45 +25,10 @@ class Entry(ABC, Generic[T]):
     :param T: The type of content stored in the entry (e.g., str for text, Attachment for files).
     """
 
-    @overload
-    @staticmethod
-    def from_part_type(
-        part_type: Literal["heading"], eid: str, data: str, user: User
-    ) -> HeaderEntry:
-        pass
-
-    @overload
-    @staticmethod
-    def from_part_type(
-        part_type: Literal["plain text entry"], eid: str, data: str, user: User
-    ) -> PlainTextEntry:
-        pass
-
-    @overload
-    @staticmethod
-    def from_part_type(
-        part_type: Literal["text entry"], eid: str, data: str, user: User
-    ) -> TextEntry:
-        pass
-
-    @overload
-    @staticmethod
-    def from_part_type(
-        part_type: Literal["attachment"], eid: str, caption: str, user: User, /
-    ) -> AttachmentEntry:
-        pass
-
-    @overload
-    @staticmethod
-    def from_part_type(
-        part_type: Literal["widget entry"], eid: str, data: str, user: User
-    ) -> WidgetEntry:
-        pass
+    _part_type: str
 
     @staticmethod
-    def from_part_type(
-        part_type: ImplementedPartType, eid: str, data: str, user: User
-    ) -> Entry[Any]:
+    def from_part_type(part_type: str, eid: str, data: str, user: User) -> Entry[Any]:
         """Factory method to create an entry of the appropriate type.
 
         This method takes a part type string and returns the corresponding
@@ -82,28 +43,17 @@ class Entry(ABC, Generic[T]):
         :returns: An entry instance of the appropriate type.
         :raises NotImplementedError: If the part type is not recognized or implemented.
         """
-        from .attachment import AttachmentEntry
-        from .text import HeaderEntry, PlainTextEntry, TextEntry
-        from .widget import WidgetEntry
-
-        match get_normalized_part_type(part_type):
-            case "plain text entry":
-                return PlainTextEntry(eid, data, user)
-            case "text entry":
-                return TextEntry(eid, data, user)
-            case "heading":
-                return HeaderEntry(eid, data, user)
-            case "attachment":
-                return AttachmentEntry(eid, data, user)
-            case "widget entry":
-                return WidgetEntry(eid, data, user)
-            case other:
-                raise NotImplementedError(f"part type {other}")
+        try:
+            klass = _entries_registry[part_type]
+            return klass(eid, data, user)
+        except KeyError:
+            raise NotImplementedError(f"{part_type}")
 
     # TODO perms
     def __init__(
         self,
         eid: str,
+        data: str,
         user: User,
     ):
         """Initializes an Entry object.
@@ -113,7 +63,17 @@ class Entry(ABC, Generic[T]):
         """
         super().__init__()
         self._id = eid
+        self._data = data
         self._user = user
+
+    def __init_subclass__(cls, part_type: str = "", **kwargs: Any) -> None:
+        if not isabstract(cls) and part_type == "":
+            raise TypeError(f"{cls.__name__} must define a part_type")
+
+        cls._part_type = part_type
+
+        _entries_registry[part_type] = cls
+        super().__init_subclass__(**kwargs)
 
     @property
     def id(self):
@@ -124,13 +84,12 @@ class Entry(ABC, Generic[T]):
         return self._id
 
     @property
-    @abstractmethod
     def content_type(self) -> str:
         """The content type identifier for the entry.
 
         :returns: A string representing the entry's type (e.g., "text entry", "Attachment").
         """
-        raise NotImplementedError
+        return self._part_type
 
     @property
     @abstractmethod

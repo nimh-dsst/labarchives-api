@@ -5,11 +5,12 @@ Logs Jupyter notebook runs (cell info, outputs, matplotlib figures) to LabArchiv
 
 LabArchives path structure:
     {notebook}/Notebook Log/{email}/{iso8601_timestamp}/
-        Notebook Run Details   (page)
-            ├── Cell Info       (text entry)
-            ├── Tags            (text entry)
-            ├── Result          (plain text entry)
-            └── Figure 1..N     (AttachmentEntry: PNG)
+        {timestamp} (page)
+            |- Tags       (text entry)
+            |- Cell Info  (text entry)
+            |- Result     (plain text entry)
+            |- Figure N   (AttachmentEntry: PNG)
+            \\- File N     (AttachmentEntry: arbitrary type)
 """
 
 import html
@@ -20,6 +21,7 @@ from mimetypes import guess_type
 from typing import Any
 
 from labapi import Client, InsertBehavior, NotebookDirectory, NotebookPage
+from labapi.entry import Attachment
 from labapi.user import User
 
 try:
@@ -53,39 +55,56 @@ class NotebookLogger:
         self._captured_figure_data: dict[int, bytes] = {}
         self.tracked_files: list[str] = []
 
-        # Register IPython display formatter to capture figures as they are shown
+        self._configure_figure_capture()
+        self.user = self._authenticate(user)
+
+    def _configure_figure_capture(self) -> None:
+        """Configure IPython/matplotlib hooks to capture rendered figures."""
         ip = get_ipython()
-        if ip:
-            try:
-                import matplotlib.figure
-                import matplotlib.pyplot as plt
-
-                def capture_fig(fig):
-                    return self._serialize_figure(fig)
-
-                ip.display_formatter.formatters["image/png"].for_type(
-                    matplotlib.figure.Figure, capture_fig
-                )
-
-                original_show = plt.show
-
-                def capture_show(*args: Any, **kwargs: Any):
-                    # Capture currently open figures before inline backends close them.
-                    for fig_num in plt.get_fignums():
-                        self._serialize_figure(plt.figure(fig_num))
-                    return original_show(*args, **kwargs)
-
-                plt.show = capture_show
-            except ImportError:
-                pass
-
-        if user is not None:
-            self.user = user
-            print(f"Using existing authentication for: {self.user.email}")
+        if not ip:
             return
 
-        auth_url = self.client.generate_auth_url("http://localhost:8089/")
+        try:
+            import matplotlib.figure
+            import matplotlib.pyplot as plt
+        except ImportError:
+            return
 
+        def capture_fig(fig):
+            return self._serialize_figure(fig)
+
+        ip.display_formatter.formatters["image/png"].for_type(
+            matplotlib.figure.Figure, capture_fig
+        )
+
+        original_show = plt.show
+
+        def capture_show(*args: Any, **kwargs: Any):
+            # Capture currently open figures before inline backends close them.
+            for fig_num in plt.get_fignums():
+                self._serialize_figure(plt.figure(fig_num))
+            return original_show(*args, **kwargs)
+
+        plt.show = capture_show
+
+    def _authenticate(self, user: User | None) -> User:
+        """Authenticate the user, reusing an existing session when provided."""
+        if user is not None:
+            print(f"Using existing authentication for: {user.email}")
+            return user
+
+        auth_url = self.client.generate_auth_url("http://localhost:8089/")
+        self._display_auth_prompt(auth_url)
+
+        print("Waiting for authentication...")
+        # Note: This is a blocking call that waits for the redirect on port 8089
+        authenticated_user = self.client.collect_auth_response()
+        print(f"Authenticated as: {authenticated_user.email}")
+        return authenticated_user
+
+    @staticmethod
+    def _display_auth_prompt(auth_url: str) -> None:
+        """Display authentication instructions in notebook or terminal."""
         try:
             from IPython.display import HTML, display
 
@@ -98,11 +117,6 @@ class NotebookLogger:
             )
         except ImportError:
             print(f"Authenticate by visiting:\n  {auth_url}")
-
-        print("Waiting for authentication...")
-        # Note: This is a blocking call that waits for the redirect on port 8089
-        self.user = self.client.collect_auth_response()
-        print(f"Authenticated as: {self.user.email}")
 
     def track_file(self, path: str) -> None:
         """Register a file to be uploaded with the next log() call."""
@@ -182,6 +196,104 @@ class NotebookLogger:
 
         return "(no result)"
 
+    def _collect_file_paths(self, files: list[str] | None) -> list[str]:
+        """Combine tracked and explicit files into a de-duplicated path list."""
+        combined = [*self.tracked_files, *(files or [])]
+        self.tracked_files.clear()
+
+        unique_paths: list[str] = []
+        seen: set[str] = set()
+        for path in combined:
+            abs_path = os.path.abspath(path)
+            if abs_path in seen:
+                continue
+            seen.add(abs_path)
+            unique_paths.append(abs_path)
+
+        return unique_paths
+
+    def _resolve_notebook(self):
+        """Look up the target notebook by name."""
+        notebooks = self.user.notebooks
+        try:
+            return notebooks[self.notebook_name]
+        except KeyError:
+            available = ", ".join(notebooks.keys())
+            raise RuntimeError(
+                f"Notebook '{self.notebook_name}' not found. Available: {available}"
+            ) from None
+
+    def _create_log_page(self) -> tuple[NotebookPage, str]:
+        """Create and return the destination page for this run."""
+        notebook = self._resolve_notebook()
+        print("Navigating to logging directory...")
+
+        notebook_log_dir = notebook.create(
+            NotebookDirectory, "Notebook Log", if_exists=InsertBehavior.Retain
+        )
+        user_dir = notebook_log_dir.create(
+            NotebookDirectory, self.user.email, if_exists=InsertBehavior.Retain
+        )
+
+        timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
+        page = user_dir.create(NotebookPage, timestamp)
+        return page, timestamp
+
+    @staticmethod
+    def _build_tags_html(tags: list[str]) -> str:
+        """Render tags as styled HTML badges."""
+        tags_html = "".join(
+            f'<span style="background: #eee; padding: 2px 5px; margin: 2px; border-radius: 3px;">{html.escape(tag)}</span>'
+            for tag in tags
+        )
+        return f"<p><strong>Tags:</strong> {tags_html}</p>"
+
+    @staticmethod
+    def _build_cell_info_html(cell_info: dict[str, Any]) -> str:
+        """Render captured cell metadata as HTML."""
+        recent = cell_info.get("recent_cells", [])
+        exec_count = cell_info.get("execution_count")
+        cells_html = "".join(
+            f"<pre style='background:#f5f5f5;padding:6px;margin:4px 0;'>{html.escape(src)}</pre>"
+            for src in recent
+        )
+        return (
+            f"<p><strong>Cell Info</strong> "
+            f"(execution count: {exec_count})</p>{cells_html}"
+        )
+
+    @staticmethod
+    def _write_figure_attachments(entries: Any, figures: list[bytes]) -> None:
+        """Write captured matplotlib figures as PNG attachments."""
+        for i, fig_bytes in enumerate(figures, 1):
+            attachment = Attachment(
+                BytesIO(fig_bytes),
+                "image/png",
+                f"figure_{i}.png",
+                f"Notebook figure {i}",
+            )
+            entries.create_entry("Attachment", attachment)
+
+    @staticmethod
+    def _write_file_attachments(entries: Any, file_paths: list[str]) -> None:
+        """Write tracked files as attachments."""
+        for path in file_paths:
+            if not os.path.isfile(path):
+                print(f"Warning: Tracked file '{path}' is not a valid file.")
+                continue
+
+            with open(path, "rb") as f:
+                content = f.read()
+                mime_type = guess_type(path)[0] or "application/octet-stream"
+                filename = os.path.basename(path)
+                attachment = Attachment(
+                    BytesIO(content),
+                    mime_type,
+                    filename,
+                    f"Attached file: {filename}",
+                )
+                entries.create_entry("Attachment", attachment)
+
     def log(
         self,
         tags: list[str],
@@ -199,89 +311,19 @@ class NotebookLogger:
         :param figures: List of PNG bytes, one per matplotlib figure.
         :param files: Optional list of file paths to attach.
         """
-        from labapi.entry import Attachment
-
-        # Combine explicitly passed files and tracked files, avoiding duplicates
-        all_files = set(self.tracked_files)
-        if files:
-            all_files.update(os.path.abspath(f) for f in files)
-        self.tracked_files.clear()
-
-        notebooks = self.user.notebooks
-        try:
-            notebook = notebooks[self.notebook_name]
-        except KeyError:
-            available = ", ".join(notebooks.keys())
-            raise RuntimeError(
-                f"Notebook '{self.notebook_name}' not found. Available: {available}"
-            ) from None
-
-        print("Navigating to logging directory...")
-        notebook_log_dir = notebook.create(
-            NotebookDirectory, "Notebook Log", if_exists=InsertBehavior.Retain
-        )
-        user_dir = notebook_log_dir.create(
-            NotebookDirectory, self.user.email, if_exists=InsertBehavior.Retain
-        )
-
-        timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
-        page = user_dir.create(NotebookPage, timestamp)
+        file_paths = self._collect_file_paths(files)
+        page, timestamp = self._create_log_page()
         entries = page.entries
 
         print(
             f"Logging to: {self.notebook_name}/Notebook Log/{self.user.email}/{timestamp}"
         )
 
-        # 1. Tags as styled pills
-        tags_html = "".join(
-            f'<span style="background: #eee; padding: 2px 5px; margin: 2px; border-radius: 3px;">{html.escape(t)}</span>'
-            for t in tags
-        )
-        entries.create_entry("text entry", f"<p><strong>Tags:</strong> {tags_html}</p>")
-
-        # 2. Cell info as HTML
-        recent = cell_info.get("recent_cells", [])
-        exec_count = cell_info.get("execution_count")
-        cells_html = "".join(
-            f"<pre style='background:#f5f5f5;padding:6px;margin:4px 0;'>{html.escape(src)}</pre>"
-            for src in recent
-        )
-        cell_html = (
-            f"<p><strong>Cell Info</strong> "
-            f"(execution count: {exec_count})</p>{cells_html}"
-        )
-        entries.create_entry("text entry", cell_html)
-
-        # 3. Result as plain text
+        entries.create_entry("text entry", self._build_tags_html(tags))
+        entries.create_entry("text entry", self._build_cell_info_html(cell_info))
         entries.create_entry("plain text entry", result)
-
-        # 4. Figures as PNG attachments
-        for i, fig_bytes in enumerate(figures, 1):
-            attachment = Attachment(
-                BytesIO(fig_bytes),
-                "image/png",
-                f"figure_{i}.png",
-                f"Notebook figure {i}",
-            )
-            entries.create_entry("Attachment", attachment)
-
-        # 5. Tracked files as attachments
-        for path in all_files:
-            if not os.path.isfile(path):
-                print(f"Warning: Tracked file '{path}' is not a valid file.")
-                continue
-
-            with open(path, "rb") as f:
-                content = f.read()
-                mime_type = guess_type(path)[0] or "application/octet-stream"
-                filename = os.path.basename(path)
-                attachment = Attachment(
-                    BytesIO(content),
-                    mime_type,
-                    filename,
-                    f"Attached file: {filename}",
-                )
-                entries.create_entry("Attachment", attachment)
+        self._write_figure_attachments(entries, figures)
+        self._write_file_attachments(entries, file_paths)
 
         print("Log complete!")
 

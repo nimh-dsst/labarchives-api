@@ -26,8 +26,8 @@ class NotebookPath(Sequence[str]):
         path = NotebookPath(folder)             # e.g. /Experiments/2024
 
         # From a string
-        path = NotebookPath(None, "/Experiments/2024")  # absolute
-        path = NotebookPath(None, "2024/Results")        # relative
+        path = NotebookPath("/Experiments/2024")  # absolute
+        path = NotebookPath("2024/Results")        # relative
 
         # Combine with /
         path = NotebookPath(notebook) / "Experiments" / "2024"
@@ -35,7 +35,7 @@ class NotebookPath(Sequence[str]):
 
     def __init__(
         self,
-        part: NotebookPath | AbstractBaseTreeNode | None = None,
+        part: NotebookPath | AbstractBaseTreeNode | str,
         *parts: str,
         parent: NotebookPath | AbstractBaseTreeNode | None = None,
     ):
@@ -61,17 +61,17 @@ class NotebookPath(Sequence[str]):
         else:
             self._parent = None
 
-        if part is None:
-            self._absolute = (
-                NotebookPath._is_absolute_seq(parts) and self._parent is None
-            )
-            self._parts = NotebookPath._combine(parts, [], self._absolute)
-        elif isinstance(part, NotebookPath):
+        if isinstance(part, NotebookPath):
             self._parts: Sequence[str] = NotebookPath._combine(
                 part._parts, parts, part._absolute
             )
             self._absolute: bool = part._absolute
             self._parent = part._parent
+        elif isinstance(part, str):
+            self._parts: Sequence[str] = NotebookPath._combine((part,), parts, True)
+            self._absolute = (
+                NotebookPath._is_absolute_seq(part) and self._parent is None
+            )
         else:
             self._parts: Sequence[str] = NotebookPath._combine(
                 NotebookPath._of_node(part), parts, True
@@ -201,12 +201,12 @@ class NotebookPath(Sequence[str]):
             raise ValueError(f'Path "{self}" is outside of "{other}"')
 
         if not other._absolute and other._parent is None:
-            return NotebookPath(None, *self[len(other) :])
+            return NotebookPath(*self[len(other) :])
 
         p_origin = other.resolve()
         p_endpoint = self.resolve(other)
 
-        return NotebookPath(None, *p_endpoint[len(p_origin) :], parent=p_origin)
+        return NotebookPath(*p_endpoint[len(p_origin) :], parent=p_origin)
 
     @property
     def name(self) -> str:
