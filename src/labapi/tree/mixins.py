@@ -93,6 +93,8 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         self._parent: AbstractTreeContainer = parent
         self._tree_id: str = tree_id
         self._user = user
+        self._has_path = False
+        self._path: NotebookPath
 
     @property
     def root(self) -> AbstractTreeContainer:
@@ -137,6 +139,14 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         """
         return self._tree_id
 
+    @property
+    def path(self) -> NotebookPath:
+        if not self._has_path:
+            self._path = NotebookPath(self)
+            self._has_path = True
+
+        return self._path
+
     @abstractmethod
     def is_dir(self) -> bool:
         """Method to determine if the node is a directory.
@@ -178,11 +188,8 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         :raises RuntimeError: If a segment in the path does not lead to a directory.
         :raises KeyError: If a node at any segment of the path is not found.
         """
-
-        # TODO rewrite to use NotebookPath (or str that is converted to NotebookPath internally)
-
-        canonical = NotebookPath(None, path) if isinstance(path, str) else path
-        canonical = canonical.resolve(NotebookPath(self))
+        canonical = NotebookPath(path) if isinstance(path, str) else path
+        canonical = canonical.resolve(self.path)
 
         curr = self.root
 
@@ -285,6 +292,8 @@ class AbstractTreeNode(AbstractBaseTreeNode):
         self._parent = destination
         self.parent._children.append(self)  # pyright: ignore[reportPrivateUsage]
         # This adds current node to new parent in-place
+
+        self._has_path = False
         return self
 
     def delete(self) -> Self:
@@ -295,8 +304,6 @@ class AbstractTreeNode(AbstractBaseTreeNode):
 
         :returns: The instance of the deleted node.
         """
-        # XXX: should the creation of the deleted directory be singletoned by the Client
-        # on its instantiation into a Notebook?
         api_deleted_items = self.root[Index.Name : "API Deleted Items"]
 
         if len(api_deleted_items) == 0:
@@ -518,7 +525,7 @@ class AbstractTreeContainer(
         self,
         *,
         max_depth: int = 1,
-        timeout: timedelta | None = None,
+        timeout: timedelta = timedelta(seconds=5),
         _timeout: float | None = None,
         _current_depth: int = 0,
     ) -> Sequence[str]:
@@ -536,9 +543,6 @@ class AbstractTreeContainer(
 
         if _current_depth >= max_depth:
             return current
-
-        if timeout is None:
-            timeout = timedelta(seconds=5)
 
         if _timeout is None:
             _timeout = time.monotonic() + timeout.total_seconds()
@@ -558,7 +562,9 @@ class AbstractTreeContainer(
                     [
                         f"{name}/{child_path}"
                         for child_path in container.enumerate_all(
-                            _current_depth + 1, max_depth=max_depth, _timeout=_timeout
+                            _current_depth=_current_depth + 1,
+                            max_depth=max_depth,
+                            _timeout=_timeout,
                         )
                     ]
                 )
@@ -568,7 +574,10 @@ class AbstractTreeContainer(
         return current
 
     def enumerate_dirs(
-        self, *, max_depth: int = 1, timeout: timedelta | None = None
+        self,
+        *,
+        max_depth: int = 1,
+        timeout: timedelta = timedelta(seconds=5),
     ) -> Sequence[str]:
         """Enumerates only directories up to a specified depth.
 
@@ -583,7 +592,10 @@ class AbstractTreeContainer(
         return [name for name in all_names if self.traverse(name).is_dir()]
 
     def enumerate_pages(
-        self, *, max_depth: int = 1, timeout: timedelta | None = None
+        self,
+        *,
+        max_depth: int = 1,
+        timeout: timedelta = timedelta(seconds=5),
     ) -> Sequence[str]:
         """Enumerates only pages up to a specified depth.
 
@@ -617,12 +629,10 @@ class AbstractTreeContainer(
         :returns: The newly created (or existing) node of type `cls`.
         :raises RuntimeError: If `if_exists` is `InsertBehavior.Raise` and the node already exists.
         """
-        path_self = NotebookPath(self)
-
         if not isinstance(name, str) and name.is_absolute():
             path = name.relative_to(self)
         else:
-            path = (path_self / name).relative_to(self)
+            path = (self.path / name).relative_to(self)
 
         if len(path) == 0:
             raise ValueError("Path cannot be empty")

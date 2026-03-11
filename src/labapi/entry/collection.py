@@ -71,6 +71,8 @@ class Entries(Sequence["Entry[Any]"]):
         :param data: The JSON-serializable data to upload.
         :returns: A tuple containing the attachment entry and the text entry.
         """
+        # TODO treat this as one entry in the code
+
         name = f"uploaded_data_{datetime.now().timestamp():.0f}.json"
 
         file_entry = self.create_entry(

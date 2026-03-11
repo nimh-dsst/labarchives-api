@@ -11,7 +11,7 @@ from typing import override
 from .text import BaseTextEntry
 
 
-class WidgetEntry(BaseTextEntry):
+class WidgetEntry(BaseTextEntry, part_type="widget entry"):
     """Represents a widget entry on a LabArchives page.
 
     Widget entries typically embed interactive content or external applications.
@@ -27,12 +27,3 @@ class WidgetEntry(BaseTextEntry):
         :raises AttributeError: Always, as updating widget content is not supported.
         """
         raise AttributeError("Widget entries are read-only.")
-
-    @property
-    @override
-    def content_type(self) -> str:
-        """The content type identifier for a widget entry.
-
-        :returns: The string "widget entry".
-        """
-        return "widget entry"

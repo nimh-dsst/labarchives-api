@@ -30,8 +30,7 @@ class BaseTextEntry(Entry[str], ABC):
         :param data: The text content of the entry.
         :param user: The authenticated user.
         """
-        super().__init__(eid, user)
-        self._entry_data = data
+        super().__init__(eid, data, user)
 
     @property
     @override
@@ -40,7 +39,7 @@ class BaseTextEntry(Entry[str], ABC):
 
         :returns: The content of the entry as a string.
         """
-        return self._entry_data
+        return self._data
 
     @content.setter
     @override
@@ -53,52 +52,25 @@ class BaseTextEntry(Entry[str], ABC):
         """
         self._user.api_post("entries/update_entry", {"entry_data": value}, eid=self.id)
 
-        self._entry_data = value
+        self._data = value
 
 
-class TextEntry(BaseTextEntry):
+class TextEntry(BaseTextEntry, part_type="text entry"):
     """Represents a rich text entry on a LabArchives page.
 
     This class is used for entries containing formatted text, typically HTML.
     """
 
-    @property
-    @override
-    def content_type(self) -> str:
-        """The content type identifier for a rich text entry.
 
-        :returns: The string "text entry".
-        """
-        return "text entry"
-
-
-class HeaderEntry(BaseTextEntry):
+class HeaderEntry(BaseTextEntry, part_type="heading"):
     """Represents a header entry on a LabArchives page.
 
     This class is used for entries that function as headings or titles within a page.
     """
 
-    @property
-    @override
-    def content_type(self) -> str:
-        """The content type identifier for a header entry.
 
-        :returns: The string "heading".
-        """
-        return "heading"
-
-
-class PlainTextEntry(BaseTextEntry):
+class PlainTextEntry(BaseTextEntry, part_type="plain text entry"):
     """Represents a plain text entry on a LabArchives page.
 
     This class is used for entries containing unformatted, raw text.
     """
-
-    @property
-    @override
-    def content_type(self) -> str:
-        """The content type identifier for a plain text entry.
-
-        :returns: The string "plain text entry".
-        """
-        return "plain text entry"
