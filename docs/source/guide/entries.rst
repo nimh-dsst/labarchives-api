@@ -75,18 +75,20 @@ Widget entries (:class:`~labapi.entry.entries.widget.WidgetEntry`) embed interac
 Creating New Entries
 --------------------
 
-You can create new entries using the :meth:`~labapi.entry.collection.Entries.create_entry` method.
+You can create new entries using the :meth:`~labapi.entry.collection.Entries.create` method.
 
 .. code-block:: python
 
+   from labapi import TextEntry, HeaderEntry, PlainTextEntry
+
    # Create a rich text entry
-   page.entries.create_entry("text entry", "<h1>New Section</h1><p>Some content...</p>")
+   page.entries.create(TextEntry, "<h1>New Section</h1><p>Some content...</p>")
    
    # Create a heading
-   page.entries.create_entry("heading", "Experiment Notes")
+   page.entries.create(HeaderEntry, "Experiment Notes")
    
    # Create a plain text entry
-   page.entries.create_entry("plain text entry", "Raw data string")
+   page.entries.create(PlainTextEntry, "Raw data string")
 
 Creating Attachments
 ~~~~~~~~~~~~~~~~~~~~
@@ -96,22 +98,24 @@ To create an attachment entry, you first need to create an :class:`~labapi.entry
 .. code-block:: python
 
    from io import BytesIO
-   from labapi.entry import Attachment
+   from labapi import Attachment, AttachmentEntry
    
    # Create attachment from in-memory data
    data = BytesIO(b"Hello, LabArchives!")
    attachment = Attachment(data, "text/plain", "hello.txt", "A simple text file")
    
    # Upload as a new entry
-   page.entries.create_entry("attachment", attachment)
+   page.entries.create(AttachmentEntry, attachment)
 
 You can also create an attachment directly from a file on disk:
 
 .. code-block:: python
 
+   from labapi import Attachment, AttachmentEntry
+
    with open("data.csv", "rb+") as f:
        attachment = Attachment.from_file(f)
-       page.entries.create_entry("attachment", attachment)
+       page.entries.create(AttachmentEntry, attachment)
 
 Working with JSON Data
 ----------------------
@@ -143,6 +147,6 @@ For attachments, setting the ``content`` property with a new :class:`~labapi.ent
 
 .. code-block:: python
 
-   with open("updated_data.csv", "rb") as f:
+   with open("updated_data.csv", "rb+") as f:
        new_attachment = Attachment.from_file(f)
        attachment_entry.content = new_attachment

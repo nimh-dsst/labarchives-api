@@ -2,34 +2,36 @@
 
 This package provides various utility functions and classes used throughout
 the LabArchives API client, including XML extraction, type conversions,
-indexing mechanisms, entry part type validation, and data structures for
-notebook initialization.
+indexing mechanisms, and data structures for notebook initialization.
 """
 
 from .extract import extract_etree, to_bool
-from .index import IdIndex, IdOrNameIndex, Index, NameIndex
-from .notebookinit import NotebookInit
-from .part_type import (
-    get_normalized_part_type,
-    is_part_type,
-    is_valid_part_type,
-    serialize_part_type,
-)
-from .behavior import InsertBehavior
 from .path import NotebookPath
+from .types import IdIndex, IdOrNameIndex, Index, InsertBehavior, JsonData, NameIndex, NotebookInit
+
+#: All known LabArchives entry part types.
+ALL_PART_TYPES = (
+    "Attachment",
+    "plain text entry",
+    "heading",
+    "text entry",
+    "widget entry",
+    "sketch entry",
+    "reference entry",
+    "equation entry",
+    "assignment entry",
+)
 
 __all__ = [
     "IdIndex",
     "IdOrNameIndex",
     "Index",
+    "InsertBehavior",
+    "JsonData",
     "NameIndex",
     "NotebookInit",
-    "extract_etree",
-    "get_normalized_part_type",
-    "is_part_type",
-    "is_valid_part_type",
-    "serialize_part_type",
-    "to_bool",
-    "InsertBehavior",
     "NotebookPath",
+    "ALL_PART_TYPES",
+    "extract_etree",
+    "to_bool",
 ]

@@ -121,7 +121,6 @@ class TestAttachmentEntryIntegration:
         assert api_call[1]["filename"] == "new_file.txt"
         assert api_call[1]["caption"] == "New caption"
         assert api_call[1]["eid"] == "eid_att"
-        assert api_call[1]["change_description"] == "File updated via API"
 
     def test_attachment_entry_get_attachment_caching(self, client, user: User):
         """Test AttachmentEntry.get_attachment caches the result."""

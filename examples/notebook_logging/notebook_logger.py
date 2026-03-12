@@ -20,7 +20,16 @@ from io import BytesIO
 from mimetypes import guess_type
 from typing import Any
 
-from labapi import Client, InsertBehavior, NotebookDirectory, NotebookPage
+from labapi import (
+    AttachmentEntry,
+    Client,
+    HeaderEntry,
+    InsertBehavior,
+    NotebookDirectory,
+    NotebookPage,
+    PlainTextEntry,
+    TextEntry,
+)
 from labapi.entry import Attachment
 from labapi.user import User
 
@@ -272,7 +281,7 @@ class NotebookLogger:
                 f"figure_{i}.png",
                 f"Notebook figure {i}",
             )
-            entries.create_entry("Attachment", attachment)
+            entries.create(AttachmentEntry, attachment)
 
     @staticmethod
     def _write_file_attachments(entries: Any, file_paths: list[str]) -> None:
@@ -292,7 +301,7 @@ class NotebookLogger:
                     filename,
                     f"Attached file: {filename}",
                 )
-                entries.create_entry("Attachment", attachment)
+                entries.create(AttachmentEntry, attachment)
 
     def log(
         self,
@@ -319,9 +328,9 @@ class NotebookLogger:
             f"Logging to: {self.notebook_name}/Notebook Log/{self.user.email}/{timestamp}"
         )
 
-        entries.create_entry("text entry", self._build_tags_html(tags))
-        entries.create_entry("text entry", self._build_cell_info_html(cell_info))
-        entries.create_entry("plain text entry", result)
+        entries.create(TextEntry, self._build_tags_html(tags))
+        entries.create(TextEntry, self._build_cell_info_html(cell_info))
+        entries.create(PlainTextEntry, result)
         self._write_figure_attachments(entries, figures)
         self._write_file_attachments(entries, file_paths)
 

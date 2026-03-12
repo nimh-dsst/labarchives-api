@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-from labapi.util.notebookinit import NotebookInit
+from labapi.util.types import NotebookInit
 
 
 def test_notebookinit_creation():

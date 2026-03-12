@@ -131,8 +131,8 @@ nodes or strings, combined with ``/``, and converted back to strings. It is used
 
 .. code-block:: python
 
-    abs_path = NotebookPath(None, "/Experiments/2024")
-    rel_path = NotebookPath(None, "2024/Results")
+    abs_path = NotebookPath("/Experiments/2024")
+    rel_path = NotebookPath("2024/Results")
 
 **Combining paths with ``/``:**
 
@@ -145,7 +145,7 @@ nodes or strings, combined with ``/``, and converted back to strings. It is used
 
 .. code-block:: python
 
-    rel = NotebookPath(None, "Results")
+    rel = NotebookPath("Results")
     abs_path = rel.resolve(NotebookPath(folder))  # /Experiments/2024/Results
 
 **Getting a relative path between two nodes:**

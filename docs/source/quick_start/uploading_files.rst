@@ -16,7 +16,7 @@ file-like object (e.g., a file opened in binary mode).
 
 .. code-block:: python
 
-    from labapi.entry.attachment import Attachment
+    from labapi import Attachment
 
     with open("my_file.txt", "rb+") as f:
         attachment = Attachment.from_file(f)
@@ -36,7 +36,8 @@ Once you have an :class:`~labapi.entry.attachment.Attachment` object, you can cr
 .. code-block:: python
 
     # Assuming you have a NotebookPage object called 'my_page'
-    attachment_entry = my_page.entries.create_entry("attachment", attachment)
+    from labapi import AttachmentEntry
+    attachment_entry = my_page.entries.create(AttachmentEntry, attachment)
 
 This will upload the file to LabArchives and create a new attachment entry on the page.
 
@@ -57,7 +58,7 @@ You can do this by creating an :class:`~labapi.entry.attachment.Attachment` obje
 
 .. code-block:: python
 
-    from labapi.entry.attachment import Attachment
+    from labapi import Attachment, AttachmentEntry
 
     # Upload an image with a custom caption
     with open("experiment_results.png", "rb") as f:
@@ -69,6 +70,6 @@ You can do this by creating an :class:`~labapi.entry.attachment.Attachment` obje
         )
 
         # Create the entry on the page
-        figure_entry = my_page.entries.create_entry("attachment", attachment)
+        figure_entry = my_page.entries.create(AttachmentEntry, attachment)
 
 This will display the image inline on the page with your custom caption beneath it, making it easy to reference figures in your lab notebook.

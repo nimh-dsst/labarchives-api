@@ -12,6 +12,7 @@ from tempfile import TemporaryFile
 from typing import TYPE_CHECKING, override
 
 from labapi.entry.attachment import Attachment
+from labapi.exceptions import ApiError
 
 from .base import Entry
 
@@ -75,7 +76,8 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
                 filename = msg.get_filename()
                 mime_type = msg.get_content_type()
 
-                assert filename is not None
+                if filename is None:
+                    raise ApiError("Could not determine filename from API response headers")
 
             output.seek(0)
 

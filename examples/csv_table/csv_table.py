@@ -168,7 +168,7 @@ def upload_csv_as_table(
 
     print(f"Uploading table to '{page_path}'...")
     try:
-        entry = page.entries.create_entry("text entry", html_table)
+        entry = page.entries.create(TextEntry, html_table)
         print(f"✓ Table uploaded successfully (Entry ID: {entry.id})")
     except Exception as e:
         print(f"✗ Error uploading table: {e}")

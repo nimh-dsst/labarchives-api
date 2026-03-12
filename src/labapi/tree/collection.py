@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import ItemsView, Iterator, KeysView, Mapping, Sequence, ValuesView
 from typing import TYPE_CHECKING, Literal, overload, override
 
+from labapi.exceptions import ApiError
 from labapi.util import IdOrNameIndex, Index, NotebookInit, extract_etree
 
 from .notebook import Notebook
@@ -126,7 +127,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
         )["nbid"]
 
         if nbid in self._notebooks_by_id:
-            raise RuntimeError(f"API returned an existing notebook ID: {nbid}")
+            raise ApiError(f"API returned an existing notebook ID: {nbid}")
 
         new_notebook = Notebook(NotebookInit(nbid, name, False), self._user, self)
 

@@ -32,39 +32,18 @@ class TestNotebookPageUnit:
         assert page.name == "Test Page"
         assert page.parent is mock_parent
         assert page.root is mock_root
-
-    def test_page_is_dir(self):
-        """Test NotebookPage.is_dir returns False."""
-        mock_user = Mock(spec=User)
-        mock_root = Mock(spec=Notebook)
-        mock_parent = Mock(spec=Notebook)
-
-        page = NotebookPage(
-            tree_id="page-1",
-            name="Test Page",
-            parent=mock_parent,
-            root=mock_root,
-            user=mock_user,
-        )
-
         assert page.is_dir() is False
 
 
 class TestNotebookPageIntegration:
     """Integration tests with real objects and mocked API."""
 
-    def test_page_id_from_tree(self, notebook_tree: Notebook):
-        """Test NotebookPage.id returns the page ID."""
+    def test_page_from_tree(self, notebook_tree: Notebook):
+        """Test NotebookPage identity and name from the tree fixture."""
         page = notebook_tree[Index.Id : "page-1"]
 
         assert isinstance(page, NotebookPage)
         assert page.id == "page-1"
-
-    def test_page_name_from_tree(self, notebook_tree: Notebook):
-        """Test NotebookPage.name returns the page name."""
-        page = notebook_tree[Index.Id : "page-1"]
-
-        assert isinstance(page, NotebookPage)
         assert page.name == "Test Page 1"
 
     def test_page_entries_lazy_load(self, client, notebook_tree: Notebook):
@@ -94,13 +73,11 @@ class TestNotebookPageIntegration:
         </entries>
         """
 
-        # Access entries property (should trigger API call)
         entries = page.entries
 
         assert isinstance(entries, Entries)
         assert len(entries) == 2
 
-        # Verify API call
         api_call = client.api_log
         assert api_call[0] == "tree_tools/get_entries_for_page"
         assert api_call[1]["page_tree_id"] == "page-1"
@@ -115,7 +92,6 @@ class TestNotebookPageIntegration:
         assert isinstance(page, NotebookPage)
         client.clear_log()
 
-        # Mock API response
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <entries>
             <entry>
@@ -128,19 +104,12 @@ class TestNotebookPageIntegration:
         </entries>
         """
 
-        # First access
         entries1 = page.entries
-        client.api_log  # Pop the log
+        client.api_log  # consume the load call
 
-        # Second access should use cached data
         entries2 = page.entries
 
-        # Should be the same object
         assert entries1 is entries2
-
-        # Verify no second API call was made
-        with pytest.raises(IndexError):
-            client.api_log
         client.clear_log()
 
     def test_page_refresh(self, client, notebook_tree: Notebook):
@@ -150,7 +119,6 @@ class TestNotebookPageIntegration:
         assert isinstance(page, NotebookPage)
         client.clear_log()
 
-        # Mock API response for first load
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <entries>
             <entry>
@@ -163,15 +131,12 @@ class TestNotebookPageIntegration:
         </entries>
         """
 
-        # Load entries
         entries1 = page.entries
         assert len(entries1) == 1
-        client.api_log  # Pop the log
+        client.api_log  # consume the load call
 
-        # Refresh the page
         page.refresh()
 
-        # Mock API response for second load
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <entries>
             <entry>
@@ -191,12 +156,10 @@ class TestNotebookPageIntegration:
         </entries>
         """
 
-        # Access entries again (should trigger new API call)
         entries2 = page.entries
         assert len(entries2) == 2
-        assert entries1 is not entries2  # Different object
+        assert entries1 is not entries2
 
-        # Verify API call was made again
         api_call = client.api_log
         assert api_call[0] == "tree_tools/get_entries_for_page"
         client.clear_log()

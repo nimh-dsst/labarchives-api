@@ -7,9 +7,10 @@ from unittest.mock import Mock
 import pytest
 
 from labapi import Index, Notebook
+from labapi.exceptions import ApiError
 from labapi.tree.collection import Notebooks
 from labapi.user import User
-from labapi.util.notebookinit import NotebookInit
+from labapi.util.types import NotebookInit
 
 
 class TestNotebooksUnit:
@@ -169,6 +170,6 @@ class TestNotebooksIntegration:
         </notebooks>
         """
 
-        with pytest.raises(RuntimeError, match="API returned an existing notebook ID"):
+        with pytest.raises(ApiError, match="API returned an existing notebook ID"):
             notebooks.create_notebook("Duplicate")
         client.clear_log()

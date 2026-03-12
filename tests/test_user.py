@@ -8,7 +8,7 @@ from lxml import etree
 
 from labapi import User
 from labapi.tree.collection import Notebooks
-from labapi.util.notebookinit import NotebookInit
+from labapi.util.types import NotebookInit
 
 
 class TestUserUnit:

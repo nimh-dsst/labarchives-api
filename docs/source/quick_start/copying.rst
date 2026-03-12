@@ -73,7 +73,8 @@ The ``copy_to()`` method returns a reference to the newly created copy:
     print(f"Copy: {new_page.id}")  # Different ID
 
     # You can add more entries to the copy
-    new_page.entries.create_entry("text entry", "Additional notes added to the copy")
+    from labapi import TextEntry
+    new_page.entries.create(TextEntry, "Additional notes added to the copy")
 
 Important Limitations
 ---------------------
@@ -181,7 +182,7 @@ and add entries programmatically rather than using ``copy_to()``:
     # Add entries from scratch or based on original page
     for entry in original_page.entries:
         if entry.content_type == "text entry":
-            new_page.entries.create_entry("text entry", entry.content)
+            new_page.entries.create(entry.__class__, entry.content)
 
 This approach gives you more control and avoids potential issues with unsupported entry types.
 

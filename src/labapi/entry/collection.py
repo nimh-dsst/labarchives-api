@@ -6,18 +6,20 @@ from collections.abc import Sequence
 from datetime import datetime
 from io import BytesIO
 from json import dumps
-from typing import TYPE_CHECKING, Any, Literal, overload, override
+from typing import TYPE_CHECKING, Any, Type, TypeVar, overload, override
 
 from labapi.util import extract_etree
 
 from .attachment import Attachment
-from .entries import AttachmentEntry, Entry, HeaderEntry, PlainTextEntry, TextEntry
+from .entries import AttachmentEntry, Entry, TextEntry
+
+E = TypeVar("E", bound="Entry[Any]")
 
 if TYPE_CHECKING:
     from labapi.tree import NotebookPage
     from labapi.user import User
 
-    from .json_data import JsonData
+    from labapi.util import JsonData
 
 
 class Entries(Sequence["Entry[Any]"]):
@@ -75,8 +77,8 @@ class Entries(Sequence["Entry[Any]"]):
 
         name = f"uploaded_data_{datetime.now().timestamp():.0f}.json"
 
-        file_entry = self.create_entry(
-            "Attachment",
+        file_entry = self.create(
+            AttachmentEntry,
             Attachment(
                 BytesIO(dumps(data).encode()),
                 "application/json",
@@ -85,8 +87,8 @@ class Entries(Sequence["Entry[Any]"]):
             ),
         )
 
-        text_entry = self.create_entry(
-            "text entry",
+        text_entry = self.create(
+            TextEntry,
             f"""
 <p>Reference Attachment: {name}</p>
 <p>Entry ID: {file_entry.id}</p>
@@ -98,48 +100,28 @@ class Entries(Sequence["Entry[Any]"]):
         return file_entry, text_entry
 
     @overload
-    def create_entry(self, entry_type: Literal["heading"], data: str) -> HeaderEntry:
-        pass
+    def create(self, cls: Type[AttachmentEntry], data: Attachment) -> AttachmentEntry: ...
 
     @overload
-    def create_entry(self, entry_type: Literal["text entry"], data: str) -> TextEntry:
-        pass
+    def create(self, cls: Type[E], data: str) -> E: ...
 
-    @overload
-    def create_entry(
-        self, entry_type: Literal["plain text entry"], data: str
-    ) -> PlainTextEntry:
-        pass
-
-    @overload
-    def create_entry(
-        self,
-        entry_type: Literal["attachment", "Attachment"],
-        data: Attachment,
-    ) -> AttachmentEntry:
-        pass
-
-    def create_entry(
-        self,
-        entry_type: Literal[
-            "heading", "text entry", "plain text entry", "attachment", "Attachment"
-        ],
-        data: str | Attachment,
-    ) -> HeaderEntry | TextEntry | PlainTextEntry | AttachmentEntry:
+    def create(self, cls: Type[E], data: str | Attachment) -> E:
         """Creates a new entry on the page.
 
-        This method supports creating various types of entries including headers,
-        text entries, plain text entries, and attachments. The created entry is
-        automatically added to the collection.
+        This method supports creating any entry type by passing the entry class directly,
+        similar to :meth:`~labapi.tree.mixins.AbstractTreeContainer.create`. The created
+        entry is automatically added to the collection.
 
-        :param entry_type: The type of entry to create. Can be "heading", "text entry",
-                          "plain text entry", "attachment", or "Attachment".
+        :param cls: The entry class to create (e.g., :class:`~labapi.entry.entries.TextEntry`,
+                   :class:`~labapi.entry.entries.HeaderEntry`,
+                   :class:`~labapi.entry.entries.AttachmentEntry`).
         :param data: The content of the entry. For text-based entries, this should be a string.
-                    For attachment entries, this should be an :class:`~labapi.entry.Attachment` object.
-        :returns: The newly created entry object of the appropriate type.
+                    For :class:`~labapi.entry.entries.AttachmentEntry`, this should be an
+                    :class:`~labapi.entry.Attachment` object.
+        :returns: The newly created entry object of the specified type.
         :raises RuntimeError: If the API call to create the entry fails.
         """
-        if entry_type == "Attachment" or entry_type == "attachment":
+        if issubclass(cls, AttachmentEntry):
             assert isinstance(data, Attachment)
             entry_tree = self._user.api_post(
                 "entries/add_attachment",
@@ -153,22 +135,20 @@ class Entries(Sequence["Entry[Any]"]):
             # TODO client_ip should be the end user ip (allow this to be set?)
 
             eid = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
-            entry = Entry.from_part_type("attachment", eid, data.caption, self._user)
+            entry = cls(eid, data.caption, self._user)
 
         else:
             assert isinstance(data, str)
             entry_tree = self._user.api_post(
                 "entries/add_entry",
                 {"entry_data": data},
-                part_type=entry_type,
+                part_type=cls._part_type, # pyright: ignore[reportPrivateUsage]
                 pid=self._page.id,
                 nbid=self._page.root.id,
             )
 
             eid = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
-            entry = Entry.from_part_type(entry_type, eid, data, self._user)
+            entry = cls(eid, data, self._user)
 
         self._entries.append(entry)
-        return entry  # pyright: ignore[reportReturnType]
-        # XXX the python typechecker here does not understand that entry_type is constrained
-        #     and so picks a nonsense overload which tries to return too wide of a type
+        return entry

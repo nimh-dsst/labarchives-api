@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from labapi import Index, Notebook, NotebookPage, NotebookDirectory
+from labapi.exceptions import NodeExistsError, TraversalError
 from labapi.util import InsertBehavior
 from labapi.tree.mixins import (
     AbstractTreeContainer,
@@ -43,7 +44,7 @@ class TestTreeMixinsIntegration:
 
     def test_traverse_not_a_directory(self, notebook_tree: Notebook):
         """Test traversing through a non-directory node."""
-        with pytest.raises(RuntimeError, match="is not a directory"):
+        with pytest.raises(TraversalError, match="is not a directory"):
             notebook_tree.traverse("Test Page 1/Something")
 
     def test_getitem_invalid_key_type_raises(self, notebook_tree: Notebook):
@@ -166,16 +167,16 @@ class TestTreeMixinsIntegration:
         assert "Test Page 1" in all_items
 
         # Deeper enumeration
-        all_items_deep = notebook_tree.enumerate_all(max_depth=2)
+        all_items_deep = notebook_tree.enumerate_all(depth=2)
         assert "Test Folder A/Dir1 Test Page A" in all_items_deep
         assert "Test Folder A/Dir1 Test Page B" in all_items_deep
         assert "Test Folder B/Dir2 Subfolder A" in all_items_deep
 
-        dirs = notebook_tree.enumerate_dirs(max_depth=2)
+        dirs = notebook_tree.enumerate_dirs(depth=2)
         assert "Test Folder A" in dirs
         assert "Test Folder B/Dir2 Subfolder A" in dirs
 
-        pages = notebook_tree.enumerate_pages(max_depth=2)
+        pages = notebook_tree.enumerate_pages(depth=2)
         assert "Test Page 1" in pages
         assert "Test Folder A/Dir1 Test Page A" in pages
 
@@ -286,12 +287,12 @@ class TestTreeMixinsIntegration:
 
     def test_create_nested_without_parents_raises(self, notebook_tree: Notebook):
         """Test create rejects nested paths when parents=False."""
-        with pytest.raises(RuntimeError, match="parents=True"):
+        with pytest.raises(ValueError, match="parents=True"):
             notebook_tree.create(NotebookPage, "Parent/Child", parents=False)
 
     def test_create_if_exists_raise(self, notebook_tree: Notebook):
         """Test InsertBehavior.Raise when node exists."""
-        with pytest.raises(RuntimeError, match="already exists"):
+        with pytest.raises(NodeExistsError, match="already exists"):
             notebook_tree.create(
                 NotebookPage, "Test Page 1", if_exists=InsertBehavior.Raise
             )

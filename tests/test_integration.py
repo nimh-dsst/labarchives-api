@@ -5,20 +5,25 @@ from datetime import UTC, datetime
 from io import BytesIO
 
 import pytest
-from dotenv import load_dotenv
 
 import labapi as LA
 from labapi import Index
 
 type AnyDict = Mapping[str, AnyDict | str | bool | int | float]
-
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 
 @pytest.fixture(scope="session")
 def la_client():
     """Initializes the LabArchives API Client from .env file."""
-    return LA.Client()
+    if not os.getenv("ACCESS_KEYID") or not os.getenv("ACCESS_PWD") or not os.getenv("API_URL"):
+        pytest.skip("ACCESS_KEYID, ACCESS_PWD, and AUTH_URL required for integration tests")
+    else:
+        return LA.Client()
 
 
 @pytest.fixture(scope="session")
@@ -75,7 +80,7 @@ def add_readme(workspace: LA.NotebookDirectory, scenario: str, actions: str):
     """Helper to add the required README to the test workspace."""
     readme_page = workspace.create(LA.NotebookPage, "README")
     content = f"SCENARIO: {scenario}\n\nACTIONS TAKEN:\n{actions}"
-    readme_page.entries.create_entry("plain text entry", content)
+    readme_page.entries.create(LA.PlainTextEntry, content)
 
 
 def create_json_rich_text(data: dict) -> str:
@@ -99,7 +104,7 @@ def get_or_create_page_with_entry(
         return existing[0]
 
     new_page = parent.create(LA.NotebookPage, name)
-    new_page.entries.create_entry(entry_type, data)  # type: ignore
+    new_page.entries.create(LA.Entry.class_of(entry_type), data)  # type: ignore
     return new_page
 
 
@@ -148,15 +153,15 @@ def data_dir_structure(root_test_dir: LA.NotebookDirectory):
 
             with open(Path(__file__).parent / "test_entry.json", "rb") as f:
                 data_att = LA.Attachment.from_file(f)
-                sess_1.create(LA.NotebookPage, "data.json").entries.create_entry(
-                    "attachment", data_att
+                sess_1.create(LA.NotebookPage, "data.json").entries.create(
+                    LA.AttachmentEntry, data_att
                 )
 
         # notes.txt
         if not sess_1[Index.Name : "notes.txt"]:
             n_page = sess_1.create(LA.NotebookPage, "notes.txt")
-            n_page.entries.create_entry(
-                "attachment",
+            n_page.entries.create(
+                LA.AttachmentEntry,
                 LA.Attachment(BytesIO(b""), "text/plain", "notes.txt", "Notes"),
             )
 
@@ -205,7 +210,7 @@ def test_add_session_notes(test_env):
     ][0]
 
     # Add the plain text entry
-    notes_page.entries.create_entry("plain text entry", "fell asleep during test")
+    notes_page.entries.create(LA.PlainTextEntry, "fell asleep during test")
 
     assert any("fell asleep" in str(e.content) for e in notes_page.entries)
 
@@ -255,7 +260,7 @@ def test_upload_new_session(test_env):
     # Create session 2
     sess_2 = sess_root.create(LA.NotebookDirectory, "2")
     notes_page = sess_2.create(LA.NotebookPage, "notes.txt")
-    notes_page.entries.create_entry("plain text entry", "New session started.")
+    notes_page.entries.create(LA.PlainTextEntry, "New session started.")
 
     assert len(sess_root[Index.Name : "2"]) > 0
 
