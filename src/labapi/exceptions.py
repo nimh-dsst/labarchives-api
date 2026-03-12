@@ -3,11 +3,28 @@ class LabArchivesError(Exception):
 
 
 class AuthenticationError(LabArchivesError):
-    """Missing credentials or failed authentication flow."""
+    """Missing credentials or failed authentication flow.
+
+    ``error_code`` is set when the error originates from the LabArchives API
+    (e.g. 4506 invalid akid, 4514 bad login, 4520 bad signature, 4533 session
+    timeout).  It is ``None`` for locally-detected credential errors.
+    """
+
+    def __init__(self, message: str, error_code: int | None = None) -> None:
+        super().__init__(message)
+        self.error_code = error_code
 
 
 class ApiError(LabArchivesError):
-    """LabArchives API returned an error or unexpected response."""
+    """LabArchives API returned an error or unexpected response.
+
+    ``error_code`` is the numeric code from the API ``<error-code>`` element,
+    or ``None`` if the error was detected before parsing the response body.
+    """
+
+    def __init__(self, message: str, error_code: int | None = None) -> None:
+        super().__init__(message)
+        self.error_code = error_code
 
 
 class NodeExistsError(LabArchivesError):
