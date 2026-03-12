@@ -19,6 +19,14 @@ from requests.adapters import HTTPAdapter
 import ssl
 
 from .exceptions import ApiError, AuthenticationError
+
+# Error codes that indicate an authentication/credential failure.
+_AUTH_ERROR_CODES: frozenset[int] = frozenset({
+    4506,  # invalid akid
+    4514,  # login or password incorrect
+    4520,  # invalid signature
+    4533,  # session timed out
+})
 from .user import User
 from .util import extract_etree, to_bool, NotebookInit
 
@@ -194,15 +202,37 @@ class Client:
         """
         Handles the HTTP response status, raising an error for unsuccessful requests.
 
+        Attempts to parse the LabArchives ``<error>`` XML element from the response
+        body to surface a specific error code and description.  Falls back to a
+        generic message if the body is not parseable XML.
+
         :param response: The HTTP response object from the requests library.
-        :raises RuntimeError: If the HTTP status code is not 200 (OK).
+        :raises AuthenticationError: For API error codes 4506, 4514, 4520, 4533.
+        :raises ApiError: For all other non-200 responses.
         """
+        # NOTE: See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
         if response.status_code != status_codes.ok:
+            error_code: int | None = None
+            error_desc: str | None = None
+            try:
+                tree = fromstring(bytes(response.text, encoding="utf-8"))
+                code_text = tree.findtext("./error-code")
+                if code_text is not None:
+                    error_code = int(code_text)
+                    error_desc = tree.findtext("./error-description")
+            except Exception:
+                pass
+
+            if error_code is not None:
+                message = f"[{error_code}] {error_desc}"
+                if error_code in _AUTH_ERROR_CODES:
+                    raise AuthenticationError(message, error_code)
+                raise ApiError(message, error_code)
+
             raise ApiError(
                 f"API request failed with status code {response.status_code} "
                 f"for URL {response.url}: {response.text}"
             )
-            # See https://mynotebook.labarchives.com/share/LabArchives%2520API/NDEuNnwyNy8zMi9UcmVlTm9kZS83NDE1Mjk1NTJ8MTA1LjY= [ELN Error Codes]
 
     def stream_api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any

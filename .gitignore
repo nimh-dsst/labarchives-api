@@ -31,6 +31,21 @@ wheels/
 .environment-*
 .mcp.json
 
+# Sandbox stub files (empty placeholders created by Claude Code's sandbox)
+.gitconfig
+.gitmodules
+.zprofile
+.zshrc
+.bashrc
+.bash_profile
+.profile
+.ripgreprc
+HEAD
+config
+hooks
+objects
+refs
+
 docs/build/
 docs/_build/
 docs/source/reference/generated/
