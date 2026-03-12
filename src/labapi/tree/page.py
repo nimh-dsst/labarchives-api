@@ -12,11 +12,7 @@ import warnings
 from typing import TYPE_CHECKING, Any, cast, override, Literal
 
 from labapi.entry import Attachment, Entries, Entry
-from labapi.util import (
-    extract_etree,
-    InsertBehavior,
-    ALL_PART_TYPES
-)
+from labapi.util import extract_etree, InsertBehavior, ALL_PART_TYPES
 
 
 from .mixins import AbstractTreeContainer, AbstractTreeNode

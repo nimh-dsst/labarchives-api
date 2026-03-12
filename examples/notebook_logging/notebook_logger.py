@@ -23,7 +23,6 @@ from typing import Any
 from labapi import (
     AttachmentEntry,
     Client,
-    HeaderEntry,
     InsertBehavior,
     NotebookDirectory,
     NotebookPage,

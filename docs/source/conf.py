@@ -13,7 +13,9 @@ sys.path.insert(0, os.path.abspath("../../src"))
 
 project = "labapi"
 copyright = "2026, Christoph Li and Joshua Lawrimore"
-author = "Christoph Li <christoph.li@nih.gov>, Joshua Lawrimore <josh.lawrimore@nih.gov>"
+author = (
+    "Christoph Li <christoph.li@nih.gov>, Joshua Lawrimore <josh.lawrimore@nih.gov>"
+)
 
 version = "0.1.0"
 release = "0.1.0"

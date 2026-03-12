@@ -29,7 +29,6 @@ try:
 
     default_browser = "terminal"
 
-    # TODO more browsers?
     browser_choices = ["chrome", "firefox", "edge"]  # priority in order of order
 
     if raw_env_browser in ("chrome", "firefox", "edge", "terminal"):

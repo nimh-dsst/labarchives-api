@@ -7,7 +7,15 @@ indexing mechanisms, and data structures for notebook initialization.
 
 from .extract import extract_etree, to_bool
 from .path import NotebookPath
-from .types import IdIndex, IdOrNameIndex, Index, InsertBehavior, JsonData, NameIndex, NotebookInit
+from .types import (
+    IdIndex,
+    IdOrNameIndex,
+    Index,
+    InsertBehavior,
+    JsonData,
+    NameIndex,
+    NotebookInit,
+)
 
 #: All known LabArchives entry part types.
 ALL_PART_TYPES = (

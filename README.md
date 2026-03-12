@@ -21,7 +21,7 @@ These instructions will help you set up the project on your local machine for de
 Clone the repository and install the dependencies:
 
 ```bash
-git clone https://github.com/NIH-NCI-DCEG/labapi.git
+git clone https://github.com/nimh-dsst/labapi.git
 cd labapi
 uv sync
 ```
@@ -120,22 +120,12 @@ uv run pytest --cov=labapi
 
 ## Contributing
 
-Please see [CLAUDE.md](CLAUDE.md) for development guidelines, including information on code style (`ruff`) and pre-commit hooks.
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/NIH-NCI-DCEG/labapi/tags).
-
-## Authors
-
-- **Christoph Li** - [christoph-li](https://github.com/christoph-li)
-- **Joshua Lawrimore** - [jlawrimore](https://github.com/jlawrimore)
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/nimh-dsst/labapi/tags).
 
 ## License
 
 This project is licensed under the CC0 1.0 Universal License - see the [LICENSE](LICENSE) file for details (or `pyproject.toml`).
-
-## Acknowledgments
-
-- LabArchives API Documentation
-- NCI DCEG for supporting the project
