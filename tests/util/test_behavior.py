@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-from labapi.util.behavior import InsertBehavior
+from labapi.util.types import InsertBehavior
 
 
 def test_insert_behavior_enum_members():

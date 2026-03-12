@@ -23,7 +23,7 @@ Creating a JSON Entry
 To create a JSON entry, use the :meth:`~labapi.entry.collection.Entries.create_json_entry` method on a
 page's :class:`~labapi.entry.collection.Entries` collection (``page.entries``).
 
-This method takes your :class:`~labapi.entry.json_data.JsonData` object and handles the process of creating both the file 
+This method takes your :class:`~labapi.util.types.JsonData` object and handles the process of creating both the file 
 attachment and the text preview.
 
 Example JSON Entry Creation
@@ -32,7 +32,7 @@ Example JSON Entry Creation
 .. code-block:: python
 
     from labapi import Client
-    from labapi.entry.json_data import JsonData
+    from labapi.util import JsonData
 
     ...
 

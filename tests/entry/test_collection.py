@@ -93,77 +93,39 @@ class TestEntriesIntegration:
         page._user = user
         return page
 
-    def test_entries_create_entry_text(self, client, user: User, mock_page):
-        """Test Entries.create_entry with text entry type."""
+    @pytest.mark.parametrize("cls,data", [
+        (TextEntry, "<p>New content</p>"),
+        (HeaderEntry, "<h1>Title</h1>"),
+        (PlainTextEntry, "Plain text content"),
+    ])
+    def test_entries_create_text_types(self, client, user: User, mock_page, cls, data):
+        """Test Entries.create dispatches correctly for all text entry types."""
         entries = Entries([], user, mock_page)
 
-        # Mock API response
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
         <entries>
             <response></response>
             <entry>
-                <eid>new_text_eid</eid>
+                <eid>new_eid</eid>
             </entry>
         </entries>
         """
 
-        entry = entries.create_entry("text entry", "<p>New content</p>")
+        entry = entries.create(cls, data)
 
-        # Verify entry was created and added
-        assert isinstance(entry, TextEntry)
-        assert entry.id == "new_text_eid"
+        assert isinstance(entry, cls)
+        assert entry.id == "new_eid"
         assert len(entries) == 1
         assert entries[0] is entry
 
-        # Verify API call
         api_call = client.api_log
         assert api_call[0] == "entries/add_entry"
-        assert api_call[1]["entry_data"] == "<p>New content</p>"
-        assert api_call[1]["part_type"] == "text entry"
+        assert api_call[1]["entry_data"] == data
         assert api_call[1]["pid"] == "test_page_id"
         assert api_call[1]["nbid"] == "test_notebook_id"
 
-    def test_entries_create_entry_heading(self, client, user: User, mock_page):
-        """Test Entries.create_entry with heading type."""
-        entries = Entries([], user, mock_page)
-
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>new_heading_eid</eid>
-            </entry>
-        </entries>
-        """
-
-        entry = entries.create_entry("heading", "<h1>Title</h1>")
-
-        assert isinstance(entry, HeaderEntry)
-        assert entry.id == "new_heading_eid"
-        assert len(entries) == 1
-        client.clear_log()
-
-    def test_entries_create_entry_plain_text(self, client, user: User, mock_page):
-        """Test Entries.create_entry with plain text entry type."""
-        entries = Entries([], user, mock_page)
-
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>new_plain_eid</eid>
-            </entry>
-        </entries>
-        """
-
-        entry = entries.create_entry("plain text entry", "Plain text content")
-
-        assert isinstance(entry, PlainTextEntry)
-        assert entry.id == "new_plain_eid"
-        client.clear_log()
-
-    def test_entries_create_entry_attachment(self, client, user: User, mock_page):
-        """Test Entries.create_entry with attachment type."""
+    def test_entries_create_attachment(self, client, user: User, mock_page):
+        """Test Entries.create with attachment type."""
         entries = Entries([], user, mock_page)
 
         client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
@@ -184,7 +146,7 @@ class TestEntriesIntegration:
             caption="Test file",
         )
 
-        entry = entries.create_entry("Attachment", attachment)
+        entry = entries.create(AttachmentEntry, attachment)
 
         assert isinstance(entry, AttachmentEntry)
         assert entry.id == "new_attachment_eid"

@@ -85,11 +85,13 @@ page = notebook.traverse("Experiments/2026/Results")
 Create and manage different types of entries on a page:
 
 ```python
+from labapi import TextEntry, HeaderEntry
+
 # Create a text entry
-page.entries.create_entry("text entry", "<p>Initial observation: The reaction turned blue.</p>")
+page.entries.create(TextEntry, "<p>Initial observation: The reaction turned blue.</p>")
 
 # Create a heading
-page.entries.create_entry("heading", "<h1>Final Conclusions</h1>")
+page.entries.create(HeaderEntry, "<h1>Final Conclusions</h1>")
 
 # Create a JSON entry (uploads as attachment + preview text)
 data = {"yield": 0.85, "purity": "99%"}

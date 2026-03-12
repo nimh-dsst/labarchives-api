@@ -13,7 +13,15 @@ import argparse
 import sys
 from io import BytesIO
 
-from labapi import Client, NotebookDirectory, NotebookPage
+from labapi import (
+    AttachmentEntry,
+    Client,
+    HeaderEntry,
+    NotebookDirectory,
+    NotebookPage,
+    PlainTextEntry,
+    TextEntry,
+)
 from labapi.entry import Attachment
 from labapi.user import User
 
@@ -54,13 +62,11 @@ def populate_notebook(notebook_name: str) -> None:
 
     # Add a heading
     print("    Adding heading...")
-    page.entries.create_entry("heading", "Calibration Phase")
+    page.entries.create(HeaderEntry, "Calibration Phase")
 
     # Add a text entry
     print("    Adding text entry...")
-    page.entries.create_entry(
-        "text entry", "<p>Initial calibration completed successfully.</p>"
-    )
+    page.entries.create(TextEntry, "<p>Initial calibration completed successfully.</p>")
 
     # Add an attachment
     print("    Adding attachment...")
@@ -71,13 +77,13 @@ def populate_notebook(notebook_name: str) -> None:
         "calibration_report.txt",
         "Calibration report summary",
     )
-    page.entries.create_entry("Attachment", attachment)
+    page.entries.create(AttachmentEntry, attachment)
 
     # 4. Create another page in a different folder
     print("  Creating page: General Notes")
     notes_page = experiments.create(NotebookPage, "General Notes")
-    notes_page.entries.create_entry(
-        "plain text entry", "These are some general notes for the experiments folder."
+    notes_page.entries.create(
+        PlainTextEntry, "These are some general notes for the experiments folder."
     )
 
     print("\n✓ Notebook populated successfully!")

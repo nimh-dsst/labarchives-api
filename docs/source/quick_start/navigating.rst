@@ -19,6 +19,27 @@ path-like string and returns the object at that location.
    experiments = notebook.traverse("Experiments")
    project_a = experiments.traverse("Project A")
 
+Fluent Navigation (Ensure Methods)
+----------------------------------
+
+For a more "fluent" and concise navigation style, especially when you want to ensure a path exists while navigating,
+you can use the :meth:`~labapi.tree.mixins.AbstractTreeContainer.dir` and
+:meth:`~labapi.tree.mixins.AbstractTreeContainer.page` methods.
+
+These methods act as "ensure" methods: they return the node if it exists, or create it if it's missing.
+
+.. code-block:: python
+
+   # Ensures the directory structure exists and returns the final page
+   page = notebook.dir("Experiments").dir("Project A").page("Results")
+
+   # Supports paths and automatic parent creation (parents=True by default)
+   page = notebook.dir("Experiments/Project A").page("Results")
+
+This style is particularly useful for setting up a notebook structure in a single chain of calls.
+See :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` for more granular control over
+node creation (such as handling duplicates or replacing existing nodes).
+
 
 Accessing Children by Name
 --------------------------
@@ -37,12 +58,12 @@ matches the given name.
 Accessing Children by ID or Name
 --------------------------------
 
-For more explicit lookups, you can use the :class:`~labapi.util.index.Index` object.
+For more explicit lookups, you can use the :class:`~labapi.util.types.Index` object.
 
 Accessing by ID
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To get a single child by its unique ID, use :attr:`~labapi.util.index.Index.Id`:
+To get a single child by its unique ID, use :attr:`~labapi.util.types.Index.Id`:
 
 .. code-block:: python
 
@@ -54,7 +75,7 @@ To get a single child by its unique ID, use :attr:`~labapi.util.index.Index.Id`:
 Accessing by Name
 ^^^^^^^^^^^^^^^^^
 
-To get a list of all children that match a given name, use :attr:`~labapi.util.index.Index.Name`:
+To get a list of all children that match a given name, use :attr:`~labapi.util.types.Index.Name`:
 
 .. code-block:: python
 

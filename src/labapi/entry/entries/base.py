@@ -28,6 +28,25 @@ class Entry(ABC, Generic[T]):
     _part_type: str
 
     @staticmethod
+    def is_registered(part_type: str) -> bool:
+        """Checks if an entry class is registered for a given part type.
+
+        :param part_type: The LabArchives part type identifier to check.
+        :returns: True if a class is registered for this part type, False otherwise.
+        """
+        return part_type in _entries_registry
+    
+    @staticmethod
+    def class_of(part_type: str) -> Type[Entry[Any]]:
+        """Retrieves the registered entry class for a given part type.
+
+        :param part_type: The LabArchives part type identifier.
+        :returns: The :class:`Entry` subclass registered for this part type.
+        :raises KeyError: If no class is registered for the specified part type.
+        """
+        return _entries_registry[part_type]
+
+    @staticmethod
     def from_part_type(part_type: str, eid: str, data: str, user: User) -> Entry[Any]:
         """Factory method to create an entry of the appropriate type.
 

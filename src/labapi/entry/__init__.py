@@ -10,13 +10,12 @@ from .collection import Entries
 from .comment import Comment
 from .entries.attachment import AttachmentEntry
 from .entries.base import Entry
-from .entries.text import BaseTextEntry, HeaderEntry, PlainTextEntry, TextEntry
+from .entries.text import HeaderEntry, PlainTextEntry, TextEntry
 from .entries.widget import WidgetEntry
 
 __all__ = [
     "Attachment",
     "AttachmentEntry",
-    "BaseTextEntry",
     "Comment",
     "Entries",
     "Entry",

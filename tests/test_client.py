@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from os import getenv
 from unittest.mock import Mock
 
 import pytest
 from requests import Response
 
 from labapi import Client, User
+from labapi.exceptions import ApiError
 
 
 class TestClientUnit:
@@ -135,7 +137,7 @@ class TestClientUnit:
         response.text = "Not Found"
 
         with pytest.raises(
-            RuntimeError, match="API request failed with status code 404"
+            ApiError, match="API request failed with status code 404"
         ):
             Client._handle_request_status(response)
 
@@ -146,14 +148,22 @@ class TestClientUnit:
         assert client._base_url == "https://custom.api.com"
         assert client._akid == "my_akid"
 
-    def test_client_initialization_env_fallback(self):
-        """Test Client initialization can fall back to environment variables."""
-        try:
-            client = Client()
-            assert client._base_url is not None
-            assert client._akid is not None
-        except RuntimeError:
-            pytest.skip("Environment variables not set")
+    def test_client_initialization_from_env_vars(self, monkeypatch):
+        """Test Client initialization reads from environment variables."""
+        monkeypatch.setenv("ACCESS_KEYID", "test_akid")
+        monkeypatch.setenv("ACCESS_PWD", "test_password")
+
+        client = Client()
+
+        assert client._akid == "test_akid"
+        assert client._base_url == "https://api.labarchives.com"
+
+    @pytest.mark.skipif(not getenv("ACCESS_KEYID"), reason="Environment variables not set")
+    def test_client_initialization_from_dotenv(self):
+        """Test Client initialization falls back to .env file."""
+        client = Client()
+        assert client._base_url is not None
+        assert client._akid is not None
 
 
 class TestClientIntegration:

@@ -10,7 +10,14 @@ import sys
 from datetime import datetime
 from typing import Any, Sequence
 
-from labapi import Client, InsertBehavior, NotebookDirectory, NotebookPage
+from labapi import (
+    AttachmentEntry,
+    Client,
+    InsertBehavior,
+    NotebookDirectory,
+    NotebookPage,
+    TextEntry,
+)
 from labapi.user import User
 
 
@@ -78,9 +85,7 @@ class ModelLogger:
         )
 
         # 1. Log Commit Hash
-        entries.create_entry(
-            "text entry", f"<p><strong>Git Commit:</strong> {commit}</p>"
-        )
+        entries.create(TextEntry, f"<p><strong>Git Commit:</strong> {commit}</p>")
 
         # 2. Log Tags
         # Flatten tags if they are mixed str and list[str]
@@ -97,13 +102,14 @@ class ModelLogger:
                 for t in flat_tags
             ]
         )
-        entries.create_entry("text entry", f"<p><strong>Tags:</strong> {tags_html}</p>")
+        entries.create(TextEntry, f"<p><strong>Tags:</strong> {tags_html}</p>")
 
         # 3. Log Metrics
         entries.create_json_entry(metrics)
 
         # 4. Log Results
         from io import BytesIO
+
         from labapi.entry import Attachment
 
         results_attachment = Attachment(
@@ -112,7 +118,7 @@ class ModelLogger:
             "results.bin",
             "Model prediction results",
         )
-        entries.create_entry("Attachment", results_attachment)
+        entries.create(AttachmentEntry, results_attachment)
 
         # 5. Log Figures
         for i, fig_data in enumerate(figures, 1):
@@ -122,7 +128,7 @@ class ModelLogger:
                 f"figure_{i}.png",
                 f"Model evaluation figure {i}",
             )
-            entries.create_entry("Attachment", fig_attachment)
+            entries.create(AttachmentEntry, fig_attachment)
 
         print("✓ Log complete!")
 

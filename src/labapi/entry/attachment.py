@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import shutil
+import tempfile
 from collections.abc import Buffer
 from mimetypes import guess_type
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
-    from io import BufferedRandom, BytesIO
-    from tempfile import _TemporaryFileWrapper  # pyright: ignore[reportPrivateUsage]
+    from io import BufferedRandom, BufferedReader, BytesIO
+    from tempfile import SpooledTemporaryFile, _TemporaryFileWrapper  # pyright: ignore[reportPrivateUsage]
 
 # NOTE: from Pylance
 # Unfortunately PEP 688 does not allow us to distinguish read-only
@@ -33,26 +35,28 @@ class Attachment:
     # TODO writes need explicit syncing with server
     # NOTE or we just disable them that probly works
 
-    # @overload
     @staticmethod
-    def from_file(file: BufferedRandom) -> Attachment:
-        """Creates an Attachment from a file object.
+    def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
+        """Creates an Attachment from a file object by cloning its content.
 
+        The content of the provided file is copied into a temporary buffer,
+        making the Attachment independent of the original file's state.
         The MIME type is automatically guessed from the file's name.
         If the MIME type cannot be determined, it defaults to "application/octet-stream".
 
         :param file: The file object to create an attachment from. Must have a `name` attribute.
-        :returns: A new Attachment object wrapping the file.
+        :returns: A new Attachment object wrapping a clone of the file.
         """
-        # TODO rewrite this to clone the bufferedrandom into
-        #   a tempfile or memory buffer and use that as a backing
-        #   then we can use a BufferedReader as well
-
-        # @staticmethod
-        # def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
         mime_type = guess_type(file.name)[0] or "application/octet-stream"
+
+        # Create a spooled temporary file as the new backing buffer.
+        # It stays in memory until it reaches 1MB, then rolls over to disk.
+        backing = tempfile.SpooledTemporaryFile(max_size=1024 * 1024, mode="w+b")
+        shutil.copyfileobj(file, backing)
+        backing.seek(0)
+
         return Attachment(
-            file,  # pyright: ignore[reportUnknownVariableType, reportArgumentType]
+            backing,  # pyright: ignore[reportArgumentType]
             mime_type,
             file.name,
             caption=f"API-uploaded {mime_type} file.",
@@ -61,8 +65,9 @@ class Attachment:
     def __init__(
         self,
         backing: BufferedRandom
-        # | BufferedReader
+        | BufferedReader
         | BytesIO
+        | SpooledTemporaryFile[bytes]
         | _TemporaryFileWrapper[bytes],
         mime_type: str,
         filename: str,
@@ -71,7 +76,7 @@ class Attachment:
         """Initializes an Attachment object.
 
         :param backing: The file-like object that contains the attachment data.
-                        Can be a BufferedRandom, BytesIO, or TemporaryFile.
+                        Can be a BufferedRandom, BufferedReader, BytesIO, or TemporaryFile.
         :param mime_type: The MIME type of the attachment (e.g., "image/png", "application/pdf").
         :param filename: The filename of the attachment.
         :param caption: A descriptive caption for the attachment.
@@ -90,19 +95,10 @@ class Attachment:
         This allows the Attachment to behave like the underlying file object
         for operations like read(), write(), etc.
 
-        .. note::
-           This passthrough mechanism may not work perfectly due to BufferedIOBase
-           defining implementations of abstract functions. Consider using a Protocol
-           for better type safety.
-
         :param attr: The attribute name to access on the backing object.
         :returns: The attribute value from the backing object.
         :raises AttributeError: If the attribute does not exist on the backing object.
         """
-        # FIXME This doesn't work to passthrough stuff for some reason
-        # NOTE: I expect this is because BufferedIOBase defines implementations of its
-        # abstract functions :(
-        # maybe we can comply with a Protocol?
         return getattr(self._backing, attr)
 
     @property

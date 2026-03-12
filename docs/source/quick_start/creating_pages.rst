@@ -47,7 +47,7 @@ exists. You can control this behavior using the ``if_exists`` parameter:
     # Create another node with the same name/type
     page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Ignore)
 
-    # Return the existing node instead of creating a duplicate
+    # Return the existing node if it matches both name and type
     page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Retain)
 
     # Delete the existing node(s) and create a new one
@@ -57,25 +57,25 @@ Creating Entries
 ----------------
 
 :class:`~labapi.entry.collection.Entries` are the content blocks within pages. Use the
-:meth:`~labapi.entry.collection.Entries.create_entry` method to add one:
+:meth:`~labapi.entry.collection.Entries.create` method to add one:
 
 .. code-block:: python
 
+    from labapi import Attachment, AttachmentEntry, HeaderEntry, PlainTextEntry, TextEntry
+
     # Add a header
-    page.entries.create_entry("heading", "Experiment Results")
+    page.entries.create(HeaderEntry, "Experiment Results")
 
     # Add rich text (HTML)
-    page.entries.create_entry("text entry", "<p>This is <b>bold</b> text.</p>")
+    page.entries.create(TextEntry, "<p>This is <b>bold</b> text.</p>")
 
     # Add plain text
-    page.entries.create_entry("plain text entry", "Simple unformatted text")
+    page.entries.create(PlainTextEntry, "Simple unformatted text")
 
     # Add an attachment
-    from labapi import Attachment
-
-    with open("results.csv", "rb") as f:
+    with open("results.csv", "rb+") as f:
         attachment = Attachment(f, "text/csv", "results.csv", "Experiment data")
-        page.entries.create_entry("attachment", attachment)
+        page.entries.create(AttachmentEntry, attachment)
 
 Entry Types
 ~~~~~~~~~~~
@@ -86,19 +86,19 @@ The following entry types are supported. For more detailed information, see the 
    :header-rows: 1
    :widths: 30 20 60
 
-   * - Entry Type
+   * - Entry Class
      - Data Type
      - Description
-   * - ``"heading"``
+   * - :class:`~labapi.entry.entries.text.HeaderEntry`
      - ``str``
      - Section headers and titles
-   * - ``"text entry"``
+   * - :class:`~labapi.entry.entries.text.TextEntry`
      - ``str``
      - Rich text with HTML formatting
-   * - ``"plain text entry"``
+   * - :class:`~labapi.entry.entries.text.PlainTextEntry`
      - ``str``
      - Unformatted plain text
-   * - ``"attachment"``
+   * - :class:`~labapi.entry.entries.attachment.AttachmentEntry`
      - ``Attachment``
      - File uploads (images, documents, data files, etc.) 
 
@@ -118,7 +118,7 @@ Access the entries on a page through the ``entries`` property, which behaves lik
     first_entry = page.entries[0]
     
     # Check entry types
-    from labapi.entry import TextEntry, AttachmentEntry
+    from labapi import TextEntry, AttachmentEntry
 
     if isinstance(first_entry, TextEntry):
         print("This is a text-based entry")

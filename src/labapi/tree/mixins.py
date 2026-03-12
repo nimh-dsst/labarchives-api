@@ -20,6 +20,7 @@ from collections.abc import (
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal, Self, cast, overload, override, TypeVar, Type
 
+from labapi.exceptions import NodeExistsError, TraversalError
 from labapi.util import (
     IdIndex,
     IdOrNameIndex,
@@ -202,7 +203,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
             elif isinstance(curr, AbstractTreeContainer):
                 curr = curr[segment]
             else:
-                raise RuntimeError(f"{'/'.join(parsed_segments)} is not a directory")
+                raise TraversalError(f"{'/'.join(parsed_segments)} is not a directory")
 
         return curr
 
@@ -524,7 +525,7 @@ class AbstractTreeContainer(
     def enumerate_all(
         self,
         *,
-        max_depth: int = 1,
+        depth: int = 1,
         timeout: timedelta = timedelta(seconds=5),
         _timeout: float | None = None,
         _current_depth: int = 0,
@@ -535,13 +536,13 @@ class AbstractTreeContainer(
         nodes, including both directories and pages. Each path is relative to this
         container (e.g., "Folder/Page" or "Folder/Subfolder/Page").
 
-        :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :param depth: The maximum depth to traverse. Default is 1 (only immediate children).
         :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
         :returns: A sequence of relative path strings for all descendants.
         """
         current: MutableSequence[str] = []
 
-        if _current_depth >= max_depth:
+        if _current_depth >= depth:
             return current
 
         if _timeout is None:
@@ -563,7 +564,7 @@ class AbstractTreeContainer(
                         f"{name}/{child_path}"
                         for child_path in container.enumerate_all(
                             _current_depth=_current_depth + 1,
-                            max_depth=max_depth,
+                            depth=depth,
                             _timeout=_timeout,
                         )
                     ]
@@ -576,7 +577,7 @@ class AbstractTreeContainer(
     def enumerate_dirs(
         self,
         *,
-        max_depth: int = 1,
+        depth: int = 1,
         timeout: timedelta = timedelta(seconds=5),
     ) -> Sequence[str]:
         """Enumerates only directories up to a specified depth.
@@ -584,17 +585,17 @@ class AbstractTreeContainer(
         Returns relative path strings from the current container for all descendant
         directories (excluding pages). Each path is relative to this container.
 
-        :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :param depth: The maximum depth to traverse. Default is 1 (only immediate children).
         :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
         :returns: A sequence of relative path strings for all descendant directories.
         """
-        all_names = self.enumerate_all(max_depth=max_depth, timeout=timeout)
+        all_names = self.enumerate_all(depth=depth, timeout=timeout)
         return [name for name in all_names if self.traverse(name).is_dir()]
 
     def enumerate_pages(
         self,
         *,
-        max_depth: int = 1,
+        depth: int = 1,
         timeout: timedelta = timedelta(seconds=5),
     ) -> Sequence[str]:
         """Enumerates only pages up to a specified depth.
@@ -602,11 +603,11 @@ class AbstractTreeContainer(
         Returns relative path strings from the current container for all descendant
         pages (excluding directories). Each path is relative to this container.
 
-        :param max_depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :param depth: The maximum depth to traverse. Default is 1 (only immediate children).
         :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
         :returns: A sequence of relative path strings for all descendant pages.
         """
-        all_names = self.enumerate_all(max_depth=max_depth, timeout=timeout)
+        all_names = self.enumerate_all(depth=depth, timeout=timeout)
         return [name for name in all_names if not self.traverse(name).is_dir()]
 
     def create(
@@ -619,12 +620,12 @@ class AbstractTreeContainer(
     ) -> T:
         """Creates a new child node (page or directory) within this container.
 
-        This method allows for more flexible creation of tree nodes compared to
-        the deprecated :meth:`create_page` and :meth:`create_directory` methods.
-        It also supports different behaviors if a node with the same name already exists.
+        This method supports different behaviors if a node with the same name already exists.
 
         :param cls: The class of the node to create (e.g., :class:`~labapi.tree.page.NotebookPage` or :class:`~labapi.tree.directory.NotebookDirectory`).
         :param name: The name of the new node.
+        :param parents: If True, intermediate directories in the path will be created
+                        using `InsertBehavior.Retain` if they don't exist.
         :param if_exists: The behavior to take if a node with the same name and type already exists. Default is to raise a RuntimeError.
         :returns: The newly created (or existing) node of type `cls`.
         :raises RuntimeError: If `if_exists` is `InsertBehavior.Raise` and the node already exists.
@@ -642,7 +643,7 @@ class AbstractTreeContainer(
             if nodes:
                 match if_exists:
                     case InsertBehavior.Raise:
-                        raise RuntimeError(
+                        raise NodeExistsError(
                             f'{cls.__name__} with name "{name}" already exists'
                         )
                     case InsertBehavior.Ignore:
@@ -686,63 +687,45 @@ class AbstractTreeContainer(
                 if_exists=if_exists,
             )
         else:
-            raise RuntimeError(
+            raise ValueError(
                 f'Parent path for "{name}" does not exist. Set `parents=True` to create it.'
             )
 
-    def create_page(self, name: str) -> NotebookPage:
-        """Creates a new page within this container.
+    def dir(self, name: str | NotebookPath) -> NotebookDirectory:
+        """Ensures a directory exists at the given path and returns it.
 
-        .. deprecated:: 0.1.0
+        Shorthand for :meth:`create` with ``cls=NotebookDirectory``,
+        ``if_exists=InsertBehavior.Retain``, and ``parents=True``.
 
-            Use :py:meth:`~labapi.tree.mixins.AbstractTreeContainer.create` instead.
-
-        :param name: The name of the new page.
-        :returns: The newly created :class:`~labapi.tree.page.NotebookPage` object.
-        :raises RuntimeError: If the API call to create the page fails.
+        :param name: The name or path of the directory.
+        :returns: The ensured :class:`~labapi.tree.directory.NotebookDirectory`.
         """
-        from . import page
+        from .directory import NotebookDirectory
 
-        # TODO take into account whether can write in this directory
-        create_tree = self.user.api_get(
-            "tree_tools/insert_node",
-            nbid=self.root.id,
-            parent_tree_id=self.tree_id,
-            display_text=name,
-            is_folder="false",
+        return self.create(
+            NotebookDirectory,
+            name,
+            parents=True,
+            if_exists=InsertBehavior.Retain,
         )
-        tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
 
-        new_page = page.NotebookPage(tree_id, name, self.root, self, self.user)
-        self._children.append(new_page)
-        return new_page
+    def page(self, name: str | NotebookPath) -> NotebookPage:
+        """Ensures a page exists at the given path and returns it.
 
-    def create_directory(self, name: str) -> NotebookDirectory:
-        """Creates a new directory within this container.
+        Shorthand for :meth:`create` with ``cls=NotebookPage``,
+        ``if_exists=InsertBehavior.Retain``, and ``parents=True``.
 
-        .. deprecated:: 0.1.0
-
-            Use :py:meth:`~labapi.tree.mixins.AbstractTreeContainer.create` instead.
-
-        :param name: The name of the new directory.
-        :returns: The newly created :class:`~labapi.tree.directory.NotebookDirectory` object.
-        :raises RuntimeError: If the API call to create the directory fails.
+        :param name: The name or path of the page.
+        :returns: The ensured :class:`~labapi.tree.page.NotebookPage`.
         """
-        from . import directory
+        from .page import NotebookPage
 
-        # TODO take into account whether can write in this directory
-        create_tree = self._user.api_get(
-            "tree_tools/insert_node",
-            nbid=self.root.id,
-            parent_tree_id=self.tree_id,
-            display_text=name,
-            is_folder="true",
+        return self.create(
+            NotebookPage,
+            name,
+            parents=True,
+            if_exists=InsertBehavior.Retain,
         )
-        tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
-
-        new_dir = directory.NotebookDirectory(tree_id, name, self.root, self, self.user)
-        self._children.append(new_dir)
-        return new_dir
 
     @override
     def is_dir(self) -> Literal[True]:
@@ -758,11 +741,9 @@ class AbstractTreeContainer(
 
         This method clears the internal children cache, forcing the container
         to re-fetch its children from the LabArchives API on the next access.
-
-        .. note::
-           Currently only clears the children list. Future implementation should
-           invalidate all children before clearing.
         """
-        # TODO invalidate all children first
+        # TODO if a child node is removed it won't know about it.
+        for child in self._children:
+            child.refresh()
         self._children = []
         self._populated = False

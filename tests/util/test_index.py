@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-from labapi.util.index import Index
+from labapi.util.types import Index
 
 
 def test_index_enum_members():

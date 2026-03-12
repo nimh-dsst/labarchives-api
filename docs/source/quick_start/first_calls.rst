@@ -130,8 +130,10 @@ You can now start writing entries to your notebook. First, navigate to an existi
 
 .. code-block:: python
 
+   from labapi import TextEntry
+
    # Navigate to a page by path
    page = notebook.traverse("Experiments/Project A/Results")
 
    # Add a text entry
-   page.entries.create_entry("text entry", "Successfully ran the first trial.")
+   page.entries.create(TextEntry, "Successfully ran the first trial.")

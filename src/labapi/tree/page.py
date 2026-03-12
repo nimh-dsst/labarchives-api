@@ -14,10 +14,8 @@ from typing import TYPE_CHECKING, Any, cast, override, Literal
 from labapi.entry import Attachment, Entries, Entry
 from labapi.util import (
     extract_etree,
-    is_part_type,
-    is_valid_part_type,
-    get_normalized_part_type,
     InsertBehavior,
+    ALL_PART_TYPES
 )
 
 
@@ -94,10 +92,10 @@ class NotebookPage(AbstractTreeNode):
                     },
                 )
 
-                part_type = get_normalized_part_type(entry_data["part-type"])
+                part_type = entry_data["part-type"]
 
-                if is_part_type(part_type):
-                    if is_valid_part_type(part_type):
+                if part_type in ALL_PART_TYPES:
+                    if Entry.is_registered(part_type):
                         # Cast extracted string values to ensure type checker knows they're not None
                         entries.append(
                             Entry.from_part_type(
@@ -143,16 +141,14 @@ class NotebookPage(AbstractTreeNode):
         """
         # TODO: Add specific handling for attachment entries to work around
         #   LabArchives renaming behavior
-        # TODO: Implement create_entry methods for all entry types to prevent
-        #   failures
 
         new_page = destination.create(
             NotebookPage, self.name, if_exists=InsertBehavior.Ignore
         )
 
         for entry in self.entries:
-            new_page.entries.create_entry(  # pyright: ignore[reportCallIssue]
-                entry.content_type,  # pyright: ignore[reportArgumentType]
+            new_page.entries.create(
+                entry.__class__,
                 entry.content,
             )
 

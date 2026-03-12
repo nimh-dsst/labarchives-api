@@ -9,13 +9,13 @@ including text formatting, tables, and lists.
 Creating a Rich Text Entry
 --------------------------
 
-To create a rich text entry, you can use the :meth:`~labapi.entry.collection.Entries.create_entry` method on 
-a :class:`~labapi.tree.page.NotebookPage` object with the entry type set to ``"text entry"``. The data for the 
-entry should be a string containing HTML.
+To create a rich text entry, you can use the :meth:`~labapi.entry.collection.Entries.create` method on 
+a :class:`~labapi.tree.page.NotebookPage` object.
 
 .. code-block:: python
 
-    my_page.entries.create_entry("text entry", "<p>This is a rich text entry.</p>")
+    from labapi import TextEntry
+    my_page.entries.create(TextEntry, "<p>This is a rich text entry.</p>")
 
 Paragraphs
 ----------

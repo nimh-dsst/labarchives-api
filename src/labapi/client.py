@@ -18,6 +18,7 @@ from requests import codes as status_codes, Response, Session
 from requests.adapters import HTTPAdapter
 import ssl
 
+from .exceptions import ApiError, AuthenticationError
 from .user import User
 from .util import extract_etree, to_bool, NotebookInit
 
@@ -118,7 +119,7 @@ class Client:
                 akpass = getenv("ACCESS_PWD")
 
         if not akid or not akpass:
-            raise RuntimeError(
+            raise AuthenticationError(
                 "ACCESS_KEYID or ACCESS_PWD environment variables not set."
             )
 
@@ -197,7 +198,7 @@ class Client:
         :raises RuntimeError: If the HTTP status code is not 200 (OK).
         """
         if response.status_code != status_codes.ok:
-            raise RuntimeError(
+            raise ApiError(
                 f"API request failed with status code {response.status_code} "
                 f"for URL {response.url}: {response.text}"
             )
@@ -463,10 +464,10 @@ class Client:
             httpd.handle_request()
 
         if "error" in auth_info:
-            raise RuntimeError(f"Authentication failed: {auth_info['error']}")
+            raise AuthenticationError(f"Authentication failed: {auth_info['error']}")
 
         if "auth_code" not in auth_info or "email" not in auth_info:
-            raise RuntimeError(
+            raise AuthenticationError(
                 "Authentication callback did not include both auth_code and email"
             )
 

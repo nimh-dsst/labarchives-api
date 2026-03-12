@@ -32,6 +32,29 @@ def test_attachment_from_file():
         Path(temp_file_path).unlink(missing_ok=True)
 
 
+def test_attachment_from_file_buffered_reader():
+    """Test creating Attachment from a BufferedReader (opened with rb)."""
+    # Create a temporary file
+    with tempfile.NamedTemporaryFile(
+        mode="w+b", suffix=".txt", delete=False
+    ) as temp_file:
+        temp_file.write(b"Test content for BufferedReader")
+        temp_file_path = temp_file.name
+
+    try:
+        # Open the file with 'rb' (read-only binary mode)
+        with open(temp_file_path, "rb") as file:
+            attachment = Attachment.from_file(file)
+
+            # Read content from attachment to verify cloning
+            assert attachment.read() == b"Test content for BufferedReader"
+            assert attachment.filename == temp_file_path
+            assert attachment.mime_type == "text/plain"
+    finally:
+        # Clean up
+        Path(temp_file_path).unlink(missing_ok=True)
+
+
 def test_attachment_from_file_unknown_mimetype():
     """Test creating Attachment from a file with unknown MIME type."""
     # Create a file with unknown extension

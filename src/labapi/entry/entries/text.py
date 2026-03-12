@@ -7,7 +7,6 @@ implementations for plain text, rich text, and header entries.
 
 from __future__ import annotations
 
-from abc import ABC
 from typing import TYPE_CHECKING, override
 
 from .base import Entry
@@ -16,10 +15,11 @@ if TYPE_CHECKING:
     from labapi.user import User
 
 
-class BaseTextEntry(Entry[str], ABC):
-    """Abstract base class for all text-based entries in LabArchives.
+class PlainTextEntry(Entry[str], part_type="plain text entry"):
+    """Represents a plain text entry on a LabArchives page.
 
-    This class provides common functionalities for entries whose content is
+    This class is used for entries containing unformatted, raw text.
+    Additionally, it provides common functionalities for entries whose content is
     represented as a string, including methods for getting and setting the content.
     """
 
@@ -55,22 +55,18 @@ class BaseTextEntry(Entry[str], ABC):
         self._data = value
 
 
-class TextEntry(BaseTextEntry, part_type="text entry"):
+class TextEntry(PlainTextEntry, part_type="text entry"):
     """Represents a rich text entry on a LabArchives page.
 
     This class is used for entries containing formatted text, typically HTML.
     """
 
 
-class HeaderEntry(BaseTextEntry, part_type="heading"):
+class HeaderEntry(PlainTextEntry, part_type="heading"):
     """Represents a header entry on a LabArchives page.
 
     This class is used for entries that function as headings or titles within a page.
     """
 
 
-class PlainTextEntry(BaseTextEntry, part_type="plain text entry"):
-    """Represents a plain text entry on a LabArchives page.
 
-    This class is used for entries containing unformatted, raw text.
-    """

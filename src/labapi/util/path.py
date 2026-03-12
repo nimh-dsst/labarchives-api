@@ -46,12 +46,12 @@ class NotebookPath(Sequence[str]):
 
         :param part: The base of the path. Pass a tree node to create an
             absolute path rooted at that node's location, a ``NotebookPath``
-            to extend it, or ``None`` to build a path purely from ``parts``.
+            to extend it, or a slash-separated string (absolute strings start
+            with ``/``; others are relative).
         :param parts: Additional slash-separated path segments appended after
             ``part``. Segments are split on ``/`` and normalised.
-        :param parent: An absolute path (or node) that anchors a relative path
-            for later resolution. Must be absolute. Only meaningful when
-            ``part`` is ``None`` and ``parts`` form a relative path.
+        :param parent: An absolute path (or node) that anchors a relative
+            string path for later resolution. Must be absolute.
         :raises ValueError: If ``parent`` is not absolute.
         """
         if parent is not None:
@@ -68,10 +68,9 @@ class NotebookPath(Sequence[str]):
             self._absolute: bool = part._absolute
             self._parent = part._parent
         elif isinstance(part, str):
-            self._parts: Sequence[str] = NotebookPath._combine((part,), parts, True)
-            self._absolute = (
-                NotebookPath._is_absolute_seq(part) and self._parent is None
-            )
+            is_abs = NotebookPath._is_absolute_seq(part) and self._parent is None
+            self._parts: Sequence[str] = NotebookPath._combine((part,), parts, is_abs)
+            self._absolute = is_abs
         else:
             self._parts: Sequence[str] = NotebookPath._combine(
                 NotebookPath._of_node(part), parts, True
@@ -154,7 +153,6 @@ class NotebookPath(Sequence[str]):
         :returns: ``True`` if the leading segments of this path equal all
             segments of ``other``.
         """
-        # NOTE does not resolve paths
         if len(self) < len(other):
             return False
         return self[: len(other)] == other[: len(other)]
@@ -201,12 +199,13 @@ class NotebookPath(Sequence[str]):
             raise ValueError(f'Path "{self}" is outside of "{other}"')
 
         if not other._absolute and other._parent is None:
-            return NotebookPath(*self[len(other) :])
+            return NotebookPath(*self[len(other):])
 
         p_origin = other.resolve()
         p_endpoint = self.resolve(other)
 
-        return NotebookPath(*p_endpoint[len(p_origin) :], parent=p_origin)
+        remaining = list(p_endpoint[len(p_origin):])
+        return NotebookPath(*remaining, parent=p_origin) if remaining else NotebookPath("", parent=p_origin)
 
     @property
     def name(self) -> str:
@@ -244,10 +243,12 @@ class NotebookPath(Sequence[str]):
 
     @override
     def __iter__(self) -> Iterator[str]:
+        """Iterate over the path segments in order."""
         return iter(self._parts)
 
     @override
     def __len__(self) -> int:
+        """Return the number of segments in the path."""
         return len(self._parts)
 
     @overload
@@ -258,14 +259,18 @@ class NotebookPath(Sequence[str]):
 
     @override
     def __getitem__(self, idx: int | slice) -> str | Sequence[str]:
+        """Return the segment at ``idx``, or a sub-sequence for a slice."""
         return self._parts[idx]
 
     @override
     def __hash__(self) -> int:
+        """Hash based on absoluteness, segments, and parent anchor."""
         return hash((self._absolute, tuple(self._parts)))
 
     @override
     def __eq__(self, other: object) -> bool:
+        """Return ``True`` if ``other`` is a ``NotebookPath`` with identical
+        absoluteness, segments, and parent anchor."""
         if self is other:
             return True
         if not isinstance(other, NotebookPath):
@@ -278,18 +283,33 @@ class NotebookPath(Sequence[str]):
 
     @override
     def __repr__(self) -> str:
+        """Return a developer-readable representation, e.g. ``NotebookPath('/a/b')``."""
         return f"{type(self).__name__}({self.to_string()!r})"
 
     @override
-    def __str__(self):
+    def __str__(self) -> str:
+        """Return the slash-separated string form of the path."""
         return self.to_string()
 
     @staticmethod
     def _is_absolute_seq(a: Sequence[str]) -> bool:
+        """Return ``True`` if the first element of ``a`` starts with ``/``."""
         return len(a) > 0 and a[0].startswith("/")
 
     @staticmethod
     def _combine(a: Sequence[str], b: Sequence[str], from_root: bool) -> Sequence[str]:
+        """Merge two sequences of raw path segments into a normalised list.
+
+        Splits each element on ``/``, strips whitespace, drops empty segments
+        and ``.``, and resolves ``..`` (popping the previous segment, or
+        keeping ``..`` literally at the start of a relative path).
+
+        :param a: First sequence of raw segments (e.g. from an existing path).
+        :param b: Second sequence of raw segments to append.
+        :param from_root: Whether the combined path is rooted (absolute). When
+            ``True``, a leading ``..`` is silently dropped instead of kept.
+        :returns: A flat list of normalised, non-empty segment strings.
+        """
         canonical: list[str] = []
 
         # NOTE no support for escapes
@@ -311,6 +331,15 @@ class NotebookPath(Sequence[str]):
 
     @staticmethod
     def _of_node(a: AbstractBaseTreeNode) -> Sequence[str]:
+        """Return the ordered list of ancestor names from the notebook root to ``a``.
+
+        Walks ``a.parent`` until the root is reached, building the segment list
+        from the bottom up.
+
+        :param a: The tree node to derive a path for.
+        :returns: A sequence of name strings representing the path from root to
+            ``a``, not including the root notebook itself.
+        """
         stack: list[str] = []
 
         curr = a

@@ -14,6 +14,13 @@ Key components include:
 """
 
 from .client import Client
+from .exceptions import (
+    ApiError,
+    AuthenticationError,
+    LabArchivesError,
+    NodeExistsError,
+    TraversalError,
+)
 from .entry import (
     Attachment,
     AttachmentEntry,
@@ -32,19 +39,24 @@ from .user import User
 from .util import Index, InsertBehavior, NotebookPath
 
 __all__ = [
+    "ApiError",
     "Attachment",
     "AttachmentEntry",
+    "AuthenticationError",
     "Client",
     "Entry",
     "HeaderEntry",
     "Index",
     "InsertBehavior",
+    "LabArchivesError",
     "Notebook",
     "NotebookDirectory",
     "NotebookPage",
+    "NodeExistsError",
     "PlainTextEntry",
     "NotebookPath",
     "TextEntry",
+    "TraversalError",
     "User",
     "WidgetEntry",
 ]
