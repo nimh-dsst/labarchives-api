@@ -24,20 +24,25 @@ class TestEntryUnit:
         """Test Entry exposes the correct content_type for its class."""
         assert TextEntry("e", "", Mock(spec=User)).content_type == "text entry"
         assert HeaderEntry("e", "", Mock(spec=User)).content_type == "heading"
-        assert PlainTextEntry("e", "", Mock(spec=User)).content_type == "plain text entry"
+        assert (
+            PlainTextEntry("e", "", Mock(spec=User)).content_type == "plain text entry"
+        )
         assert AttachmentEntry("e", "", Mock(spec=User)).content_type == "Attachment"
 
 
 class TestEntryIntegration:
     """Integration tests with real objects and mocked API."""
 
-    @pytest.mark.parametrize("part_type,cls", [
-        ("text entry", TextEntry),
-        ("plain text entry", PlainTextEntry),
-        ("heading", HeaderEntry),
-        ("Attachment", AttachmentEntry),
-        ("widget entry", WidgetEntry),
-    ])
+    @pytest.mark.parametrize(
+        "part_type,cls",
+        [
+            ("text entry", TextEntry),
+            ("plain text entry", PlainTextEntry),
+            ("heading", HeaderEntry),
+            ("Attachment", AttachmentEntry),
+            ("widget entry", WidgetEntry),
+        ],
+    )
     def test_entry_from_part_type(self, part_type: str, cls: type, user: User):
         """Test Entry.from_part_type creates the correct subclass."""
         entry = Entry.from_part_type(part_type, "eid_123", "data", user)

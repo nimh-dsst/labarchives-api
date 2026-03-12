@@ -93,11 +93,14 @@ class TestEntriesIntegration:
         page._user = user
         return page
 
-    @pytest.mark.parametrize("cls,data", [
-        (TextEntry, "<p>New content</p>"),
-        (HeaderEntry, "<h1>Title</h1>"),
-        (PlainTextEntry, "Plain text content"),
-    ])
+    @pytest.mark.parametrize(
+        "cls,data",
+        [
+            (TextEntry, "<p>New content</p>"),
+            (HeaderEntry, "<h1>Title</h1>"),
+            (PlainTextEntry, "Plain text content"),
+        ],
+    )
     def test_entries_create_text_types(self, client, user: User, mock_page, cls, data):
         """Test Entries.create dispatches correctly for all text entry types."""
         entries = Entries([], user, mock_page)

@@ -136,9 +136,7 @@ class TestClientUnit:
         response.url = "https://api.test.com/endpoint"
         response.text = "Not Found"
 
-        with pytest.raises(
-            ApiError, match="API request failed with status code 404"
-        ):
+        with pytest.raises(ApiError, match="API request failed with status code 404"):
             Client._handle_request_status(response)
 
     def test_client_initialization_with_params(self):
@@ -158,7 +156,9 @@ class TestClientUnit:
         assert client._akid == "test_akid"
         assert client._base_url == "https://api.labarchives.com"
 
-    @pytest.mark.skipif(not getenv("ACCESS_KEYID"), reason="Environment variables not set")
+    @pytest.mark.skipif(
+        not getenv("ACCESS_KEYID"), reason="Environment variables not set"
+    )
     def test_client_initialization_from_dotenv(self):
         """Test Client initialization falls back to .env file."""
         client = Client()

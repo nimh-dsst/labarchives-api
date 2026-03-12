@@ -67,6 +67,3 @@ class HeaderEntry(PlainTextEntry, part_type="heading"):
 
     This class is used for entries that function as headings or titles within a page.
     """
-
-
-

@@ -12,6 +12,7 @@ from labapi import Index
 type AnyDict = Mapping[str, AnyDict | str | bool | int | float]
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except ImportError:
     pass
@@ -20,8 +21,14 @@ except ImportError:
 @pytest.fixture(scope="session")
 def la_client():
     """Initializes the LabArchives API Client from .env file."""
-    if not os.getenv("ACCESS_KEYID") or not os.getenv("ACCESS_PWD") or not os.getenv("API_URL"):
-        pytest.skip("ACCESS_KEYID, ACCESS_PWD, and AUTH_URL required for integration tests")
+    if (
+        not os.getenv("ACCESS_KEYID")
+        or not os.getenv("ACCESS_PWD")
+        or not os.getenv("API_URL")
+    ):
+        pytest.skip(
+            "ACCESS_KEYID, ACCESS_PWD, and AUTH_URL required for integration tests"
+        )
     else:
         return LA.Client()
 

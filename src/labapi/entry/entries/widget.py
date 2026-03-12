@@ -15,7 +15,7 @@ class WidgetEntry(PlainTextEntry, part_type="widget entry"):
     """Represents a widget entry on a LabArchives page.
 
     Widget entries typically embed interactive content or external applications.
-    At this time, LabArchives returns the value of the widget as a JSON string 
+    At this time, LabArchives returns the value of the widget as a JSON string
     and not the content making up the widget.
     """
 

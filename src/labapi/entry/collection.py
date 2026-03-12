@@ -100,7 +100,9 @@ class Entries(Sequence["Entry[Any]"]):
         return file_entry, text_entry
 
     @overload
-    def create(self, cls: Type[AttachmentEntry], data: Attachment) -> AttachmentEntry: ...
+    def create(
+        self, cls: Type[AttachmentEntry], data: Attachment
+    ) -> AttachmentEntry: ...
 
     @overload
     def create(self, cls: Type[E], data: str) -> E: ...
@@ -142,7 +144,7 @@ class Entries(Sequence["Entry[Any]"]):
             entry_tree = self._user.api_post(
                 "entries/add_entry",
                 {"entry_data": data},
-                part_type=cls._part_type, # pyright: ignore[reportPrivateUsage]
+                part_type=cls._part_type,  # pyright: ignore[reportPrivateUsage]
                 pid=self._page.id,
                 nbid=self._page.root.id,
             )

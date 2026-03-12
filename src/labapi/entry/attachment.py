@@ -50,8 +50,8 @@ class Attachment:
         mime_type = guess_type(file.name)[0] or "application/octet-stream"
 
         # Create a spooled temporary file as the new backing buffer.
-        # It stays in memory until it reaches 1MB, then rolls over to disk.
-        backing = tempfile.SpooledTemporaryFile(max_size=1024 * 1024, mode="w+b")
+        # It stays in memory until it reaches 4MB, then rolls over to disk.
+        backing = tempfile.SpooledTemporaryFile(max_size=4 * 1024 * 1024, mode="w+b")
         shutil.copyfileobj(file, backing)
         backing.seek(0)
 

@@ -199,13 +199,17 @@ class NotebookPath(Sequence[str]):
             raise ValueError(f'Path "{self}" is outside of "{other}"')
 
         if not other._absolute and other._parent is None:
-            return NotebookPath(*self[len(other):])
+            return NotebookPath(*self[len(other) :])
 
         p_origin = other.resolve()
         p_endpoint = self.resolve(other)
 
-        remaining = list(p_endpoint[len(p_origin):])
-        return NotebookPath(*remaining, parent=p_origin) if remaining else NotebookPath("", parent=p_origin)
+        remaining = list(p_endpoint[len(p_origin) :])
+        return (
+            NotebookPath(*remaining, parent=p_origin)
+            if remaining
+            else NotebookPath("", parent=p_origin)
+        )
 
     @property
     def name(self) -> str:

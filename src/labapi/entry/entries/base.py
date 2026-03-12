@@ -35,7 +35,7 @@ class Entry(ABC, Generic[T]):
         :returns: True if a class is registered for this part type, False otherwise.
         """
         return part_type in _entries_registry
-    
+
     @staticmethod
     def class_of(part_type: str) -> Type[Entry[Any]]:
         """Retrieves the registered entry class for a given part type.
