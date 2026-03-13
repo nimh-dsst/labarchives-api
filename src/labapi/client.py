@@ -6,39 +6,40 @@ handling authentication, request signing, and various API call methods.
 """
 
 from __future__ import annotations
+
+import ssl
 import warnings
+from base64 import b64encode
+from datetime import datetime, timedelta
+from http.server import SimpleHTTPRequestHandler
+from io import BufferedIOBase
 from operator import itemgetter
+from os import getenv
+from socketserver import TCPServer
 from typing import Any, Generator, Mapping, Sequence, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
-from os import getenv
 
 from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.hazmat.primitives.hmac import HMAC
-from requests import codes as status_codes, Response, Session
-from requests.adapters import HTTPAdapter
-import ssl
-
-from .exceptions import ApiError, AuthenticationError
-
-# Error codes that indicate an authentication/credential failure.
-_AUTH_ERROR_CODES: frozenset[int] = frozenset({
-    4506,  # invalid akid
-    4514,  # login or password incorrect
-    4520,  # invalid signature
-    4533,  # session timed out
-})
-from .user import User
-from .util import extract_etree, to_bool, NotebookInit
-
-from io import BufferedIOBase
-
 from lxml.etree import Element, fromstring
-from base64 import b64encode
-from datetime import datetime, timedelta
-from socketserver import TCPServer
-from http.server import SimpleHTTPRequestHandler
+from requests import Response, Session
+from requests import codes as status_codes
+from requests.adapters import HTTPAdapter
 
 from .browser import default_browser
+from .exceptions import ApiError, AuthenticationError
+from .user import User
+from .util import NotebookInit, extract_etree, to_bool
+
+# Error codes that indicate an authentication/credential failure.
+_AUTH_ERROR_CODES: frozenset[int] = frozenset(
+    {
+        4506,  # invalid akid
+        4514,  # login or password incorrect
+        4520,  # invalid signature
+        4533,  # session timed out
+    }
+)
 
 try:
     from dotenv import load_dotenv
