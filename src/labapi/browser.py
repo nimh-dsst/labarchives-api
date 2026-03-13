@@ -43,7 +43,7 @@ try:
                     default_browser = choice
                     break
 
-        # TODO the way this is written we'll never *NOT* have a compatible 'browser'
+        # FIXME the way this is written we'll never *NOT* have a compatible 'browser'
         # because `terminal` is registered in default_authenticate as a real value
         # the warning for No compatible browser never triggers
 
@@ -51,14 +51,9 @@ try:
             if len(browsers) > 0:
                 browser_name = browsers[0]["name"].lower()
 
-                # BUG: I think we are detected betas and nightlys here which might cause an issue
-                # with Selenium if the installed location is wrong
-                # TODO: fix with get_details_of() and get the executable path to feed to the driver
-
                 for choice in browser_choices:
                     if choice in browser_name:
                         default_browser = choice
                         break
 except ImportError:
     default_browser = "terminal"
-    # TODO give warning when this is accessed without installed browsers

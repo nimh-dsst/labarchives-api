@@ -12,7 +12,6 @@ license = { text = "CC0-1.0" }
 authors = [
   { name = "Christoph Li", email = "christoph.li@nih.gov" },
   { name = "Joshua Lawrimore", email = "josh.lawrimore@nih.gov"},
-  # TODO add Adam & Dustin
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
