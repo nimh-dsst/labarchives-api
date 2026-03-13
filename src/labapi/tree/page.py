@@ -9,11 +9,10 @@ entries contained within the page.
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, cast, override, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast, override
 
 from labapi.entry import Attachment, Entries, Entry
-from labapi.util import extract_etree, InsertBehavior, ALL_PART_TYPES
-
+from labapi.util import ALL_PART_TYPES, InsertBehavior, extract_etree
 
 from .mixins import AbstractTreeContainer, AbstractTreeNode
 

@@ -129,7 +129,7 @@ class Client:
 
         if not akid or not akpass:
             raise AuthenticationError(
-                "ACCESS_KEYID or ACCESS_PWD environment variables not set."
+                "ACCESS_KEYID or ACCESS_PWD environment variables not set, and parameters were not provided."
             )
 
         self._base_url = urlsplit(base_url).geturl()

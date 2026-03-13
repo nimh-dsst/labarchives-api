@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import Mock
+
 import pytest
 
 from labapi.entry.entries.attachment import AttachmentEntry
@@ -9,7 +11,6 @@ from labapi.entry.entries.base import Entry
 from labapi.entry.entries.text import HeaderEntry, PlainTextEntry, TextEntry
 from labapi.entry.entries.widget import WidgetEntry
 from labapi.user import User
-from unittest.mock import Mock
 
 
 class TestEntryUnit:

@@ -5,9 +5,10 @@ Test script for ModelLogger
 Reads test data from files and logs them to LabArchives.
 """
 
-import json
 import argparse
+import json
 from pathlib import Path
+
 from model_logger import ModelLogger
 
 

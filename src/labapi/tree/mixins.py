@@ -7,6 +7,7 @@ provide common functionalities and properties for tree nodes and containers.
 
 from __future__ import annotations
 
+import time
 from abc import ABC, abstractmethod
 from collections.abc import (
     ItemsView,
@@ -17,24 +18,20 @@ from collections.abc import (
     Sequence,
     ValuesView,
 )
-from datetime import datetime
-from typing import TYPE_CHECKING, Literal, Self, cast, overload, override, TypeVar, Type
+from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Literal, Self, Type, TypeVar, cast, overload, override
 
 from labapi.exceptions import NodeExistsError, TraversalError
 from labapi.util import (
     IdIndex,
     IdOrNameIndex,
     Index,
+    InsertBehavior,
     NameIndex,
+    NotebookPath,
     extract_etree,
     to_bool,
-    InsertBehavior,
-    NotebookPath,
 )
-
-from datetime import timedelta
-import time
-
 
 if TYPE_CHECKING:
     from labapi.user import User

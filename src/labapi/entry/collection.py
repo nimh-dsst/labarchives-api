@@ -18,7 +18,6 @@ E = TypeVar("E", bound="Entry[Any]")
 if TYPE_CHECKING:
     from labapi.tree import NotebookPage
     from labapi.user import User
-
     from labapi.util import JsonData
 
 

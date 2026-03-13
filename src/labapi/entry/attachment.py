@@ -10,7 +10,10 @@ from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
     from io import BufferedRandom, BufferedReader, BytesIO
-    from tempfile import SpooledTemporaryFile, _TemporaryFileWrapper  # pyright: ignore[reportPrivateUsage]
+    from tempfile import (  # pyright: ignore[reportPrivateUsage]
+        SpooledTemporaryFile,
+        _TemporaryFileWrapper,
+    )
 
 # NOTE: from Pylance
 # Unfortunately PEP 688 does not allow us to distinguish read-only

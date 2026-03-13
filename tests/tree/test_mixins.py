@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from labapi import Index, Notebook, NotebookPage, NotebookDirectory
+from labapi import Index, Notebook, NotebookDirectory, NotebookPage
 from labapi.exceptions import NodeExistsError, TraversalError
-from labapi.util import InsertBehavior
 from labapi.tree.mixins import (
     AbstractTreeContainer,
 )
+from labapi.util import InsertBehavior
 
 
 class TestTreeMixinsIntegration:

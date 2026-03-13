@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 from labapi.util.types import NotebookInit
 
 

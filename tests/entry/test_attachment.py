@@ -6,7 +6,6 @@ import tempfile
 from io import BytesIO
 from pathlib import Path
 
-
 from labapi.entry.attachment import Attachment
 
 

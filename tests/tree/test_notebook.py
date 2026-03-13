@@ -6,8 +6,8 @@ from unittest.mock import Mock
 
 from labapi import Notebook
 from labapi.tree.collection import Notebooks
-from labapi.util.types import NotebookInit
 from labapi.user import User
+from labapi.util.types import NotebookInit
 
 
 class TestNotebookUnit:

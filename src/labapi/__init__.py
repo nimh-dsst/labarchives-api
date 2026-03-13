@@ -14,13 +14,6 @@ Key components include:
 """
 
 from .client import Client
-from .exceptions import (
-    ApiError,
-    AuthenticationError,
-    LabArchivesError,
-    NodeExistsError,
-    TraversalError,
-)
 from .entry import (
     Attachment,
     AttachmentEntry,
@@ -29,6 +22,13 @@ from .entry import (
     PlainTextEntry,
     TextEntry,
     WidgetEntry,
+)
+from .exceptions import (
+    ApiError,
+    AuthenticationError,
+    LabArchivesError,
+    NodeExistsError,
+    TraversalError,
 )
 from .tree import (
     Notebook,

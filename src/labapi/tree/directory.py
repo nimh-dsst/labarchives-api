@@ -11,8 +11,9 @@ from __future__ import annotations
 
 from typing import override
 
-from .mixins import AbstractTreeContainer, AbstractTreeNode
 from labapi.util import InsertBehavior
+
+from .mixins import AbstractTreeContainer, AbstractTreeNode
 
 
 class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):

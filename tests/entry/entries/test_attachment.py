@@ -5,7 +5,6 @@ from __future__ import annotations
 from io import BytesIO
 from unittest.mock import Mock
 
-
 from labapi.entry.attachment import Attachment
 from labapi.entry.entries.attachment import AttachmentEntry
 from labapi.user import User
