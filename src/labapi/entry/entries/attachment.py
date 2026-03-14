@@ -52,6 +52,7 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
         """
         # BUG: currently the implementation means that the backing buffer can be used while a reference is maintained
         #      to it
+        # TODO: we should probably return a new temporary copy every time it's asked for, tbh?
         if self._filedata is None or self._filedata.closed:
             attachment = self._user.client.stream_api_get(
                 "entries/entry_attachment", uid=self._user.id, eid=self.id
@@ -109,7 +110,8 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
         :param value: The new attachment object to upload.
         """
         # NOTE: this implicitly invalidates all previous Attachments
-        # BUG: currently returns 4999
+        # NOTE: if every time content is called we give a new copy anyways that's fine
+        #       (see get_attachment())
 
         self._user.api_post(
             "entries/update_attachment",

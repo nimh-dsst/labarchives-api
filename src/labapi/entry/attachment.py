@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from io import BufferedRandom, BufferedReader, BytesIO
     from tempfile import (  # pyright: ignore[reportPrivateUsage]
         SpooledTemporaryFile,
-        _TemporaryFileWrapper,
     )
 
 # NOTE: from Pylance
@@ -34,9 +33,6 @@ class Attachment:
     .. note::
        Write operations to the backing buffer need explicit syncing with the server.
     """
-
-    # TODO writes need explicit syncing with server
-    # NOTE or we just disable them that probly works
 
     @staticmethod
     def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
@@ -70,8 +66,7 @@ class Attachment:
         backing: BufferedRandom
         | BufferedReader
         | BytesIO
-        | SpooledTemporaryFile[bytes]
-        | _TemporaryFileWrapper[bytes],
+        | SpooledTemporaryFile[bytes],
         mime_type: str,
         filename: str,
         caption: str,
