@@ -119,13 +119,12 @@ class Client:
         """
         super().__init__()
 
-        if base_url is None or akid is None or akpass is None:
-            if base_url is None:
-                base_url = getenv("API_URL", "https://api.labarchives.com")
-            if akid is None:
-                akid = getenv("ACCESS_KEYID")
-            if akpass is None:
-                akpass = getenv("ACCESS_PWD")
+        if base_url is None:
+            base_url = getenv("API_URL", "https://api.labarchives.com")
+        if akid is None:
+            akid = getenv("ACCESS_KEYID")
+        if akpass is None:
+            akpass = getenv("ACCESS_PWD")
 
         if not akid or not akpass:
             raise AuthenticationError(

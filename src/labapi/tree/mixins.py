@@ -154,7 +154,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         return False
 
     @abstractmethod
-    def refresh(self) -> None:
+    def refresh(self) -> Self:
         """Refreshes the node's data from the LabArchives API.
 
         This method updates the node's properties (such as name, ID, and children)
@@ -733,7 +733,7 @@ class AbstractTreeContainer(
         return True
 
     @override
-    def refresh(self) -> None:
+    def refresh(self) -> Self:
         """Refreshes the container by clearing its cached children.
 
         This method clears the internal children cache, forcing the container
@@ -744,3 +744,5 @@ class AbstractTreeContainer(
             child.refresh()
         self._children = []
         self._populated = False
+
+        return self

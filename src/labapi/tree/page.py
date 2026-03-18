@@ -9,7 +9,7 @@ entries contained within the page.
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, Literal, cast, override
+from typing import TYPE_CHECKING, Any, Literal, cast, override, Self
 
 from labapi.entry import Attachment, Entries, Entry
 from labapi.util import ALL_PART_TYPES, InsertBehavior, extract_etree
@@ -162,7 +162,7 @@ class NotebookPage(AbstractTreeNode):
         return False
 
     @override
-    def refresh(self) -> None:
+    def refresh(self) -> Self:
         """Refreshes the page by clearing its cached entries.
 
         This method clears the internal entries cache, forcing the page
@@ -174,3 +174,4 @@ class NotebookPage(AbstractTreeNode):
         """
         # TODO: Properly invalidate all entry objects before clearing
         self._entries = None
+        return self
