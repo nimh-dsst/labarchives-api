@@ -150,7 +150,7 @@ class TestClientUnit:
         """Test Client initialization reads from environment variables."""
         monkeypatch.setenv("ACCESS_KEYID", "test_akid")
         monkeypatch.setenv("ACCESS_PWD", "test_password")
-        monkeypatch.delenv("API_URL")
+        monkeypatch.delenv("API_URL", raising=False)
 
         client = Client()
 
