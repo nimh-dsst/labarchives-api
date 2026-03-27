@@ -16,7 +16,7 @@ Install the package with its development dependencies using ``uv``:
 
     uv sync
     source .venv/bin/activate
-    pre-commit install
+    pre-commit install --hook-type pre-commit --hook-type pre-push
 
 Running Tests
 -------------
@@ -80,10 +80,11 @@ formatting.
 Pre-commit hooks
 ~~~~~~~~~~~~~~~~
 
-After running ``pre-commit install``, Ruff runs automatically on every commit:
+After running ``pre-commit install --hook-type pre-commit --hook-type pre-push``:
 
-* **ruff-check** — lints and auto-fixes safe issues (``--fix``)
-* **ruff-format** — enforces consistent formatting
+* **ruff-check** - lints and auto-fixes safe issues (``--fix``)
+* **ruff-format** - enforces consistent formatting
+* **pytest-check** - runs ``uv run pytest --no-cov`` on ``pre-push``
 
 You can run them manually at any time:
 
@@ -91,6 +92,7 @@ You can run them manually at any time:
 
     ruff check --fix .
     ruff format .
+    uv run pytest --no-cov
 
 Or check without making changes:
 
@@ -110,7 +112,7 @@ Key conventions:
 * **``from __future__ import annotations``** is present in every module,
   enabling postponed evaluation of annotations and allowing forward references
   without string literals.
-* **Generics** are used throughout the entry system — :class:`~labapi.entry.entries.base.Entry`
+* **Generics** are used throughout the entry system - :class:`~labapi.entry.entries.base.Entry`
   is parameterized by its data type (e.g., ``Entry[Attachment]``), so callers
   get concrete return types without casting.
 * **``TYPE_CHECKING`` guards** prevent circular imports while keeping type
@@ -121,4 +123,4 @@ Key conventions:
   types produced by different index kinds.
 
 The project targets Python 3.12+ and uses modern syntax where it improves
-clarity — ``type`` aliases, ``match`` statements, and ``Self``.
+clarity - ``type`` aliases, ``match`` statements, and ``Self``.
