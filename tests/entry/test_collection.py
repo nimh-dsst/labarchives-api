@@ -163,6 +163,35 @@ class TestEntriesIntegration:
         assert api_call[1]["caption"] == "Test file"
         assert api_call[1]["pid"] == "test_page_id"
         assert api_call[1]["nbid"] == "test_notebook_id"
+        assert "client_ip" not in api_call[1]
+
+    def test_entries_create_attachment_with_client_ip(
+        self, client, user: User, mock_page
+    ):
+        """Test Entries.create passes through client_ip for attachment uploads."""
+        entries = Entries([], user, mock_page)
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>new_attachment_eid</eid>
+            </entry>
+        </entries>
+        """
+
+        attachment = Attachment(
+            backing=BytesIO(b"File content"),
+            mime_type="text/plain",
+            filename="test.txt",
+            caption="Test file",
+        )
+
+        entries.create(AttachmentEntry, attachment, client_ip="203.0.113.7")
+
+        api_call = client.api_log
+        assert api_call[0] == "entries/add_attachment"
+        assert api_call[1]["client_ip"] == "203.0.113.7"
 
     def test_entries_create_json_entry(self, client, user: User, mock_page):
         """Test Entries.create_json_entry creates both attachment and text entry."""

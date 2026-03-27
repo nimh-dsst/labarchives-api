@@ -100,13 +100,19 @@ class Entries(Sequence["Entry[Any]"]):
 
     @overload
     def create(
-        self, cls: Type[AttachmentEntry], data: Attachment
+        self,
+        cls: Type[AttachmentEntry],
+        data: Attachment,
+        *,
+        client_ip: str | None = None,
     ) -> AttachmentEntry: ...
 
     @overload
-    def create(self, cls: Type[E], data: str) -> E: ...
+    def create(self, cls: Type[E], data: str, *, client_ip: str | None = None) -> E: ...
 
-    def create(self, cls: Type[E], data: str | Attachment) -> E:
+    def create(
+        self, cls: Type[E], data: str | Attachment, *, client_ip: str | None = None
+    ) -> E:
         """Creates a new entry on the page.
 
         This method supports creating any entry type by passing the entry class directly,
@@ -119,21 +125,26 @@ class Entries(Sequence["Entry[Any]"]):
         :param data: The content of the entry. For text-based entries, this should be a string.
                     For :class:`~labapi.entry.entries.AttachmentEntry`, this should be an
                     :class:`~labapi.entry.Attachment` object.
+        :param client_ip: Optional end-user IP to pass through on attachment uploads.
         :returns: The newly created entry object of the specified type.
         :raises RuntimeError: If the API call to create the entry fails.
         """
         if issubclass(cls, AttachmentEntry):
             assert isinstance(data, Attachment)
+            upload_kwargs = {
+                "filename": data.filename,
+                "caption": data.caption,
+                "nbid": self._page.root.id,
+                "pid": self._page.id,
+                "change_description": "File uploaded via API",
+            }
+            if client_ip is not None:
+                upload_kwargs["client_ip"] = client_ip
             entry_tree = self._user.api_post(
                 "entries/add_attachment",
                 data._backing,  # pyright: ignore[reportPrivateUsage, reportArgumentType]
-                filename=data.filename,
-                caption=data.caption,
-                nbid=self._page.root.id,
-                pid=self._page.id,
-                change_description="File uploaded via API",
+                **upload_kwargs,
             )
-            # TODO client_ip should be the end user ip (allow this to be set?)
 
             eid = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
             entry = cls(eid, data.caption, self._user)
