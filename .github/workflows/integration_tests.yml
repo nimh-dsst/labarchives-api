@@ -38,6 +38,6 @@ jobs:
         ACCESS_KEYID: ${{ secrets.AKID }}
         ACCESS_PWD: ${{ secrets.AKPASS }}
         AUTH_KEY: ${{ github.event.inputs.la_key }}
-        AUTH_EMAIL: ${{ github.events.inputs.la_email }}
+        AUTH_EMAIL: ${{ github.event.inputs.la_email }}
         NOTEBOOK: ${{ secrets.NOTEBOOK }}
-      run: uv run pytest test_integration.py
+      run: uv run pytest tests/test_integration.py
