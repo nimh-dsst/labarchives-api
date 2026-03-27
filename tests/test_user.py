@@ -56,6 +56,21 @@ class TestUserUnit:
         )
         assert result is mock_element
 
+    def test_user_check_uses_lightweight_probe(self):
+        """Test User.check uses users/max_file_size as its session probe."""
+        mock_client = Mock()
+        mock_element = etree.fromstring(
+            b"<users><max-file-size>104857600</max-file-size></users>"
+        )
+        mock_client.api_get.return_value = mock_element
+
+        user = User("user_789", "test@example.com", [], mock_client)
+
+        assert user.check() is True
+        mock_client.api_get.assert_called_once_with(
+            "users/max_file_size", uid="user_789"
+        )
+
 
 class TestUserIntegration:
     """Integration tests with real objects and mocked API."""
@@ -126,6 +141,20 @@ class TestUserIntegration:
         max_size = user.get_max_upload_size()
 
         assert max_size == 104857600
+
+        api_call = client.api_log
+        assert api_call[0] == "users/max_file_size"
+        assert api_call[1]["uid"] == "testid1"
+
+    def test_user_check(self, client, user: User):
+        """Test User.check succeeds via the lightweight probe endpoint."""
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <users>
+            <max-file-size type="integer">104857600</max-file-size>
+        </users>
+        """
+
+        assert user.check() is True
 
         api_call = client.api_log
         assert api_call[0] == "users/max_file_size"

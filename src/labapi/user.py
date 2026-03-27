@@ -119,6 +119,19 @@ class User:
             self.api_get("users/max_file_size"), {"max-file-size": int}
         )["max-file-size"]
 
+    def check(self) -> bool:
+        """Performs a lightweight authenticated API call to verify the session.
+
+        This uses the ``users/max_file_size`` endpoint as a cheap probe and
+        returns ``True`` when the request succeeds. Authentication and API
+        failures are allowed to propagate so callers can distinguish them.
+
+        :returns: ``True`` when the authenticated session is valid.
+        :raises RuntimeError: If the API request fails.
+        """
+        self.api_get("users/max_file_size")
+        return True
+
     @property
     def notebooks(self) -> Notebooks:
         """Provides access to the user's notebooks.
