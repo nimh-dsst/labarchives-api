@@ -32,9 +32,9 @@ available on any :class:`~labapi.tree.notebook.Notebook` or
     subfolder = my_folder.create(NotebookDirectory, "2024 Results")
 
 .. note::
-    Tree mutation methods such as ``create()`` update the local object graph immediately.
-    If you just created a page or directory through this client, you can keep using the
-    returned object and parent container without calling ``refresh()`` first.
+    Tree mutation methods such as ``create()`` update the local cached objects
+    immediately. The created node is ready to use right away, and you can fetch
+    ``children`` again if you want a fresh child snapshot that includes it.
 
 Handling Existing Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~
