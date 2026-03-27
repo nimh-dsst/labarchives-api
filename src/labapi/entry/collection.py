@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Type, TypeVar, overload, override
 from labapi.util import extract_etree
 
 from .attachment import Attachment
-from .entries import AttachmentEntry, Entry, TextEntry
+from .entries import AttachmentEntry, Entry, HeaderEntry, PlainTextEntry, TextEntry
 
 E = TypeVar("E", bound="Entry[Any]")
 
@@ -153,3 +153,19 @@ class Entries(Sequence["Entry[Any]"]):
 
         self._entries.append(entry)
         return entry
+
+    def text(self, content: str) -> TextEntry:
+        """Create a rich text entry."""
+        return self.create(TextEntry, content)
+
+    def plain_text(self, content: str) -> PlainTextEntry:
+        """Create a plain text entry."""
+        return self.create(PlainTextEntry, content)
+
+    def header(self, content: str) -> HeaderEntry:
+        """Create a header entry."""
+        return self.create(HeaderEntry, content)
+
+    def attachment(self, data: Attachment) -> AttachmentEntry:
+        """Create an attachment entry."""
+        return self.create(AttachmentEntry, data)

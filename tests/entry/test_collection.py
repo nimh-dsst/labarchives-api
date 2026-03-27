@@ -79,6 +79,48 @@ class TestEntriesUnit:
         entry_ids = [entry.id for entry in entries]
         assert entry_ids == ["eid_1", "eid_2", "eid_3"]
 
+    @pytest.mark.parametrize(
+        "method_name,expected_cls,data",
+        [
+            ("text", TextEntry, "<p>Text</p>"),
+            ("plain_text", PlainTextEntry, "Plain text"),
+            ("header", HeaderEntry, "<h1>Header</h1>"),
+        ],
+    )
+    def test_text_factory_methods_delegate_to_create(
+        self, method_name: str, expected_cls: type, data: str
+    ):
+        """Test text-like factory helpers forward to Entries.create unchanged."""
+        mock_user = Mock(spec=User)
+        mock_page = Mock()
+        entries = Entries([], mock_user, mock_page)
+        expected_entry = Mock(spec=expected_cls)
+        entries.create = Mock(return_value=expected_entry)  # pyright: ignore[reportAttributeAccessIssue]
+
+        result = getattr(entries, method_name)(data)
+
+        assert result is expected_entry
+        entries.create.assert_called_once_with(expected_cls, data)
+
+    def test_attachment_factory_method_delegates_to_create(self):
+        """Test attachment helper forwards to Entries.create unchanged."""
+        mock_user = Mock(spec=User)
+        mock_page = Mock()
+        entries = Entries([], mock_user, mock_page)
+        attachment = Attachment(
+            backing=BytesIO(b"File content"),
+            mime_type="text/plain",
+            filename="test.txt",
+            caption="Test file",
+        )
+        expected_entry = Mock(spec=AttachmentEntry)
+        entries.create = Mock(return_value=expected_entry)  # pyright: ignore[reportAttributeAccessIssue]
+
+        result = entries.attachment(attachment)
+
+        assert result is expected_entry
+        entries.create.assert_called_once_with(AttachmentEntry, attachment)
+
 
 class TestEntriesIntegration:
     """Integration tests with real objects and mocked API."""
