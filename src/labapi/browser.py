@@ -10,9 +10,12 @@ opened manually by the user.
 The detected browser is exposed via the `default_browser` module-level variable.
 """
 
-try:
-    from os import getenv
+from os import getenv
 
+browser_warning: str | None = None
+raw_env_browser = getenv("LA_AUTH_BROWSER", "").strip().lower()
+
+try:
     import installed_browsers  # pyright: ignore[reportMissingTypeStubs]
 
     browsers = [
@@ -25,8 +28,6 @@ try:
         )
     ]
     raw_default_browser = installed_browsers.what_is_the_default_browser()
-    raw_env_browser = getenv("LA_AUTH_BROWSER", "").strip().lower()
-
     default_browser = "terminal"
 
     browser_choices = ["chrome", "firefox", "edge"]  # priority in order of order
@@ -57,3 +58,10 @@ try:
                         break
 except ImportError:
     default_browser = "terminal"
+    if raw_env_browser != "terminal":
+        browser_warning = (
+            "Automatic browser detection requires the optional builtin-auth "
+            "dependencies. Install them with "
+            "\"uv add labapi --optional builtin-auth\" or "
+            "\"pip install 'labapi[builtin-auth]'\"."
+        )

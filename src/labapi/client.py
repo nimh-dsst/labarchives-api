@@ -26,7 +26,7 @@ from requests import Response, Session
 from requests import codes as status_codes
 from requests.adapters import HTTPAdapter
 
-from .browser import default_browser
+from .browser import browser_warning, default_browser
 from .exceptions import ApiError, AuthenticationError
 from .user import User
 from .util import NotebookInit, extract_etree, to_bool
@@ -425,6 +425,8 @@ class Client:
                     driver = webdriver.Edge(options=options)
                     print("Opening Edge for authentication...")
                 case "terminal":
+                    if browser_warning:
+                        print(f"WARNING: {browser_warning}")
                     print("Open authentication URL in your browser:")
                     print(auth_url)
                 case _:

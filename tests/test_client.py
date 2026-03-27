@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from os import getenv
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from requests import Response
@@ -121,6 +121,26 @@ class TestClientUnit:
         # redirect_uri is URL-encoded in the query string
         assert "redirect_uri=http%3A%2F%2Flocalhost%3A8089%2F" in auth_url
         assert "akid=test_akid" in auth_url
+
+    def test_default_authenticate_terminal_warns_when_builtin_auth_missing(self):
+        """Test terminal auth prints guidance when browser extras are unavailable."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+
+        with (
+            patch("labapi.client.default_browser", "terminal"),
+            patch(
+                "labapi.client.browser_warning",
+                "Install labapi builtin-auth support.",
+            ),
+            patch.object(client, "collect_auth_response", return_value="sentinel"),
+            patch("builtins.print") as mock_print,
+        ):
+            result = client.default_authenticate()
+
+        assert result == "sentinel"
+        mock_print.assert_any_call(
+            "WARNING: Install labapi builtin-auth support."
+        )
 
     def test_client_handle_request_status_success(self):
         """Test Client._handle_request_status with successful response."""

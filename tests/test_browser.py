@@ -88,3 +88,17 @@ def test_browser_detection_import_error():
         import labapi.browser
 
         assert labapi.browser.default_browser == "terminal"
+        assert labapi.browser.browser_warning is not None
+        assert "builtin-auth" in labapi.browser.browser_warning
+
+
+def test_browser_detection_import_error_terminal_env():
+    """Test explicit terminal mode does not warn about missing browser extras."""
+    with patch.dict("sys.modules", {"installed_browsers": None}):
+        with patch("os.getenv", return_value="terminal"):
+            if "labapi.browser" in sys.modules:
+                del sys.modules["labapi.browser"]
+            import labapi.browser
+
+            assert labapi.browser.default_browser == "terminal"
+            assert labapi.browser.browser_warning is None
