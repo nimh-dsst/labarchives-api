@@ -86,13 +86,15 @@ def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]
                         or if a callable extractor fails to process a value.
     """
     flat = _flatten_dict(format)
-    leaf_paths: dict[str, list[str]] = {}
+    leaf_extractors: dict[str, list[tuple[str, Callable[[Any], Any]]]] = {}
 
-    for key in flat:
-        leaf_paths.setdefault(key.split("/")[-1], []).append(key)
+    for key, mapper in flat.items():
+        leaf_extractors.setdefault(key.split("/")[-1], []).append((key, mapper))
 
     duplicates = {
-        leaf: paths for leaf, paths in leaf_paths.items() if len(paths) > 1
+        leaf: [path for path, _ in extractors]
+        for leaf, extractors in leaf_extractors.items()
+        if len(extractors) > 1
     }
     if duplicates:
         duplicate_text = "; ".join(
@@ -106,7 +108,8 @@ def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]
 
     items: dict[str, Any] = {}
 
-    for key, mapper in flat.items():
+    for leaf, extractors in leaf_extractors.items():
+        key, mapper = extractors[0]
         value = _etree.findtext(f"./{key}")
 
         if (
@@ -115,7 +118,7 @@ def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]
             raise ValueError(f"Could not find value for './{key}'")
 
         try:
-            items[key.split("/")[-1]] = mapper(value)
+            items[leaf] = mapper(value)
         except ValueError as err:
             raise ValueError(
                 f"Could not map value {value} with {mapper.__name__} for './{key}'"
