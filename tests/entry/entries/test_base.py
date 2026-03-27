@@ -9,6 +9,7 @@ import pytest
 from labapi.entry.entries.attachment import AttachmentEntry
 from labapi.entry.entries.base import Entry
 from labapi.entry.entries.text import HeaderEntry, PlainTextEntry, TextEntry
+from labapi.entry.entries.unknown import UnknownEntry
 from labapi.entry.entries.widget import WidgetEntry
 from labapi.user import User
 
@@ -29,6 +30,10 @@ class TestEntryUnit:
             PlainTextEntry("e", "", Mock(spec=User)).content_type == "plain text entry"
         )
         assert AttachmentEntry("e", "", Mock(spec=User)).content_type == "Attachment"
+        assert (
+            UnknownEntry("e", "", Mock(spec=User), "future entry").content_type
+            == "future entry"
+        )
 
 
 class TestEntryIntegration:

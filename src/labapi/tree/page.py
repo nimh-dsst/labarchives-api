@@ -11,7 +11,7 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Any, Literal, cast, override, Self
 
-from labapi.entry import Attachment, Entries, Entry
+from labapi.entry import Attachment, Entries, Entry, UnknownEntry
 from labapi.util import ALL_PART_TYPES, InsertBehavior, extract_etree
 
 from .mixins import AbstractTreeContainer, AbstractTreeNode
@@ -103,16 +103,32 @@ class NotebookPage(AbstractTreeNode):
                     else:
                         warnings.warn(
                             f"Entry type '{part_type}' (ID: {entry_data['eid']}) is recognized but not "
-                            f"implemented in labapi. Skipping this entry.",
+                            f"implemented in labapi. Wrapping as UnknownEntry.",
                             UserWarning,
                             stacklevel=2,
+                        )
+                        entries.append(
+                            UnknownEntry(
+                                cast(str, entry_data["eid"]),
+                                cast(str, entry_data["entry-data"]),
+                                self._user,
+                                part_type,
+                            )
                         )
                 else:
                     warnings.warn(
                         f"Unknown entry type '{part_type}' (ID: {entry_data['eid']}) encountered. "
-                        f"This entry will be skipped.",
+                        f"Wrapping as UnknownEntry.",
                         RuntimeWarning,
                         stacklevel=2,
+                    )
+                    entries.append(
+                        UnknownEntry(
+                            cast(str, entry_data["eid"]),
+                            cast(str, entry_data["entry-data"]),
+                            self._user,
+                            part_type,
+                        )
                     )
 
             self._entries = Entries(entries, self._user, self)
