@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from os import getenv
-from unittest.mock import Mock
+from types import ModuleType
+from unittest.mock import Mock, patch
 
 import pytest
 from requests import Response
@@ -165,6 +166,89 @@ class TestClientUnit:
         client = Client()
         assert client._base_url is not None
         assert client._akid is not None
+
+    def test_default_authenticate_binds_listener_before_terminal_prompt(self):
+        """Test terminal auth binds the callback listener before printing the URL."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        events: list[str] = []
+
+        class FakeServer:
+            def __enter__(self):
+                events.append("enter")
+                return self
+
+            def __exit__(self, *_args):
+                events.append("exit")
+
+            def handle_request(self):
+                events.append("handle_request")
+
+        def create_listener():
+            events.append("listener")
+            return FakeServer(), {}
+
+        def record_print(*_args, **_kwargs):
+            events.append("print")
+
+        with (
+            patch.object(client, "_create_auth_listener", side_effect=create_listener),
+            patch.object(client, "_complete_auth_response", return_value="sentinel"),
+            patch("labapi.client.default_browser", "terminal"),
+            patch("builtins.print", side_effect=record_print),
+        ):
+            result = client.default_authenticate()
+
+        assert result == "sentinel"
+        assert events.index("listener") < events.index("print")
+
+    def test_default_authenticate_binds_listener_before_opening_browser(self):
+        """Test browser auth binds the callback listener before opening the browser."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        events: list[str] = []
+
+        class FakeServer:
+            def __enter__(self):
+                events.append("enter")
+                return self
+
+            def __exit__(self, *_args):
+                events.append("exit")
+
+            def handle_request(self):
+                events.append("handle_request")
+
+        class FakeDriver:
+            def get(self, _url: str):
+                events.append("get")
+
+            def quit(self):
+                events.append("quit")
+
+        webdriver = ModuleType("selenium.webdriver")
+        webdriver.ChromeOptions = lambda: object()  # type: ignore[attr-defined]
+        webdriver.Chrome = lambda options=None: FakeDriver()  # type: ignore[attr-defined]
+
+        selenium = ModuleType("selenium")
+        selenium.webdriver = webdriver  # type: ignore[attr-defined]
+
+        def create_listener():
+            events.append("listener")
+            return FakeServer(), {}
+
+        with (
+            patch.dict(
+                "sys.modules",
+                {"selenium": selenium, "selenium.webdriver": webdriver},
+            ),
+            patch.object(client, "_create_auth_listener", side_effect=create_listener),
+            patch.object(client, "_complete_auth_response", return_value="sentinel"),
+            patch("labapi.client.default_browser", "chrome"),
+            patch("builtins.print"),
+        ):
+            result = client.default_authenticate()
+
+        assert result == "sentinel"
+        assert events.index("listener") < events.index("get")
 
 
 class TestClientIntegration:

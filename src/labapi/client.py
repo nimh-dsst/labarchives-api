@@ -401,46 +401,50 @@ class Client:
         :raises RuntimeError: If authentication fails.
         """
         auth_url = self.generate_auth_url("http://localhost:8089/")
+        httpd, auth_info = self._create_auth_listener()
 
         driver = None
         options = None
         try:
-            match default_browser:
-                case "chrome":
-                    import selenium.webdriver as webdriver
+            with httpd:
+                match default_browser:
+                    case "chrome":
+                        import selenium.webdriver as webdriver
 
-                    options = webdriver.ChromeOptions()
-                    driver = webdriver.Chrome(options=options)
-                    print("Opening Chrome for authentication...")
-                case "firefox":
-                    import selenium.webdriver as webdriver
+                        options = webdriver.ChromeOptions()
+                        driver = webdriver.Chrome(options=options)
+                        print("Opening Chrome for authentication...")
+                    case "firefox":
+                        import selenium.webdriver as webdriver
 
-                    options = webdriver.FirefoxOptions()
-                    driver = webdriver.Firefox(options=options)
-                    print("Opening Firefox for authentication...")
-                case "edge":
-                    import selenium.webdriver as webdriver
+                        options = webdriver.FirefoxOptions()
+                        driver = webdriver.Firefox(options=options)
+                        print("Opening Firefox for authentication...")
+                    case "edge":
+                        import selenium.webdriver as webdriver
 
-                    options = webdriver.EdgeOptions()
-                    driver = webdriver.Edge(options=options)
-                    print("Opening Edge for authentication...")
-                case "terminal":
-                    print("Open authentication URL in your browser:")
-                    print(auth_url)
-                case _:
+                        options = webdriver.EdgeOptions()
+                        driver = webdriver.Edge(options=options)
+                        print("Opening Edge for authentication...")
+                    case "terminal":
+                        print("Open authentication URL in your browser:")
+                        print(auth_url)
+                    case _:
+                        print(
+                            "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
+                        )
+                        print("Open authentication URL in your browser:")
+                        print(auth_url)
+
+                if driver is not None:
+                    driver.get(auth_url)
                     print(
-                        "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
+                        "Please complete the authentication in the opened browser window..."
                     )
-                    print("Open authentication URL in your browser:")
-                    print(auth_url)
 
-            if driver is not None:
-                driver.get(auth_url)
-                print(
-                    "Please complete the authentication in the opened browser window..."
-                )
+                httpd.handle_request()
 
-            return self.collect_auth_response()
+            return self._complete_auth_response(auth_info)
         except ImportError as e:
             raise ImportError(
                 "Selenium is required for automatic browser-based authentication. "
@@ -462,6 +466,15 @@ class Client:
         :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
         :raises KeyError: If the authentication code or email is not received.
         """
+        httpd, auth_info = self._create_auth_listener()
+
+        with httpd:
+            httpd.handle_request()
+
+        return self._complete_auth_response(auth_info)
+
+    def _create_auth_listener(self) -> tuple[TCPServer, dict[str, str]]:
+        """Creates and binds the local callback server used by the auth flow."""
 
         auth_info: dict[str, str] = {}
 
@@ -490,9 +503,10 @@ class Client:
             def log_message(self, format: str, *args: Any) -> None:
                 pass
 
-        with TCPServer(("127.0.0.1", 8089), AuthRequestHandler) as httpd:
-            httpd.handle_request()
+        return TCPServer(("127.0.0.1", 8089), AuthRequestHandler), auth_info
 
+    def _complete_auth_response(self, auth_info: Mapping[str, str]) -> User:
+        """Validates the auth callback data and completes the login flow."""
         if "error" in auth_info:
             raise AuthenticationError(f"Authentication failed: {auth_info['error']}")
 
