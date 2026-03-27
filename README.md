@@ -21,8 +21,8 @@ These instructions will help you set up the project on your local machine for de
 Clone the repository and install the dependencies:
 
 ```bash
-git clone https://github.com/nimh-dsst/labapi.git
-cd labapi
+git clone https://github.com/nimh-dsst/labarchives-api.git
+cd labarchives-api
 uv sync
 ```
 
@@ -124,8 +124,9 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/nimh-dsst/labapi/tags).
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/nimh-dsst/labarchives-api/tags).
 
 ## License
 
 This project is licensed under the CC0 1.0 Universal License - see the [LICENSE](LICENSE) file for details (or `pyproject.toml`).
+
