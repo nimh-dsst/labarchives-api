@@ -146,6 +146,26 @@ class TestClientUnit:
         assert client._base_url == "https://custom.api.com"
         assert client._akid == "my_akid"
 
+    def test_client_validate_config_returns_true_for_valid_client(self):
+        """Test validate_config returns True for a normally constructed client."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+
+        assert client.validate_config() is True
+
+    def test_client_validate_config_returns_false_for_invalid_base_url(self):
+        """Test validate_config returns False when the base URL is malformed."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client._base_url = "not-a-url"
+
+        assert client.validate_config() is False
+
+    def test_client_validate_config_returns_false_for_missing_signing_state(self):
+        """Test validate_config returns False when signing state is missing."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client._hmac = None  # type: ignore[assignment]
+
+        assert client.validate_config() is False
+
     def test_client_initialization_from_env_vars(self, monkeypatch):
         """Test Client initialization reads from environment variables."""
         monkeypatch.setenv("ACCESS_KEYID", "test_akid")

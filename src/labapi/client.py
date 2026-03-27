@@ -140,6 +140,24 @@ class Client:
         if not strict_cert:
             self.session.mount("https://", _313HTTPAdapter())
 
+    def validate_config(self) -> bool:
+        """Return whether this client has a usable local configuration.
+
+        This validation is local only and does not make any API calls. It
+        checks that the base URL is still well-formed and that the auth/signing
+        state required for later requests is present.
+
+        :returns: ``True`` when the client appears locally configured and
+            ready for authenticated API calls, otherwise ``False``.
+        """
+        parsed = urlsplit(self._base_url)
+        return bool(
+            parsed.scheme
+            and parsed.netloc
+            and self._akid
+            and getattr(self, "_hmac", None) is not None
+        )
+
     def generate_auth_url(self, redirect_url: str) -> str:
         """
         Generates a URL for authenticating with the LabArchives API.
