@@ -86,6 +86,23 @@ def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]
                         or if a callable extractor fails to process a value.
     """
     flat = _flatten_dict(format)
+    leaf_paths: dict[str, list[str]] = {}
+
+    for key in flat:
+        leaf_paths.setdefault(key.split("/")[-1], []).append(key)
+
+    duplicates = {
+        leaf: paths for leaf, paths in leaf_paths.items() if len(paths) > 1
+    }
+    if duplicates:
+        duplicate_text = "; ".join(
+            f"{leaf}: {', '.join(paths)}"
+            for leaf, paths in sorted(duplicates.items())
+        )
+        raise ValueError(
+            "Ambiguous extractor format has duplicate leaf keys: "
+            f"{duplicate_text}"
+        )
 
     items: dict[str, Any] = {}
 

@@ -217,6 +217,31 @@ def test_extract_etree_mapper_fails_raises():
         extract_etree(element, format_dict)
 
 
+def test_extract_etree_rejects_duplicate_leaf_names():
+    """Test extract_etree rejects ambiguous nested formats with duplicate leaves."""
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+    <root>
+        <a>
+            <id>first</id>
+        </a>
+        <b>
+            <id>second</id>
+        </b>
+    </root>
+    """
+    element = etree.fromstring(bytes(xml, encoding="utf-8"))
+    format_dict: EtreeExtractorDict = {
+        "a": {"id": str},
+        "b": {"id": str},
+    }
+
+    with pytest.raises(
+        ValueError,
+        match=r"Ambiguous extractor format has duplicate leaf keys: id: /a/id, /b/id",
+    ):
+        extract_etree(element, format_dict)
+
+
 def test_extract_etree_deeply_nested():
     """Test extract_etree with deeply nested structure."""
     xml = """<?xml version="1.0" encoding="UTF-8"?>
