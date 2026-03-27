@@ -121,6 +121,32 @@ class TestAttachmentEntryIntegration:
         assert api_call[1]["caption"] == "New caption"
         assert api_call[1]["eid"] == "eid_att"
 
+    def test_attachment_entry_content_setter_rewinds_seekable_stream(
+        self, client, user: User
+    ):
+        """Test AttachmentEntry.content rewinds seekable uploads before API calls."""
+        entry = AttachmentEntry("eid_att", "Old caption", user)
+
+        backing = BytesIO(b"New file content")
+        new_attachment = Attachment(
+            backing=backing,
+            mime_type="text/plain",
+            filename="new_file.txt",
+            caption="New caption",
+        )
+        new_attachment.read(4)
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entry>
+            <success>true</success>
+        </entry>
+        """
+
+        entry.content = new_attachment
+
+        assert backing.tell() == 0
+        client.api_log
+
     def test_attachment_entry_get_attachment_caching(self, client, user: User):
         """Test AttachmentEntry.get_attachment caches the result."""
         entry = AttachmentEntry("eid_att", "Caption", user)

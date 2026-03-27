@@ -124,6 +124,8 @@ class Entries(Sequence["Entry[Any]"]):
         """
         if issubclass(cls, AttachmentEntry):
             assert isinstance(data, Attachment)
+            if data._backing.seekable():  # pyright: ignore[reportPrivateUsage]
+                data._backing.seek(0)  # pyright: ignore[reportPrivateUsage]
             entry_tree = self._user.api_post(
                 "entries/add_attachment",
                 data._backing,  # pyright: ignore[reportPrivateUsage, reportArgumentType]
