@@ -27,6 +27,20 @@ class TestAttachmentEntryUnit:
 
         assert entry.caption == "My attachment caption"
 
+    def test_attachment_entry_listing_metadata(self):
+        """Test AttachmentEntry exposes filename and MIME metadata from listings."""
+        mock_user = Mock(spec=User)
+        entry = AttachmentEntry(
+            "eid_att",
+            "My attachment caption",
+            mock_user,
+            filename="document.pdf",
+            mime_type="application/pdf",
+        )
+
+        assert entry.filename == "document.pdf"
+        assert entry.mime_type == "application/pdf"
+
 
 class TestAttachmentEntryIntegration:
     """Integration tests with real objects and mocked API."""

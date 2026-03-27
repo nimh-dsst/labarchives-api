@@ -11,7 +11,7 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Any, Literal, cast, override, Self
 
-from labapi.entry import Attachment, Entries, Entry
+from labapi.entry import Attachment, AttachmentEntry, Entries, Entry
 from labapi.util import ALL_PART_TYPES, InsertBehavior, extract_etree
 
 from .mixins import AbstractTreeContainer, AbstractTreeNode
@@ -92,14 +92,29 @@ class NotebookPage(AbstractTreeNode):
                 if part_type in ALL_PART_TYPES:
                     if Entry.is_registered(part_type):
                         # Cast extracted string values to ensure type checker knows they're not None
-                        entries.append(
-                            Entry.from_part_type(
-                                part_type,
-                                cast(str, entry_data["eid"]),
-                                cast(str, entry_data["entry-data"]),
-                                self._user,
+                        if part_type == "Attachment":
+                            entries.append(
+                                AttachmentEntry(
+                                    cast(str, entry_data["eid"]),
+                                    cast(str, entry_data["entry-data"]),
+                                    self._user,
+                                    filename=cast(
+                                        str | None, entry_data["attach-file-name"]
+                                    ),
+                                    mime_type=cast(
+                                        str | None, entry_data["attach-content-type"]
+                                    ),
+                                )
                             )
-                        )
+                        else:
+                            entries.append(
+                                Entry.from_part_type(
+                                    part_type,
+                                    cast(str, entry_data["eid"]),
+                                    cast(str, entry_data["entry-data"]),
+                                    self._user,
+                                )
+                            )
                     else:
                         warnings.warn(
                             f"Entry type '{part_type}' (ID: {entry_data['eid']}) is recognized but not "

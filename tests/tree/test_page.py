@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import Mock
 
 from labapi import Index, Notebook, NotebookPage
-from labapi.entry import Entries
+from labapi.entry import AttachmentEntry, Entries
 from labapi.user import User
 
 
@@ -81,6 +81,38 @@ class TestNotebookPageIntegration:
         assert api_call[1]["page_tree_id"] == "page-1"
         assert api_call[1]["nbid"] == notebook_tree.id
         assert api_call[1]["entry_data"] is True
+        client.clear_log()
+
+    def test_page_entries_expose_attachment_listing_metadata(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test NotebookPage.entries hydrates attachment filename and MIME metadata."""
+        page = notebook_tree[Index.Id : "page-1"]
+
+        assert isinstance(page, NotebookPage)
+        client.clear_log()
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <entry>
+                <eid>entry_1</eid>
+                <part-type>Attachment</part-type>
+                <attach-file-name>document.pdf</attach-file-name>
+                <attach-content-type>application/pdf</attach-content-type>
+                <entry-data><![CDATA[Attachment caption]]></entry-data>
+            </entry>
+        </entries>
+        """
+
+        entries = page.entries
+
+        assert len(entries) == 1
+        assert isinstance(entries[0], AttachmentEntry)
+        assert entries[0].filename == "document.pdf"
+        assert entries[0].mime_type == "application/pdf"
+        assert entries[0].caption == "Attachment caption"
+
+        client.api_log
         client.clear_log()
 
     def test_page_entries_caching(self, client, notebook_tree: Notebook):

@@ -27,17 +27,27 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
     providing access to the attachment's content, filename, and caption.
     """
 
-    def __init__(self, eid: str, caption: str, user: User):
+    def __init__(
+        self,
+        eid: str,
+        caption: str,
+        user: User,
+        *,
+        filename: str | None = None,
+        mime_type: str | None = None,
+    ):
         """Initializes an AttachmentEntry object.
 
         :param eid: The unique ID of the entry.
         :param caption: The caption associated with the attachment.
         :param user: The authenticated user.
+        :param filename: Optional filename metadata from page listing.
+        :param mime_type: Optional MIME type metadata from page listing.
         """
         super().__init__(eid, caption, user)
         self._filedata = None
-        self._filename = None
-        self._mime_type = None
+        self._filename = filename
+        self._mime_type = mime_type
 
     def get_attachment(self, use_tempfile: bool = False) -> Attachment:
         """Retrieves the attachment data.
@@ -83,6 +93,8 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
                     )
 
             output.seek(0)
+            self._filename = filename
+            self._mime_type = mime_type
 
             self._filedata = Attachment(output, mime_type, filename, self._data)
 
@@ -135,3 +147,13 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
         :returns: The caption string.
         """
         return self._data
+
+    @property
+    def filename(self) -> str | None:
+        """The attachment filename when known without downloading content."""
+        return self._filename
+
+    @property
+    def mime_type(self) -> str | None:
+        """The attachment MIME type when known without downloading content."""
+        return self._mime_type
