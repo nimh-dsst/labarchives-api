@@ -6,6 +6,7 @@ import shutil
 import tempfile
 from collections.abc import Buffer
 from mimetypes import guess_type
+from os.path import basename
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
@@ -35,18 +36,25 @@ class Attachment:
     """
 
     @staticmethod
-    def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
+    def from_file(
+        file: BufferedReader | BufferedRandom,
+        filename: str | None = None,
+    ) -> Attachment:
         """Creates an Attachment from a file object by cloning its content.
 
         The content of the provided file is copied into a temporary buffer,
         making the Attachment independent of the original file's state.
-        The MIME type is automatically guessed from the file's name.
-        If the MIME type cannot be determined, it defaults to "application/octet-stream".
+        The MIME type is automatically guessed from the local file name or the
+        explicit remote filename override. If the MIME type cannot be determined,
+        it defaults to "application/octet-stream".
 
         :param file: The file object to create an attachment from. Must have a `name` attribute.
+        :param filename: Optional explicit remote filename to store in LabArchives.
+            Defaults to the basename of ``file.name``.
         :returns: A new Attachment object wrapping a clone of the file.
         """
-        mime_type = guess_type(file.name)[0] or "application/octet-stream"
+        remote_filename = filename or basename(file.name)
+        mime_type = guess_type(filename or file.name)[0] or "application/octet-stream"
 
         # Create a spooled temporary file as the new backing buffer.
         # It stays in memory until it reaches 4MB, then rolls over to disk.
@@ -57,7 +65,7 @@ class Attachment:
         return Attachment(
             backing,  # pyright: ignore[reportArgumentType]
             mime_type,
-            file.name,
+            remote_filename,
             caption=f"API-uploaded {mime_type} file.",
         )
 
