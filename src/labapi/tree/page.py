@@ -47,6 +47,33 @@ class NotebookPage(AbstractTreeNode):
         super().__init__(tree_id, name, root, parent, user)
         self._entries: Entries | None = None
 
+    def list_entries(self, include_data: bool = False) -> list[dict[str, str]]:
+        """Return lightweight entry metadata for this page.
+
+        :param include_data: If ``True``, include entry payload data in the result.
+        :returns: A list of extracted entry metadata dictionaries.
+        """
+        entry_format: dict[str, type[str]] = {
+            "eid": str,
+            "part-type": str,
+            "attach-file-name": str,
+            "attach-content-type": str,
+        }
+        if include_data:
+            entry_format["entry-data"] = str
+
+        entries_tree = self._user.api_get(
+            "tree_tools/get_entries_for_page",
+            page_tree_id=self.id,
+            nbid=self.root.id,
+            entry_data=include_data,
+        )
+
+        return [
+            cast(dict[str, str], extract_etree(entry, entry_format))
+            for entry in entries_tree.iterfind(".//entry")
+        ]
+
     @property
     @override
     def id(self) -> str:
@@ -67,25 +94,7 @@ class NotebookPage(AbstractTreeNode):
         """
         if self._entries is None:
             entries: list[Entry[Any]] = []
-
-            entries_tree = self._user.api_get(
-                "tree_tools/get_entries_for_page",
-                page_tree_id=self.id,
-                nbid=self.root.id,
-                entry_data=True,
-            )
-
-            for entry in entries_tree.iterfind(".//entry"):
-                entry_data = extract_etree(
-                    entry,
-                    {
-                        "eid": str,
-                        "part-type": str,
-                        "attach-file-name": str,
-                        "attach-content-type": str,
-                        "entry-data": str,
-                    },
-                )
+            for entry_data in self.list_entries(include_data=True):
 
                 part_type = entry_data["part-type"]
 

@@ -110,6 +110,76 @@ class TestNotebookPageIntegration:
         assert entries1 is entries2
         client.clear_log()
 
+    def test_page_list_entries_metadata_only(self, client, notebook_tree: Notebook):
+        """Test NotebookPage.list_entries fetches metadata without entry_data."""
+        page = notebook_tree[Index.Id : "page-1"]
+
+        assert isinstance(page, NotebookPage)
+        client.clear_log()
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <entry>
+                <eid>entry_1</eid>
+                <part-type>Attachment</part-type>
+                <attach-file-name>document.pdf</attach-file-name>
+                <attach-content-type>application/pdf</attach-content-type>
+            </entry>
+        </entries>
+        """
+
+        entries = page.list_entries()
+
+        assert entries == [
+            {
+                "eid": "entry_1",
+                "part-type": "Attachment",
+                "attach-file-name": "document.pdf",
+                "attach-content-type": "application/pdf",
+            }
+        ]
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/get_entries_for_page"
+        assert api_call[1]["entry_data"] is False
+        client.clear_log()
+
+    def test_page_list_entries_with_data(self, client, notebook_tree: Notebook):
+        """Test NotebookPage.list_entries can request entry payload data."""
+        page = notebook_tree[Index.Id : "page-1"]
+
+        assert isinstance(page, NotebookPage)
+        client.clear_log()
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <entry>
+                <eid>entry_1</eid>
+                <part-type>text entry</part-type>
+                <attach-file-name></attach-file-name>
+                <attach-content-type></attach-content-type>
+                <entry-data><![CDATA[<p>Test content</p>]]></entry-data>
+            </entry>
+        </entries>
+        """
+
+        entries = page.list_entries(include_data=True)
+
+        assert entries == [
+            {
+                "eid": "entry_1",
+                "part-type": "text entry",
+                "attach-file-name": "",
+                "attach-content-type": "",
+                "entry-data": "<p>Test content</p>",
+            }
+        ]
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/get_entries_for_page"
+        assert api_call[1]["entry_data"] is True
+        client.clear_log()
+
     def test_page_refresh(self, client, notebook_tree: Notebook):
         """Test NotebookPage.refresh clears cached entries."""
         page = notebook_tree[Index.Id : "page-1"]
