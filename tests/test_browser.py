@@ -55,8 +55,41 @@ def test_browser_detection_default_system(mock_installed_browsers):
 def test_browser_detection_fallback_list(mock_installed_browsers):
     """Test fallback to first detected compatible browser."""
     mock_installed_browsers["what_is_the_default_browser"].return_value = None
+    mock_installed_browsers["browsers"].return_value = [{"name": "Firefox"}]
+
+    with patch("os.getenv", return_value=""):
+        if "labapi.browser" in sys.modules:
+            del sys.modules["labapi.browser"]
+        import labapi.browser
+
+        assert labapi.browser.default_browser == "firefox"
+
+
+def test_browser_detection_fallback_list_skips_unstable_channels(mock_installed_browsers):
+    """Test fallback ignores canary, nightly, beta, dev, and unstable browsers."""
+    mock_installed_browsers["what_is_the_default_browser"].return_value = None
     mock_installed_browsers["browsers"].return_value = [
-        {"name": "Firefox Nightly", "path": "/path/to/firefox"}
+        {"name": "Firefox Nightly"},
+        {"name": "Chrome Canary"},
+        {"name": "Edge Dev"},
+    ]
+
+    with patch("os.getenv", return_value=""):
+        if "labapi.browser" in sys.modules:
+            del sys.modules["labapi.browser"]
+        import labapi.browser
+
+        assert labapi.browser.default_browser == "terminal"
+
+
+def test_browser_detection_default_system_skips_unstable_channel(mock_installed_browsers):
+    """Test unstable system defaults do not block fallback to a stable browser."""
+    mock_installed_browsers[
+        "what_is_the_default_browser"
+    ].return_value = "Google Chrome Canary"
+    mock_installed_browsers["browsers"].return_value = [
+        {"name": "Firefox Nightly"},
+        {"name": "Firefox"},
     ]
 
     with patch("os.getenv", return_value=""):

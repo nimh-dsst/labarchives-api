@@ -15,21 +15,25 @@ try:
 
     import installed_browsers  # pyright: ignore[reportMissingTypeStubs]
 
+    unstable_browser_channels = ("canary", "nightly", "beta", "dev", "unstable")
+    browser_choices = ["chrome", "firefox", "edge"]  # priority in order of order
+
+    def is_stable_compatible_browser(name: str) -> bool:
+        lowered_name = name.lower()
+        return (
+            any(choice in lowered_name for choice in browser_choices)
+            and not any(channel in lowered_name for channel in unstable_browser_channels)
+        )
+
     browsers = [
         x
         for x in installed_browsers.browsers()
-        if (
-            "chrome" in x["name"].lower()
-            or "firefox" in x["name"].lower()
-            or "edge" in x["name"].lower()
-        )
+        if is_stable_compatible_browser(x["name"])
     ]
     raw_default_browser = installed_browsers.what_is_the_default_browser()
     raw_env_browser = getenv("LA_AUTH_BROWSER", "").strip().lower()
 
     default_browser = "terminal"
-
-    browser_choices = ["chrome", "firefox", "edge"]  # priority in order of order
 
     if raw_env_browser in ("chrome", "firefox", "edge", "terminal"):
         if installed_browsers.do_i_have_installed(raw_env_browser):
@@ -38,10 +42,11 @@ try:
         if raw_default_browser:
             raw_default_browser = raw_default_browser.lower()
 
-            for choice in browser_choices:
-                if choice in raw_default_browser:
-                    default_browser = choice
-                    break
+            if is_stable_compatible_browser(raw_default_browser):
+                for choice in browser_choices:
+                    if choice in raw_default_browser:
+                        default_browser = choice
+                        break
 
         # FIXME the way this is written we'll never *NOT* have a compatible 'browser'
         # because `terminal` is registered in default_authenticate as a real value
