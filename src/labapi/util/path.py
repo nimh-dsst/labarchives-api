@@ -202,13 +202,32 @@ class NotebookPath(Sequence[str]):
         if not isinstance(other, NotebookPath):
             other = NotebookPath(other)
 
-        if not other._absolute and other._parent is None:
-            if self._absolute or self._parent is not None:
-                raise ValueError(
-                    "cannot compute a relative path from an anchored path "
-                    "against an unanchored relative base"
-                )
+        other_is_unanchored = not other._absolute and other._parent is None
+        self_is_anchored = self._absolute or self._parent is not None
 
+        if other_is_unanchored and self_is_anchored:
+            raise ValueError(
+                "cannot compute a relative path from an anchored path "
+                "against an unanchored relative base"
+            )
+
+        if self.is_relative_to(other):
+            if other_is_unanchored:
+                return NotebookPath(*self[len(other) :])
+
+            p_origin = other.resolve()
+            p_endpoint = self.resolve(other)
+            remaining = list(p_endpoint[len(p_origin) :])
+            return (
+                NotebookPath(*remaining, parent=p_origin)
+                if remaining
+                else NotebookPath("", parent=p_origin)
+            )
+
+        if not walk_up:
+            raise ValueError(f'Path "{self}" is outside of "{other}"')
+
+        if other_is_unanchored:
             p_origin = other
             p_endpoint = self
         else:
@@ -223,9 +242,6 @@ class NotebookPath(Sequence[str]):
             and p_origin[common_idx] == p_endpoint[common_idx]
         ):
             common_idx += 1
-
-        if not walk_up and common_idx < len(p_origin):
-            raise ValueError(f'Path "{self}" is outside of "{other}"')
 
         remaining = [".."] * (len(p_origin) - common_idx)
         remaining.extend(p_endpoint[common_idx:])
