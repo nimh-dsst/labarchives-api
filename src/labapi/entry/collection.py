@@ -60,6 +60,25 @@ class Entries(Sequence["Entry[Any]"]):
     def __len__(self):
         return len(self._entries)
 
+    def get_by_id(self, eid: str) -> Entry[Any]:
+        """Return the entry with the given ID or raise ``KeyError``."""
+        for entry in self._entries:
+            if entry.id == eid:
+                return entry
+        raise KeyError(f"Entry with id '{eid}' not found")
+
+    def of_type(self, cls: Type[E]) -> list[E]:
+        """Return all entries that are instances of the requested class."""
+        return [entry for entry in self._entries if isinstance(entry, cls)]
+
+    def attachments(self) -> list[AttachmentEntry]:
+        """Return all attachment entries."""
+        return self.of_type(AttachmentEntry)
+
+    def texts(self) -> list[TextEntry]:
+        """Return all rich text entries."""
+        return self.of_type(TextEntry)
+
     # TODO delete entries
 
     def create_json_entry(self, data: JsonData) -> tuple[AttachmentEntry, TextEntry]:

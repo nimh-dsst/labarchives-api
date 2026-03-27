@@ -79,6 +79,50 @@ class TestEntriesUnit:
         entry_ids = [entry.id for entry in entries]
         assert entry_ids == ["eid_1", "eid_2", "eid_3"]
 
+    def test_entries_get_by_id(self):
+        """Test Entries.get_by_id returns a matching entry."""
+        mock_user = Mock(spec=User)
+        mock_page = Mock()
+        entry1 = TextEntry("eid_1", "<p>Entry 1</p>", mock_user)
+        entry2 = HeaderEntry("eid_2", "<h1>Header</h1>", mock_user)
+        entries = Entries([entry1, entry2], mock_user, mock_page)
+
+        assert entries.get_by_id("eid_2") is entry2
+
+    def test_entries_get_by_id_missing_raises(self):
+        """Test Entries.get_by_id raises KeyError for unknown IDs."""
+        mock_user = Mock(spec=User)
+        mock_page = Mock()
+        entries = Entries([], mock_user, mock_page)
+
+        with pytest.raises(KeyError, match="Entry with id 'missing' not found"):
+            entries.get_by_id("missing")
+
+    def test_entries_of_type(self):
+        """Test Entries.of_type filters by entry subclass."""
+        mock_user = Mock(spec=User)
+        mock_page = Mock()
+        entry1 = TextEntry("eid_1", "<p>Entry 1</p>", mock_user)
+        entry2 = HeaderEntry("eid_2", "<h1>Header</h1>", mock_user)
+        entry3 = PlainTextEntry("eid_3", "Plain text", mock_user)
+        entries = Entries([entry1, entry2, entry3], mock_user, mock_page)
+
+        assert entries.of_type(TextEntry) == [entry1]
+        assert entries.of_type(HeaderEntry) == [entry2]
+        assert entries.of_type(PlainTextEntry) == [entry1, entry2, entry3]
+
+    def test_entries_typed_filter_helpers(self):
+        """Test Entries convenience filter helpers."""
+        mock_user = Mock(spec=User)
+        mock_page = Mock()
+        entry1 = TextEntry("eid_1", "<p>Entry 1</p>", mock_user)
+        entry2 = AttachmentEntry("eid_2", "Test file", mock_user)
+        entry3 = HeaderEntry("eid_3", "<h1>Header</h1>", mock_user)
+        entries = Entries([entry1, entry2, entry3], mock_user, mock_page)
+
+        assert entries.texts() == [entry1]
+        assert entries.attachments() == [entry2]
+
 
 class TestEntriesIntegration:
     """Integration tests with real objects and mocked API."""
