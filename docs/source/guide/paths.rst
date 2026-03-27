@@ -71,18 +71,18 @@ This is useful for listing or searching the tree without fetching every node ind
     # e.g. ["Experiments", "Experiments/2024", "Protocols"]
 
     # Only directories
-    notebook.enumerate_dirs(max_depth=2)
+    notebook.enumerate_dirs(depth=2)
 
     # Only pages
-    notebook.enumerate_pages(max_depth=2)
+    notebook.enumerate_pages(depth=2)
 
-``max_depth`` defaults to ``1`` (immediate children only). To fetch the full tree you can increase
+``depth`` defaults to ``1`` (immediate children only). To fetch the full tree you can increase
 it, but be aware that this makes one API request per directory level visited.
 
 .. code-block:: python
 
     # Enumerate up to 3 levels deep
-    all_paths = notebook.enumerate_all(max_depth=3)
+    all_paths = notebook.enumerate_all(depth=3)
 
     for path in all_paths:
         node = notebook.traverse(path)
@@ -161,3 +161,4 @@ nodes or strings, combined with ``/``, and converted back to strings. It is used
 
     page_path.is_relative_to(folder)   # True if page is inside folder
     page_path.is_relative_to(notebook) # True (everything is inside the notebook)
+

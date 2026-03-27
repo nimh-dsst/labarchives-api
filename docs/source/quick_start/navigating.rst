@@ -93,22 +93,22 @@ To discover what the contents of a directory are, ``labapi`` provides the follow
 Listing All Children
 ^^^^^^^^^^^^^^^^^^^^
 
-:meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_all` returns relative path strings for all descendants up to ``max_depth`` (default is 1):
+:meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_all` returns relative path strings for all descendants up to ``depth`` (default is 1):
 
 .. code-block:: python
 
    all_items = notebook.enumerate_all()
    # Returns: ['Experiments', 'Notes']
 
-   all_items = notebook.enumerate_all(max_depth=3)
+   all_items = notebook.enumerate_all(depth=3)
    # Returns: ['Experiments', 'Experiments/2024', 'Experiments/2024/Results', 'Experiments/Archive', 'Notes']
 
    experiments = notebook['Experiments']
-   experiment_items = experiments.enumerate_all(max_depth=2)
+   experiment_items = experiments.enumerate_all(depth=2)
    # Returns: ['2024', '2024/Results', 'Archive']
 
 .. note::
-   The ``max_depth`` parameter controls how many levels deep to traverse in the tree structure:
+   The ``depth`` parameter controls how many levels deep to traverse in the tree structure:
 
    Given this tree structure::
 
@@ -119,9 +119,9 @@ Listing All Children
       │   └── Archive
       └── Notes
 
-   - ``max_depth=1`` returns: ``['Experiments', 'Notes']``
-   - ``max_depth=2`` returns: ``['Experiments', 'Experiments/2024', 'Experiments/Archive', 'Notes']``
-   - ``max_depth=3`` returns: ``['Experiments', 'Experiments/2024', 'Experiments/2024/Results', 'Experiments/Archive', 'Notes']``
+   - ``depth=1`` returns: ``['Experiments', 'Notes']``
+   - ``depth=2`` returns: ``['Experiments', 'Experiments/2024', 'Experiments/Archive', 'Notes']``
+   - ``depth=3`` returns: ``['Experiments', 'Experiments/2024', 'Experiments/2024/Results', 'Experiments/Archive', 'Notes']``
 
 Listing Only Directories
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -133,7 +133,7 @@ Listing Only Directories
    directories = notebook.enumerate_dirs()
    # Returns: ['Experiments']
 
-   directories = notebook.enumerate_dirs(max_depth=2)
+   directories = notebook.enumerate_dirs(depth=2)
    # Returns: ['Experiments', 'Experiments/2024']
 
    experiments = notebook['Experiments']
@@ -150,11 +150,11 @@ Listing Only Pages
    pages = notebook.enumerate_pages()
    # Returns: ['Notes']
 
-   pages = notebook.enumerate_pages(max_depth=2)
+   pages = notebook.enumerate_pages(depth=2)
    # Returns: ['Experiments/Archive', 'Notes']
 
    experiments = notebook['Experiments']
-   experiment_pages = experiments.enumerate_pages(max_depth=2)
+   experiment_pages = experiments.enumerate_pages(depth=2)
    # Returns: ['Archive', '2024/Results']
 
 
@@ -211,3 +211,4 @@ This allows you to access directory-specific methods and attributes without your
         directory.create(NotebookPage, "New Page")
 
 If you call :meth:`~labapi.tree.mixins.AbstractBaseTreeNode.as_dir` on a node that is not a directory, it will raise a :class:`TypeError`.
+
