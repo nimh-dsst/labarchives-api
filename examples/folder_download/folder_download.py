@@ -40,10 +40,33 @@ def sanitize_filename(name: str) -> str:
     return name or "untitled"
 
 
-def download_page(page: NotebookPage, output_dir: Path) -> None:
+def get_unique_path(
+    base_dir: Path, name: str, used_paths: set[Path], unique_suffix: str
+) -> Path:
+    """Return a collision-safe path for a sanitized LabArchives name."""
+    sanitized_name = sanitize_filename(name)
+    candidate = base_dir / sanitized_name
+
+    if candidate not in used_paths:
+        used_paths.add(candidate)
+        return candidate
+
+    sanitized_suffix = sanitize_filename(unique_suffix)[:8] or "dup"
+    candidate = base_dir / f"{sanitized_name}_{sanitized_suffix}"
+
+    counter = 1
+    while candidate in used_paths:
+        candidate = base_dir / f"{sanitized_name}_{sanitized_suffix}_{counter}"
+        counter += 1
+
+    used_paths.add(candidate)
+    return candidate
+
+
+def download_page(page: NotebookPage, output_dir: Path, used_paths: set[Path]) -> None:
     """Download a page and its entries to a directory."""
 
-    page_dir = output_dir / sanitize_filename(page.name)
+    page_dir = get_unique_path(output_dir, page.name, used_paths, page.id)
     page_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"  Downloading page: {page.name}")
@@ -112,11 +135,12 @@ def download_page(page: NotebookPage, output_dir: Path) -> None:
                 )
 
 
-def download_directory(directory: AbstractTreeContainer, output_dir: Path) -> None:
+def download_directory(
+    directory: AbstractTreeContainer, output_dir: Path, used_paths: set[Path]
+) -> None:
     """Recursively download a directory and its contents."""
 
-    dir_name = sanitize_filename(directory.name)
-    dir_path = output_dir / dir_name
+    dir_path = get_unique_path(output_dir, directory.name, used_paths, directory.id)
     dir_path.mkdir(parents=True, exist_ok=True)
 
     print(f"Downloading directory: {directory.name}")
@@ -125,10 +149,10 @@ def download_directory(directory: AbstractTreeContainer, output_dir: Path) -> No
     for child in directory.children:
         if child.is_dir():
             # Recursively download subdirectory
-            download_directory(child.as_dir(), dir_path)
+            download_directory(child.as_dir(), dir_path, used_paths)
         else:
             # Download page
-            download_page(child.as_page(), dir_path)
+            download_page(child.as_page(), dir_path, used_paths)
 
 
 def download_notebook_or_folder(
@@ -147,12 +171,14 @@ def download_notebook_or_folder(
         else:
             target = notebook
 
+        used_paths: set[Path] = set()
+
         # Download the target
         if target.is_dir():
-            download_directory(target.as_dir(), output_dir)
+            download_directory(target.as_dir(), output_dir, used_paths)
         else:
             # It's a page
-            download_page(target.as_page(), output_dir)
+            download_page(target.as_page(), output_dir, used_paths)
 
         print(f"\nDownload complete! Content saved to: {output_dir.absolute()}")
 
