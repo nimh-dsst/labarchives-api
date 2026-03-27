@@ -179,7 +179,12 @@ class NotebookPath(Sequence[str]):
 
         return self.resolve().startswith(other.resolve())
 
-    def relative_to(self, other: NotebookPath | AbstractBaseTreeNode) -> NotebookPath:
+    def relative_to(
+        self,
+        other: NotebookPath | AbstractBaseTreeNode,
+        *,
+        walk_up: bool = False,
+    ) -> NotebookPath:
         """Return this path made relative to ``other``.
 
         The result is a new relative ``NotebookPath`` whose ``parent`` anchor
@@ -187,29 +192,51 @@ class NotebookPath(Sequence[str]):
         to an absolute path later.
 
         :param other: The ancestor path or tree node to relativise against.
+        :param walk_up: When ``True``, allow the returned path to include
+            ``..`` segments when ``other`` is not an ancestor of this path.
         :returns: A relative ``NotebookPath`` from ``other`` to this path.
-        :raises ValueError: If this path is not located inside ``other``.
+        :raises ValueError: If this path is not located inside ``other`` and
+            ``walk_up`` is ``False``, or if ``other`` is an unanchored relative
+            path while this path is anchored.
         """
-        # # TODO walk_up param
-
         if not isinstance(other, NotebookPath):
             other = NotebookPath(other)
 
-        if not self.is_relative_to(other):
+        if not other._absolute and other._parent is None:
+            if self._absolute or self._parent is not None:
+                raise ValueError(
+                    "cannot compute a relative path from an anchored path "
+                    "against an unanchored relative base"
+                )
+
+            p_origin = other
+            p_endpoint = self
+        else:
+            p_origin = other.resolve()
+            p_endpoint = self.resolve(other)
+
+        common_idx = 0
+        max_common = min(len(p_origin), len(p_endpoint))
+
+        while (
+            common_idx < max_common
+            and p_origin[common_idx] == p_endpoint[common_idx]
+        ):
+            common_idx += 1
+
+        if not walk_up and common_idx < len(p_origin):
             raise ValueError(f'Path "{self}" is outside of "{other}"')
 
-        if not other._absolute and other._parent is None:
-            return NotebookPath(*self[len(other) :])
+        remaining = [".."] * (len(p_origin) - common_idx)
+        remaining.extend(p_endpoint[common_idx:])
+        if p_origin._absolute or p_origin._parent is not None:
+            return (
+                NotebookPath(*remaining, parent=p_origin)
+                if remaining
+                else NotebookPath("", parent=p_origin)
+            )
 
-        p_origin = other.resolve()
-        p_endpoint = self.resolve(other)
-
-        remaining = list(p_endpoint[len(p_origin) :])
-        return (
-            NotebookPath(*remaining, parent=p_origin)
-            if remaining
-            else NotebookPath("", parent=p_origin)
-        )
+        return NotebookPath(*remaining) if remaining else NotebookPath("")
 
     @property
     def name(self) -> str:

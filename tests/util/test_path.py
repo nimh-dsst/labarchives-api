@@ -110,6 +110,38 @@ def test_notebook_path_relative_to_failure():
         path.relative_to(other)
 
 
+def test_notebook_path_relative_to_walk_up_absolute():
+    """Test relative_to can walk up between absolute paths when requested."""
+    path = NotebookPath("/Experiments/2024/Results")
+    other = NotebookPath("/Experiments/Archive")
+
+    rel = path.relative_to(other, walk_up=True)
+
+    assert rel.is_absolute() is False
+    assert str(rel) == "../2024/Results"
+    assert str(rel.resolve(other)) == "/Experiments/2024/Results"
+
+
+def test_notebook_path_relative_to_walk_up_relative():
+    """Test relative_to can walk up between unanchored relative paths."""
+    path = NotebookPath("a/b/c")
+    other = NotebookPath("a/d")
+
+    rel = path.relative_to(other, walk_up=True)
+
+    assert rel.is_absolute() is False
+    assert str(rel) == "../b/c"
+
+
+def test_notebook_path_relative_to_unanchored_base_rejects_anchored_path():
+    """Test anchored paths cannot relativize against unanchored relative bases."""
+    path = NotebookPath("/Experiments/2024")
+    other = NotebookPath("Experiments")
+
+    with pytest.raises(ValueError, match="unanchored relative base"):
+        path.relative_to(other, walk_up=True)
+
+
 def test_notebook_path_properties():
     """Test name, parts, and parent properties."""
     path = NotebookPath("/Experiments/2024/Results")
