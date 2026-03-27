@@ -206,3 +206,45 @@ class TestEntriesIntegration:
         assert ".json" in text_entry.content
         assert file_entry.id in text_entry.content
         client.clear_log()
+
+    def test_entries_create_json_entry_custom_filename_and_caption(
+        self, client, user: User, mock_page
+    ):
+        """Test Entries.create_json_entry accepts stable filename and caption overrides."""
+        entries = Entries([], user, mock_page)
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>json_attachment_eid</eid>
+            </entry>
+        </entries>
+        """
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>json_text_eid</eid>
+            </entry>
+        </entries>
+        """
+
+        file_entry, text_entry = entries.create_json_entry(
+            {"key": "value"},
+            filename="metrics.json",
+            caption="Metrics Snapshot",
+        )
+
+        assert file_entry.caption == "Metrics Snapshot"
+        assert text_entry.content.startswith("\n<p>Reference Attachment: Metrics Snapshot</p>")
+        assert "json_attachment_eid" in text_entry.content
+
+        attachment_call = client.api_log
+        assert attachment_call[0] == "entries/add_attachment"
+        assert attachment_call[1]["filename"] == "metrics.json"
+        assert attachment_call[1]["caption"] == "Metrics Snapshot"
+
+        text_call = client.api_log
+        assert text_call[0] == "entries/add_entry"
+        assert "Metrics Snapshot" in text_call[1]["entry_data"]
