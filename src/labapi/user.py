@@ -88,6 +88,14 @@ class User:
         """
         return self._client.api_get(api_method_uri, **kwargs, uid=self._id)
 
+    def raw_api_get(self, api_method_uri: str | Sequence[str], **kwargs: Any):
+        """Make a raw GET request to the API on behalf of the authenticated user."""
+        return self._client.raw_api_get(api_method_uri, **kwargs, uid=self._id)
+
+    def stream_api_get(self, api_method_uri: str | Sequence[str], **kwargs: Any):
+        """Make a streaming GET request to the API on behalf of the authenticated user."""
+        return self._client.stream_api_get(api_method_uri, **kwargs, uid=self._id)
+
     def api_post(
         self,
         api_method_uri: str | Sequence[str],
@@ -106,6 +114,24 @@ class User:
         :raises RuntimeError: If the API request fails.
         """
         return self._client.api_post(api_method_uri, body, **kwargs, uid=self._id)
+
+    def raw_api_post(
+        self,
+        api_method_uri: str | Sequence[str],
+        body: Mapping[str, str] | BufferedIOBase,
+        **kwargs: Any,
+    ):
+        """Make a raw POST request to the API on behalf of the authenticated user."""
+        return self._client.raw_api_post(api_method_uri, body, **kwargs, uid=self._id)
+
+    def stream_api_post(
+        self,
+        api_method_uri: str | Sequence[str],
+        body: Mapping[str, str] | BufferedIOBase,
+        **kwargs: Any,
+    ):
+        """Make a streaming POST request to the API on behalf of the authenticated user."""
+        return self._client.stream_api_post(api_method_uri, body, **kwargs, uid=self._id)
 
     def get_max_upload_size(self) -> int:
         """Retrieves the maximum allowed file upload size for the user from the LabArchives API.

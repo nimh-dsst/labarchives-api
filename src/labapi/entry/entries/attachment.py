@@ -54,8 +54,8 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
         #      to it
         # TODO: we should probably return a new temporary copy every time it's asked for, tbh?
         if self._filedata is None or self._filedata.closed:
-            attachment = self._user.client.stream_api_get(
-                "entries/entry_attachment", uid=self._user.id, eid=self.id
+            attachment = self._user.stream_api_get(
+                "entries/entry_attachment", eid=self.id
             )
 
             if use_tempfile:

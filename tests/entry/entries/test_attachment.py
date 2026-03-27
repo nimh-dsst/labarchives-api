@@ -48,7 +48,7 @@ class TestAttachmentEntryIntegration:
             yield b"content"
             return mock_response
 
-        client.stream_api_get = Mock(return_value=mock_stream())
+        user.stream_api_get = Mock(return_value=mock_stream())
 
         # Get attachment
         attachment = entry.get_attachment(use_tempfile=False)
@@ -63,9 +63,7 @@ class TestAttachmentEntryIntegration:
         assert attachment.read() == b"Test file content"
 
         # Verify API was called correctly
-        client.stream_api_get.assert_called_once_with(
-            "entries/entry_attachment", uid=user.id, eid="eid_att"
-        )
+        user.stream_api_get.assert_called_once_with("entries/entry_attachment", eid="eid_att")
 
     def test_attachment_entry_content_getter(self, client, user: User):
         """Test AttachmentEntry.content getter returns attachment."""
@@ -82,7 +80,7 @@ class TestAttachmentEntryIntegration:
             yield b"PDF content"
             return mock_response
 
-        client.stream_api_get = Mock(return_value=mock_stream())
+        user.stream_api_get = Mock(return_value=mock_stream())
 
         # Access content property
         attachment = entry.content
@@ -136,15 +134,15 @@ class TestAttachmentEntryIntegration:
             yield b"Content"
             return mock_response
 
-        client.stream_api_get = Mock(return_value=mock_stream())
+        user.stream_api_get = Mock(return_value=mock_stream())
 
         # First call
         attachment1 = entry.get_attachment()
-        assert client.stream_api_get.call_count == 1
+        assert user.stream_api_get.call_count == 1
 
         # Second call should use cached data
         attachment2 = entry.get_attachment()
-        assert client.stream_api_get.call_count == 1  # Not called again
+        assert user.stream_api_get.call_count == 1  # Not called again
 
         # Should be same object
         assert attachment1 is attachment2

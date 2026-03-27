@@ -56,6 +56,66 @@ class TestUserUnit:
         )
         assert result is mock_element
 
+    def test_user_raw_api_get_adds_uid(self):
+        """Test User.raw_api_get adds uid to the API call."""
+        mock_client = Mock()
+        mock_response = Mock()
+        mock_client.raw_api_get.return_value = mock_response
+
+        user = User("user_123", "test@example.com", [], mock_client)
+        result = user.raw_api_get("test_endpoint", param1="value1")
+
+        mock_client.raw_api_get.assert_called_once_with(
+            "test_endpoint", param1="value1", uid="user_123"
+        )
+        assert result is mock_response
+
+    def test_user_raw_api_post_adds_uid(self):
+        """Test User.raw_api_post adds uid to the API call."""
+        mock_client = Mock()
+        mock_response = Mock()
+        mock_client.raw_api_post.return_value = mock_response
+
+        user = User("user_456", "test@example.com", [], mock_client)
+        result = user.raw_api_post(
+            "test_endpoint", {"data": "test"}, param1="value1"
+        )
+
+        mock_client.raw_api_post.assert_called_once_with(
+            "test_endpoint", {"data": "test"}, param1="value1", uid="user_456"
+        )
+        assert result is mock_response
+
+    def test_user_stream_api_get_adds_uid(self):
+        """Test User.stream_api_get adds uid to the API call."""
+        mock_client = Mock()
+        stream = iter([b"chunk"])
+        mock_client.stream_api_get.return_value = stream
+
+        user = User("user_123", "test@example.com", [], mock_client)
+        result = user.stream_api_get("test_endpoint", param1="value1")
+
+        mock_client.stream_api_get.assert_called_once_with(
+            "test_endpoint", param1="value1", uid="user_123"
+        )
+        assert result is stream
+
+    def test_user_stream_api_post_adds_uid(self):
+        """Test User.stream_api_post adds uid to the API call."""
+        mock_client = Mock()
+        stream = iter([b"chunk"])
+        mock_client.stream_api_post.return_value = stream
+
+        user = User("user_456", "test@example.com", [], mock_client)
+        result = user.stream_api_post(
+            "test_endpoint", {"data": "test"}, param1="value1"
+        )
+
+        mock_client.stream_api_post.assert_called_once_with(
+            "test_endpoint", {"data": "test"}, param1="value1", uid="user_456"
+        )
+        assert result is stream
+
 
 class TestUserIntegration:
     """Integration tests with real objects and mocked API."""
@@ -113,6 +173,22 @@ class TestUserIntegration:
         api_call = client.api_log
         assert api_call[0] == "test_post_endpoint"
         assert api_call[1]["param1"] == "value1"
+        assert api_call[1]["uid"] == "testid1"
+
+    def test_user_raw_api_post_full_flow(self, client, user: User):
+        """Test User.raw_api_post full flow with MockClient."""
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <result>
+            <success>true</success>
+        </result>
+        """
+
+        response = user.raw_api_post("test_post_endpoint", {"data": "test_data"})
+
+        assert response.status_code == 200
+
+        api_call = client.api_log
+        assert api_call[0] == "test_post_endpoint"
         assert api_call[1]["uid"] == "testid1"
 
     def test_user_get_max_upload_size(self, client, user: User):
