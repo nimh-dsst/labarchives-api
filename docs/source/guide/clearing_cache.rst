@@ -51,6 +51,32 @@ Similarly, you can refresh directories and notebooks to reload their children:
     # Next access gets fresh data
     children = directory.children  # Re-fetches from API
 
+When You Usually Do Not Need Refresh
+-----------------------------------
+
+If you create, rename, move, or delete nodes through this client, the in-memory tree is updated immediately as part of the same operation. In those cases, you usually do not need to call ``refresh()`` just to observe your own change locally.
+
+This includes:
+
+* ``create()`` appending a new page or directory to the parent container
+* ``node.name = "..."`` updating the current object's name in memory after the API call
+* ``move_to()`` updating the node's parent and both containers' child lists
+* ``delete()`` renaming and moving the current node into ``API Deleted Items``
+
+.. code-block:: python
+
+    from labapi import NotebookDirectory, NotebookPage
+
+    archive = notebook.create(NotebookDirectory, "Archive")
+    page = notebook.create(NotebookPage, "Fresh Results")
+
+    print("Fresh Results" in list(notebook))
+
+    page.move_to(archive)
+    print(page.parent is archive)  # True without refresh()
+
+Use ``refresh()`` when you need to pick up changes made outside the current object graph, such as edits from another user, the web UI, or a separate API session.
+
 When to Refresh Data
 --------------------
 

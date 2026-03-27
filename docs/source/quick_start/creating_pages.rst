@@ -31,6 +31,11 @@ available on any :class:`~labapi.tree.notebook.Notebook` or
     # Create nested directories
     subfolder = my_folder.create(NotebookDirectory, "2024 Results")
 
+.. note::
+    Tree mutation methods such as ``create()`` update the local object graph immediately.
+    If you just created a page or directory through this client, you can keep using the
+    returned object and parent container without calling ``refresh()`` first.
+
 Handling Existing Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~
 
