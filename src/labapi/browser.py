@@ -7,13 +7,21 @@ and finally any detected installed browser. If no compatible browser is found,
 it defaults to "terminal", indicating that the authentication URL should be
 opened manually by the user.
 
-The detected browser is exposed via the `default_browser` module-level variable.
+The detected browser is resolved lazily via :func:`get_default_browser`.
 """
 
-try:
-    from os import getenv
+from __future__ import annotations
 
-    import installed_browsers  # pyright: ignore[reportMissingTypeStubs]
+import os
+
+_default_browser: str | None = None
+
+
+def _detect_browser() -> str:
+    try:
+        import installed_browsers  # pyright: ignore[reportMissingTypeStubs]
+    except ImportError:
+        return "terminal"
 
     browsers = [
         x
@@ -25,10 +33,9 @@ try:
         )
     ]
     raw_default_browser = installed_browsers.what_is_the_default_browser()
-    raw_env_browser = getenv("LA_AUTH_BROWSER", "").strip().lower()
+    raw_env_browser = os.getenv("LA_AUTH_BROWSER", "").strip().lower()
 
     default_browser = "terminal"
-
     browser_choices = ["chrome", "firefox", "edge"]  # priority in order of order
 
     if raw_env_browser in ("chrome", "firefox", "edge", "terminal"):
@@ -55,5 +62,22 @@ try:
                     if choice in browser_name:
                         default_browser = choice
                         break
-except ImportError:
-    default_browser = "terminal"
+
+    return default_browser
+
+
+def get_default_browser() -> str:
+    """Detect and cache the preferred authentication browser on first use."""
+    global _default_browser
+
+    if _default_browser is None:
+        _default_browser = _detect_browser()
+
+    return _default_browser
+
+
+def __getattr__(name: str) -> str:
+    """Preserve the historical module attribute while making detection lazy."""
+    if name == "default_browser":
+        return get_default_browser()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

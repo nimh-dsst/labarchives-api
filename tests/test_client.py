@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import importlib
 from datetime import datetime, timedelta
 from os import getenv
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from requests import Response
 
+import labapi.client as client_module
 from labapi import Client, User
 from labapi.exceptions import ApiError
 
@@ -165,6 +167,34 @@ class TestClientUnit:
         client = Client()
         assert client._base_url is not None
         assert client._akid is not None
+
+    def test_client_import_does_not_load_dotenv(self):
+        """Test importing the module does not eagerly load .env values."""
+        mock_dotenv = Mock()
+
+        with patch.dict("sys.modules", {"dotenv": mock_dotenv}):
+            importlib.reload(client_module)
+
+        mock_dotenv.load_dotenv.assert_not_called()
+
+    def test_client_initialization_only_loads_dotenv_when_needed(self, monkeypatch):
+        """Test .env loading happens at Client() construction only for missing params."""
+        mock_dotenv = Mock()
+        monkeypatch.setenv("ACCESS_KEYID", "test_akid")
+        monkeypatch.setenv("ACCESS_PWD", "test_password")
+        monkeypatch.delenv("API_URL", raising=False)
+
+        with patch.dict("sys.modules", {"dotenv": mock_dotenv}):
+            importlib.reload(client_module)
+
+            client_module.Client("https://api.test.com", "explicit_akid", "explicit_pwd")
+            mock_dotenv.load_dotenv.assert_not_called()
+
+            client = client_module.Client()
+
+        mock_dotenv.load_dotenv.assert_called_once()
+        assert client._akid == "test_akid"
+        assert client._base_url == "https://api.labarchives.com"
 
 
 class TestClientIntegration:

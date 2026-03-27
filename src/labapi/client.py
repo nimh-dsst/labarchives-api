@@ -26,7 +26,7 @@ from requests import Response, Session
 from requests import codes as status_codes
 from requests.adapters import HTTPAdapter
 
-from .browser import default_browser
+from .browser import get_default_browser
 from .exceptions import ApiError, AuthenticationError
 from .user import User
 from .util import NotebookInit, extract_etree, to_bool
@@ -41,15 +41,17 @@ _AUTH_ERROR_CODES: frozenset[int] = frozenset(
     }
 )
 
-try:
-    from dotenv import load_dotenv
+context = ssl.create_default_context()
+
+
+def _load_dotenv() -> None:
+    """Load environment variables from a local .env file when available."""
+    try:
+        from dotenv import load_dotenv
+    except ImportError:
+        return
 
     load_dotenv()
-except ImportError:
-    pass
-
-
-context = ssl.create_default_context()
 
 
 class _313HTTPAdapter(HTTPAdapter):
@@ -118,6 +120,9 @@ class Client:
                            Defaults to True. **Warning:** Setting this to False reduces security.
         """
         super().__init__()
+
+        if base_url is None or akid is None or akpass is None:
+            _load_dotenv()
 
         if base_url is None:
             base_url = getenv("API_URL", "https://api.labarchives.com")
@@ -405,7 +410,7 @@ class Client:
         driver = None
         options = None
         try:
-            match default_browser:
+            match get_default_browser():
                 case "chrome":
                     import selenium.webdriver as webdriver
 
