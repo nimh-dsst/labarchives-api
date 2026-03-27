@@ -358,12 +358,13 @@ class AbstractTreeContainer(
 
     @property
     def children(self) -> Sequence[AbstractTreeNode]:
-        """A sequence of the direct children nodes within this container.
+        """A snapshot of the direct children nodes within this container.
 
-        :returns: A sequence of :class:`AbstractTreeNode` objects.
+        :returns: An immutable point-in-time sequence of
+            :class:`AbstractTreeNode` objects.
         """
         self._ensure_populated()
-        return self._children
+        return tuple(self._children)
 
     def _ensure_populated(self) -> None:
         """Ensures that the children of this container have been loaded from the API.

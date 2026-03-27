@@ -157,6 +157,31 @@ class TestTreeMixinsIntegration:
         items = dict(notebook_tree.items())
         assert items["Test Folder A"].id == "dir-1"
 
+    def test_children_returns_snapshot(self, client, notebook_tree: Notebook):
+        """Test children returns an immutable snapshot instead of a live list."""
+        snapshot = notebook_tree.children
+
+        assert isinstance(snapshot, tuple)
+
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>snapshot-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        notebook_tree.create(NotebookPage, "Snapshot Test Page")
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Snapshot Test Page"
+
+        assert all(child.name != "Snapshot Test Page" for child in snapshot)
+        assert any(
+            child.name == "Snapshot Test Page" for child in notebook_tree.children
+        )
+
     def test_enumeration(self, notebook_tree: Notebook):
         """Test enumerate_all, enumerate_dirs, and enumerate_pages."""
         # Max depth 1 by default
