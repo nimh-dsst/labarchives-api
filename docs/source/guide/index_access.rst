@@ -16,6 +16,9 @@ This indexing method is supported by the following collection types:
 .. warning::
    This indexing method is **not** supported for page **``Entries``**. Page entries must be accessed by their integer index or via iteration.
 
+.. note::
+   Iterating over ``user.notebooks`` or a tree container yields names. Use ``values()`` to iterate over notebook or node objects, or ``items()`` to iterate over ``(name, object)`` pairs.
+
 Basic Access by Name
 --------------------
 
