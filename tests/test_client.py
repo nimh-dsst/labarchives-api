@@ -129,6 +129,37 @@ class TestClientUnit:
 
         Client._handle_request_status(response)
 
+    def test_client_close_closes_session(self):
+        """Test Client.close closes the underlying requests session."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client.session.close = Mock()
+
+        client.close()
+
+        client.session.close.assert_called_once_with()
+
+    def test_client_context_manager_closes_session(self):
+        """Test Client closes its session when used as a context manager."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client.session.close = Mock()
+
+        with client as managed:
+            assert managed is client
+
+        client.session.close.assert_called_once_with()
+
+    def test_client_rejects_requests_after_close(self):
+        """Test closed clients reject further request calls."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client.session.get = Mock()
+
+        client.close()
+
+        with pytest.raises(RuntimeError, match="Client session is closed"):
+            client.raw_api_get("users/get_info")
+
+        client.session.get.assert_not_called()
+
     def test_client_handle_request_status_failure(self):
         """Test Client._handle_request_status with failed response."""
         response = Mock(spec=Response)

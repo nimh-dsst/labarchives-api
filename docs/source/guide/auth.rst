@@ -25,8 +25,12 @@ This method prompts the user to activate a link that will bring them to the LabA
 
     from labapi import Client
 
-    client = Client()
-    user = client.default_authenticate()
+    with Client() as client:
+        user = client.default_authenticate()
+
+Closing the client releases its underlying HTTP session. Any ``User`` objects
+created from that client should be treated as no longer valid for further API
+calls after the client has been closed.
 
 
 ``labapi`` provides two primary methods for authenticating users with LabArchives: an interactive browser-based flow and a manual flow that can be integrated into server-based applications.
@@ -75,4 +79,3 @@ Example Flask App
 
     if __name__ == "__main__":
         app.run(port=8080)
-
