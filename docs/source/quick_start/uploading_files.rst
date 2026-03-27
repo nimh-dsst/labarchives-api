@@ -11,19 +11,19 @@ Uploading file attachments is a bit different than other entry types. Uploading 
 Creating an Attachment
 ----------------------
 
-The :class:`~labapi.entry.attachment.Attachment` class represents a file to be uploaded. You can create an attachment from a 
-file-like object (e.g., a file opened in binary mode).
+The :class:`~labapi.entry.attachment.Attachment` class represents a file to be uploaded. You can create an attachment from a
+readable binary file object or other binary stream that also provides a ``name`` attribute.
 
 .. code-block:: python
 
     from labapi import Attachment
 
-    with open("my_file.txt", "rb+") as f:
+    with open("my_file.txt", "rb") as f:
         attachment = Attachment.from_file(f)
 
 .. note::
-    Currently, the file must be opened in a read-writable mode (e.g., "rb+").
-    This is a limitation of the current implementation and will be addressed in a future update.
+    :meth:`~labapi.entry.attachment.Attachment.from_file` only needs a readable binary stream and a ``name`` attribute.
+    It copies the content into its own temporary buffer, so the source handle does not need to be writable.
 
 The :meth:`~labapi.entry.attachment.Attachment.from_file` method automatically guesses the MIME type from the file's name. If the MIME type cannot be determined, it 
 defaults to ``application/octet-stream``.

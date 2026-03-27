@@ -107,15 +107,17 @@ To create an attachment entry, you first need to create an :class:`~labapi.entry
    # Upload as a new entry
    page.entries.create(AttachmentEntry, attachment)
 
-You can also create an attachment directly from a file on disk:
+You can also create an attachment from any readable binary stream with a ``name`` attribute, including a normal file on disk:
 
 .. code-block:: python
 
    from labapi import Attachment, AttachmentEntry
 
-   with open("data.csv", "rb+") as f:
+   with open("data.csv", "rb") as f:
        attachment = Attachment.from_file(f)
        page.entries.create(AttachmentEntry, attachment)
+
+:meth:`~labapi.entry.attachment.Attachment.from_file` copies the input into its own temporary buffer, so the source handle only needs to be readable. If your stream does not provide a ``name`` attribute, construct :class:`~labapi.entry.attachment.Attachment` manually instead.
 
 Working with JSON Data
 ----------------------
@@ -147,6 +149,6 @@ For attachments, setting the ``content`` property with a new :class:`~labapi.ent
 
 .. code-block:: python
 
-   with open("updated_data.csv", "rb+") as f:
+   with open("updated_data.csv", "rb") as f:
        new_attachment = Attachment.from_file(f)
        attachment_entry.content = new_attachment
