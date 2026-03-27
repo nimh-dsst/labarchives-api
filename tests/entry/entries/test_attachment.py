@@ -122,7 +122,7 @@ class TestAttachmentEntryIntegration:
         assert api_call[1]["eid"] == "eid_att"
 
     def test_attachment_entry_get_attachment_caching(self, client, user: User):
-        """Test AttachmentEntry.get_attachment caches the result."""
+        """Test AttachmentEntry.get_attachment reuses download cache without sharing handles."""
         entry = AttachmentEntry("eid_att", "Caption", user)
 
         # Mock stream_api_get
@@ -146,5 +146,12 @@ class TestAttachmentEntryIntegration:
         attachment2 = entry.get_attachment()
         assert client.stream_api_get.call_count == 1  # Not called again
 
-        # Should be same object
-        assert attachment1 is attachment2
+        assert attachment1 is not attachment2
+
+        attachment1.read(1)
+        assert attachment2.read() == b"Content"
+
+        attachment1.close()
+        attachment3 = entry.get_attachment()
+        assert client.stream_api_get.call_count == 1
+        assert attachment3.read() == b"Content"
