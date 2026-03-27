@@ -224,6 +224,56 @@ class TestTreeMixinsIntegration:
         assert api_call[1]["display_text"] == "New Folder"
         assert api_call[1]["is_folder"] == "true"
 
+    def test_create_page_subclass_uses_page_semantics(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test creating a NotebookPage subclass still uses page semantics."""
+
+        class CustomNotebookPage(NotebookPage):
+            pass
+
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>custom-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_page = notebook_tree.create(CustomNotebookPage, "Subclass Page")
+
+        assert isinstance(new_page, CustomNotebookPage)
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Subclass Page"
+        assert api_call[1]["is_folder"] == "false"
+
+    def test_create_directory_subclass_uses_directory_semantics(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test creating a NotebookDirectory subclass still uses directory semantics."""
+
+        class CustomNotebookDirectory(NotebookDirectory):
+            pass
+
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>custom-dir-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_dir = notebook_tree.create(CustomNotebookDirectory, "Subclass Folder")
+
+        assert isinstance(new_dir, CustomNotebookDirectory)
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Subclass Folder"
+        assert api_call[1]["is_folder"] == "true"
+
     def test_create_nested_with_parents(self, client, notebook_tree: Notebook):
         """Test creating a nested page with parents=True."""
         # 1. Create parent folder "Parent"
