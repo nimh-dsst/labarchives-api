@@ -27,7 +27,8 @@ Unit tests
 ~~~~~~~~~~
 
 Unit tests use a ``MockClient`` that replays pre-recorded API responses, so
-they run entirely offline:
+they run entirely offline. Plain ``pytest`` deselects integration tests by
+default:
 
 .. code-block:: bash
 
@@ -66,10 +67,13 @@ Run them explicitly:
 
 .. code-block:: bash
 
-    pytest tests/test_integration.py
+    pytest --integration tests/test_integration.py
 
-They are excluded from the default ``pytest`` run when credentials are absent
-(the fixture calls ``pytest.skip`` automatically).
+To run the full suite, including integration tests:
+
+.. code-block:: bash
+
+    pytest --integration
 
 Code Style
 ----------

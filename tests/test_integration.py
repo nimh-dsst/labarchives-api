@@ -9,6 +9,8 @@ import pytest
 import labapi as LA
 from labapi import Index
 
+pytestmark = pytest.mark.integration
+
 type AnyDict = Mapping[str, AnyDict | str | bool | int | float]
 try:
     from dotenv import load_dotenv
