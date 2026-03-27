@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from labapi.util import extract_etree, to_bool
+from labapi.util import extract_etree, to_bool, validate_node_name
 
 from .mixins import AbstractTreeContainer, HasNameMixin
 
@@ -59,6 +59,7 @@ class Notebook(AbstractTreeContainer):
 
         :param value: The new name for the notebook.
         """
+        validate_node_name(value)
         self.user.api_get("notebooks/modify_notebook_info", nbid=self.id, name=value)
 
         self._name = value

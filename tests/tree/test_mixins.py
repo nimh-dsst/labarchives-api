@@ -9,7 +9,7 @@ from labapi.exceptions import NodeExistsError, TraversalError
 from labapi.tree.mixins import (
     AbstractTreeContainer,
 )
-from labapi.util import InsertBehavior
+from labapi.util import InsertBehavior, NotebookPath
 
 
 class TestTreeMixinsIntegration:
@@ -99,6 +99,18 @@ class TestTreeMixinsIntegration:
         api_call = client.api_log
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["display_text"] == "New Name"
+
+    def test_name_setter_rejects_invalid_name_without_api_request(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test updating a node name fails locally for invalid names."""
+        page = notebook_tree[Index.Id : "page-1"]
+        client.clear_log()
+
+        with pytest.raises(ValueError, match="reserved for parent navigation"):
+            page.name = ".."
+
+        assert client._api_logs == []
 
     def test_move_to(self, client, notebook_tree: Notebook):
         """Test moving a node to a new container."""
@@ -284,6 +296,25 @@ class TestTreeMixinsIntegration:
         """Test create rejects empty paths."""
         with pytest.raises(ValueError, match="Path cannot be empty"):
             notebook_tree.create(NotebookPage, "")
+
+    def test_create_rejects_invalid_leaf_name_without_api_request(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test create rejects invalid leaf names before making requests."""
+
+        class InvalidAbsolutePath:
+            def is_absolute(self) -> bool:
+                return True
+
+            def relative_to(self, _other) -> NotebookPath:
+                return NotebookPath("..", parent=NotebookPath(notebook_tree))
+
+        client.clear_log()
+
+        with pytest.raises(ValueError, match="reserved for parent navigation"):
+            notebook_tree.create(NotebookPage, InvalidAbsolutePath())
+
+        assert client._api_logs == []
 
     def test_create_nested_without_parents_raises(self, notebook_tree: Notebook):
         """Test create rejects nested paths when parents=False."""

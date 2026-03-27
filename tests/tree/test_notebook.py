@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import Mock
 
+import pytest
+
 from labapi import Notebook
 from labapi.tree.collection import Notebooks
 from labapi.user import User
@@ -45,6 +47,17 @@ class TestNotebookIntegration:
         assert api_call[1]["nbid"] == "testnb1"
         assert api_call[1]["name"] == "Updated Notebook Name"
         assert notebook.name == "Updated Notebook Name"
+
+    def test_notebook_name_setter_rejects_invalid_name_without_api_request(
+        self, client, notebook: Notebook
+    ):
+        """Test Notebook.name rejects invalid names before any API call."""
+        client.clear_log()
+
+        with pytest.raises(ValueError, match='cannot contain "/"'):
+            notebook.name = "Bad/Name"
+
+        assert client._api_logs == []
 
     def test_notebook_inserts_from_bottom(self, client, notebook: Notebook):
         """Test Notebook.inserts_from_bottom lazy loads from API."""

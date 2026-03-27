@@ -31,6 +31,7 @@ from labapi.util import (
     NotebookPath,
     extract_etree,
     to_bool,
+    validate_node_name,
 )
 
 if TYPE_CHECKING:
@@ -252,6 +253,7 @@ class AbstractTreeNode(AbstractBaseTreeNode):
 
         :param value: The new name for the node.
         """
+        validate_node_name(value)
         self.user.api_get(
             "tree_tools/update_node",
             nbid=self.root.id,
@@ -634,7 +636,10 @@ class AbstractTreeContainer(
 
         if len(path) == 0:
             raise ValueError("Path cannot be empty")
-        elif len(path) == 1:
+
+        validate_node_name(path.name)
+
+        if len(path) == 1:
             nodes = [n for n in self[Index.Name : path.name] if isinstance(n, cls)]
 
             if nodes:

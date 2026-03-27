@@ -2,7 +2,8 @@
 
 This package provides various utility functions and classes used throughout
 the LabArchives API client, including XML extraction, type conversions,
-indexing mechanisms, and data structures for notebook initialization.
+indexing mechanisms, validation helpers, and data structures for notebook
+initialization.
 """
 
 from .extract import extract_etree, to_bool
@@ -16,6 +17,7 @@ from .types import (
     NameIndex,
     NotebookInit,
 )
+from .validation import validate_node_name
 
 #: All known LabArchives entry part types.
 ALL_PART_TYPES = (
@@ -39,6 +41,7 @@ __all__ = [
     "NameIndex",
     "NotebookInit",
     "NotebookPath",
+    "validate_node_name",
     "ALL_PART_TYPES",
     "extract_etree",
     "to_bool",
