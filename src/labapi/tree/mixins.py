@@ -312,7 +312,8 @@ class AbstractTreeNode(AbstractBaseTreeNode):
             )
         else:
             api_deleted_items = api_deleted_items[0]
-            assert isinstance(api_deleted_items, AbstractTreeContainer)
+            if not isinstance(api_deleted_items, AbstractTreeContainer):
+                raise TypeError('"API Deleted Items" must be a directory')
 
         self.name = (
             f"{self.name} - Deleted at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"

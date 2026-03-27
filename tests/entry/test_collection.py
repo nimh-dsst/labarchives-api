@@ -79,6 +79,41 @@ class TestEntriesUnit:
         entry_ids = [entry.id for entry in entries]
         assert entry_ids == ["eid_1", "eid_2", "eid_3"]
 
+    def test_entries_create_attachment_requires_attachment_data(self):
+        """Test attachment entry creation rejects non-attachment payloads."""
+        mock_user = Mock(spec=User)
+        mock_page = Mock()
+        mock_page.id = "test_page_id"
+        mock_page.root = Mock()
+        mock_page.root.id = "test_notebook_id"
+        entries = Entries([], mock_user, mock_page)
+
+        with pytest.raises(TypeError, match="AttachmentEntry requires Attachment"):
+            entries.create(AttachmentEntry, "not an attachment")
+
+        mock_user.api_post.assert_not_called()
+
+    def test_entries_create_text_requires_str_data(self):
+        """Test text entry creation rejects non-string payloads."""
+        mock_user = Mock(spec=User)
+        mock_page = Mock()
+        mock_page.id = "test_page_id"
+        mock_page.root = Mock()
+        mock_page.root.id = "test_notebook_id"
+        entries = Entries([], mock_user, mock_page)
+
+        attachment = Attachment(
+            backing=BytesIO(b"File content"),
+            mime_type="text/plain",
+            filename="test.txt",
+            caption="Test file",
+        )
+
+        with pytest.raises(TypeError, match="TextEntry requires str data"):
+            entries.create(TextEntry, attachment)  # pyright: ignore[reportArgumentType]
+
+        mock_user.api_post.assert_not_called()
+
 
 class TestEntriesIntegration:
     """Integration tests with real objects and mocked API."""

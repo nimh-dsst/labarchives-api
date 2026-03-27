@@ -144,6 +144,23 @@ class TestTreeMixinsIntegration:
         client.api_log  # update_node for name
         client.api_log  # update_node for move
 
+    def test_delete_requires_deleted_items_directory(self, notebook_tree: Notebook):
+        """Test delete rejects a non-directory API Deleted Items node."""
+        notebook_tree._children.append(  # pyright: ignore[reportPrivateUsage]
+            NotebookPage(
+                "deleted-page",
+                "API Deleted Items",
+                notebook_tree,
+                notebook_tree,
+                notebook_tree.user,
+            )
+        )
+
+        page = notebook_tree[Index.Id : "page-1"].as_page()
+
+        with pytest.raises(TypeError, match='"API Deleted Items" must be a directory'):
+            page.delete()
+
     def test_mapping_methods(self, notebook_tree: Notebook):
         """Test keys(), values(), and items() on a container."""
         keys = list(notebook_tree.keys())
