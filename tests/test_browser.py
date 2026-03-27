@@ -38,6 +38,16 @@ def test_browser_detection_env_var(mock_installed_browsers):
         assert labapi.browser.default_browser == "firefox"
 
 
+def test_browser_detection_env_var_terminal(mock_installed_browsers):
+    """Test manual terminal mode remains an explicit browser choice."""
+    with patch("os.getenv", return_value="terminal"):
+        if "labapi.browser" in sys.modules:
+            del sys.modules["labapi.browser"]
+        import labapi.browser
+
+        assert labapi.browser.default_browser == "terminal"
+
+
 def test_browser_detection_default_system(mock_installed_browsers):
     """Test browser selection based on system default."""
     mock_installed_browsers[
@@ -68,7 +78,7 @@ def test_browser_detection_fallback_list(mock_installed_browsers):
 
 
 def test_browser_detection_terminal_fallback(mock_installed_browsers):
-    """Test fallback to 'terminal' when no compatible browser is found."""
+    """Test no compatible browser leaves detection unset."""
     mock_installed_browsers["what_is_the_default_browser"].return_value = None
     mock_installed_browsers["browsers"].return_value = []
 
@@ -77,14 +87,14 @@ def test_browser_detection_terminal_fallback(mock_installed_browsers):
             del sys.modules["labapi.browser"]
         import labapi.browser
 
-        assert labapi.browser.default_browser == "terminal"
+        assert labapi.browser.default_browser is None
 
 
 def test_browser_detection_import_error():
-    """Test fallback to 'terminal' when installed_browsers cannot be imported."""
+    """Test missing installed_browsers leaves detection unset."""
     with patch.dict("sys.modules", {"installed_browsers": None}):
         if "labapi.browser" in sys.modules:
             del sys.modules["labapi.browser"]
         import labapi.browser
 
-        assert labapi.browser.default_browser == "terminal"
+        assert labapi.browser.default_browser is None

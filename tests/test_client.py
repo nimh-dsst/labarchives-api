@@ -166,6 +166,60 @@ class TestClientUnit:
         assert client._base_url is not None
         assert client._akid is not None
 
+    def test_default_authenticate_warns_when_no_browser_detected(
+        self, monkeypatch, capsys
+    ):
+        """Test default_authenticate warns before terminal fallback on detection failure."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        expected_user = Mock()
+
+        monkeypatch.setattr("labapi.client.default_browser", None)
+        monkeypatch.setattr(
+            client,
+            "generate_auth_url",
+            Mock(return_value="https://api.test.com/auth"),
+        )
+        monkeypatch.setattr(
+            client,
+            "collect_auth_response",
+            Mock(return_value=expected_user),
+        )
+
+        result = client.default_authenticate()
+        output = capsys.readouterr().out
+
+        assert result is expected_user
+        assert "WARNING: No compatible browser detected" in output
+        assert "Open authentication URL in your browser:" in output
+        assert "https://api.test.com/auth" in output
+
+    def test_default_authenticate_terminal_choice_does_not_warn(
+        self, monkeypatch, capsys
+    ):
+        """Test explicit terminal mode skips the missing-browser warning."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        expected_user = Mock()
+
+        monkeypatch.setattr("labapi.client.default_browser", "terminal")
+        monkeypatch.setattr(
+            client,
+            "generate_auth_url",
+            Mock(return_value="https://api.test.com/auth"),
+        )
+        monkeypatch.setattr(
+            client,
+            "collect_auth_response",
+            Mock(return_value=expected_user),
+        )
+
+        result = client.default_authenticate()
+        output = capsys.readouterr().out
+
+        assert result is expected_user
+        assert "WARNING: No compatible browser detected" not in output
+        assert "Open authentication URL in your browser:" in output
+        assert "https://api.test.com/auth" in output
+
 
 class TestClientIntegration:
     """Integration tests with MockClient and real objects."""

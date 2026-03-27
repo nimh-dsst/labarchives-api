@@ -424,13 +424,13 @@ class Client:
                     options = webdriver.EdgeOptions()
                     driver = webdriver.Edge(options=options)
                     print("Opening Edge for authentication...")
-                case "terminal":
-                    print("Open authentication URL in your browser:")
-                    print(auth_url)
-                case _:
+                case None:
                     print(
                         "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
                     )
+                    print("Open authentication URL in your browser:")
+                    print(auth_url)
+                case "terminal":
                     print("Open authentication URL in your browser:")
                     print(auth_url)
 

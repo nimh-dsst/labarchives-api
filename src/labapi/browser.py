@@ -4,8 +4,8 @@ This module attempts to detect an installed web browser (Chrome, Firefox, or Edg
 to be used for OAuth-like authentication flows. It prioritizes a browser specified
 via the `LA_AUTH_BROWSER` environment variable, then the system's default browser,
 and finally any detected installed browser. If no compatible browser is found,
-it defaults to "terminal", indicating that the authentication URL should be
-opened manually by the user.
+it leaves detection unset so the authentication flow can warn and fall back to
+manual terminal mode.
 
 The detected browser is exposed via the `default_browser` module-level variable.
 """
@@ -27,11 +27,13 @@ try:
     raw_default_browser = installed_browsers.what_is_the_default_browser()
     raw_env_browser = getenv("LA_AUTH_BROWSER", "").strip().lower()
 
-    default_browser = "terminal"
+    default_browser: str | None = None
 
     browser_choices = ["chrome", "firefox", "edge"]  # priority in order of order
 
-    if raw_env_browser in ("chrome", "firefox", "edge", "terminal"):
+    if raw_env_browser == "terminal":
+        default_browser = "terminal"
+    elif raw_env_browser in browser_choices:
         if installed_browsers.do_i_have_installed(raw_env_browser):
             default_browser = raw_env_browser
     else:
@@ -43,11 +45,7 @@ try:
                     default_browser = choice
                     break
 
-        # FIXME the way this is written we'll never *NOT* have a compatible 'browser'
-        # because `terminal` is registered in default_authenticate as a real value
-        # the warning for No compatible browser never triggers
-
-        if default_browser == "terminal":
+        if default_browser is None:
             if len(browsers) > 0:
                 browser_name = browsers[0]["name"].lower()
 
@@ -56,4 +54,4 @@ try:
                         default_browser = choice
                         break
 except ImportError:
-    default_browser = "terminal"
+    default_browser = None
