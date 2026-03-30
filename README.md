@@ -9,24 +9,12 @@ LabArchives is a cloud-based Electronic Lab Notebook (ELN) for research data man
 
 ## Getting Started
 
-These instructions will help you set up the project on your local machine for development and testing.
-
 ### Prerequisites
 
 - **Python 3.12+**
 - **[uv](https://github.com/astral-sh/uv)** (recommended) or `pip`
 
-### Installation
-
-Clone the repository and install the dependencies:
-
-```bash
-git clone https://github.com/nimh-dsst/labarchives-api.git
-cd labarchives-api
-uv sync
-```
-
-Or install it as a library:
+Install `labapi` directly from PyPI to use it in your own project:
 
 ```bash
 uv add labapi
@@ -145,6 +133,14 @@ uv run pytest --cov=labapi
 - [cryptography](https://cryptography.io/) - Secure request signing
 
 ## Contributing
+
+If you want to contribute to `labapi` itself, clone the repository and install the development dependencies:
+
+```bash
+git clone https://github.com/nimh-dsst/labarchives-api.git
+cd labarchives-api
+uv sync
+```
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
