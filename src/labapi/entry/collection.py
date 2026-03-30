@@ -66,7 +66,13 @@ class Entries(Sequence["Entry[Any]"]):
 
     # TODO delete entries
 
-    def create_json_entry(self, data: JsonData) -> tuple[AttachmentEntry, TextEntry]:
+    def create_json_entry(
+        self,
+        data: JsonData,
+        *,
+        filename: str | None = None,
+        caption: str | None = None,
+    ) -> tuple[AttachmentEntry, TextEntry]:
         """Creates a JSON data entry consisting of an attachment and a reference text entry.
 
         This method uploads JSON data as an attachment file and creates a
@@ -74,11 +80,14 @@ class Entries(Sequence["Entry[Any]"]):
         a formatted preview of the JSON data.
 
         :param data: The JSON-serializable data to upload.
+        :param filename: Optional stable filename for the uploaded JSON attachment.
+        :param caption: Optional label/caption for the generated attachment and reference entry.
         :returns: A tuple containing the attachment entry and the text entry.
         """
         # TODO treat this as one entry in the code
 
-        name = f"uploaded_data_{datetime.now().timestamp():.0f}.json"
+        name = filename or f"uploaded_data_{datetime.now().timestamp():.0f}.json"
+        display_caption = caption or name
 
         file_entry = self.create(
             AttachmentEntry,
@@ -86,14 +95,14 @@ class Entries(Sequence["Entry[Any]"]):
                 BytesIO(dumps(data).encode()),
                 "application/json",
                 name,
-                "Uploaded JSON file",
+                display_caption,
             ),
         )
 
         text_entry = self.create(
             TextEntry,
             f"""
-<p>Reference Attachment: {name}</p>
+<p>Reference Attachment: {display_caption}</p>
 <p>Entry ID: {file_entry.id}</p>
 <pre>
 {dumps(data, indent=4)}
