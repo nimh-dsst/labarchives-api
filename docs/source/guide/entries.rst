@@ -34,7 +34,7 @@ Text-based Entries
 
 Text-based entries store their content as strings.
 
-* **Rich Text Entry** (:class:`~labapi.entry.entries.text.TextEntry`): Used for formatted text, typically HTML. Content type: ``"text entry"``.
+* **Rich Text Entry** (:class:`~labapi.entry.entries.text.TextEntry`): Used for formatted text, typically HTML. Content type: ``"text entry"``. See `MDN HTML documentation <https://developer.mozilla.org/en-US/docs/Web/HTML>`_ for supported markup patterns.
 * **Plain Text Entry** (:class:`~labapi.entry.entries.text.PlainTextEntry`): Used for unformatted, raw text. Content type: ``"plain text entry"``.
 * **Header Entry** (:class:`~labapi.entry.entries.text.HeaderEntry`): Used for headings or titles within a page. Content type: ``"heading"``.
 
@@ -154,4 +154,7 @@ For attachments, setting the ``content`` property with a new :class:`~labapi.ent
 Related Pages
 -------------
 
+* :ref:`writing_rich_text` for practical HTML-rich text snippets.
+* :ref:`creating_pages` for page creation workflows before entry insertion.
+* :doc:`/examples/csv_table` for CSV-to-HTML entry conversion patterns.
 * :ref:`limitations`

@@ -4,7 +4,7 @@ Writing Rich Text Entries
 =========================
 
 LabArchives's rich text entries use HTML for formatting. This allows you to create entries with various styles, 
-including text formatting, tables, and lists.
+including text formatting, tables, and lists. For a complete tag reference, see the `MDN HTML elements reference <https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements>`_.
 
 Creating a Rich Text Entry
 --------------------------
@@ -117,3 +117,10 @@ Ordered List Example:
         <li>Second item</li>
         <li>Third item</li>
     </ol>
+
+See also
+--------
+
+- :ref:`entries` for entry type behavior and update semantics.
+- :doc:`/examples/csv_table` for converting tabular data to HTML table markup.
+- :ref:`faq` for certificate and browser settings that can affect scripted workflows.

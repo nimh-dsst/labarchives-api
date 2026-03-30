@@ -132,3 +132,10 @@ If you encounter issues during authentication:
    you'll be handling the callback
 
 For more details on authentication, see :ref:`auth`.
+
+See also
+--------
+
+- :ref:`auth` for end-to-end authentication flow details.
+- :ref:`first_calls` for quick-start credential setup and first login examples.
+- :doc:`/guide/api_calls` for low-level request patterns when troubleshooting integrations.

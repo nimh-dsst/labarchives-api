@@ -164,7 +164,7 @@ You can now start writing entries to your notebook. First, navigate to an existi
 
    # Navigate to a page by path
    page = notebook.traverse("Experiments/Project A/Results")
-
+   
    # Rich text entry: LabArchives renders HTML formatting
    page.entries.create(TextEntry, "<p><strong>Trial 1:</strong> Successfully ran.</p>")
 
@@ -173,3 +173,13 @@ You can now start writing entries to your notebook. First, navigate to an existi
 
    # Header entry: LabArchives renders a visual section heading/divider
    page.entries.create(HeaderEntry, "Follow-up Measurements")
+
+   # Add a text entry
+   page.entries.create(TextEntry, "Successfully ran the first trial.")
+
+See also
+--------
+
+- :ref:`auth` for full interactive and server-side authentication flows.
+- :ref:`navigating` for path-based notebook traversal after login.
+- :ref:`entries` for deeper coverage of entry classes and content handling.

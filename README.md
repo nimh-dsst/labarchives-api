@@ -99,13 +99,13 @@ Create and manage different types of entries on a page:
 ```python
 from labapi import TextEntry, HeaderEntry, PlainTextEntry
 
-# Rich-text content: LabArchives renders HTML formatting (bold, links, tables, etc.)
+# Rich-text content
 page.entries.create(TextEntry, "<p><strong>Observation:</strong> The reaction turned blue.</p>")
 
-# Section label: LabArchives renders this as a heading/divider on the page
+# Section label
 page.entries.create(HeaderEntry, "Final Conclusions")
 
-# Literal text: LabArchives shows characters exactly as written (no HTML rendering)
+# Literal text
 page.entries.create(PlainTextEntry, "<p>Keep this literal, including angle brackets.</p>")
 
 # Create a JSON entry (uploads as attachment + preview text)
@@ -113,7 +113,12 @@ data = {"yield": 0.85, "purity": "99%"}
 page.entries.create_json_entry(data)
 ```
 
-For text-focused entries, use ``TextEntry`` for rendered HTML, ``PlainTextEntry`` for literal text, and ``HeaderEntry`` for section headings.
+## Documentation
+
+- Quick Start: [docs/source/quick_start/index.rst](docs/source/quick_start/index.rst)
+- User Guide: [docs/source/guide/index.rst](docs/source/guide/index.rst)
+- FAQ: [docs/source/faq.rst](docs/source/faq.rst)
+- Examples: [docs/source/examples/index.rst](docs/source/examples/index.rst)
 
 ## Running the tests
 

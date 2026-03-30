@@ -109,13 +109,12 @@ Example Flask App
     if __name__ == "__main__":
         app.run(port=8080)
 
-
 Headless and CI Workflows
 -------------------------
 
 In non-interactive environments (CI, scheduled jobs, or batch workers), avoid :meth:`~labapi.client.Client.default_authenticate` because it expects a browser + local callback listener.
 
-Instead, pre-provision credentials for job execution and use :meth:`~labapi.client.Client.login` directly:
+Instead, use one-hour codes for job execution and use :meth:`~labapi.client.Client.login` directly:
 
 .. code-block:: bash
 
@@ -149,4 +148,6 @@ Operational guidance for automation:
 Related Pages
 -------------
 
+* :ref:`first_calls` for the quickest path to sign in and run your first notebook operations.
+* :ref:`faq` for browser selection and TLS troubleshooting during authentication.
 * :ref:`limitations`

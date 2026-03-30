@@ -169,4 +169,7 @@ The following data is cached and will be cleared by ``refresh()``:
 Related Pages
 -------------
 
+* :ref:`paths` for mutation and traversal workflows where stale caches are common.
+* :ref:`navigating` for descendant enumeration examples that interact with cached tree state.
+* :doc:`/examples/json_sync` for synchronization workflows that may require periodic refreshes.
 * :ref:`limitations`

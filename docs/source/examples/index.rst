@@ -3,7 +3,7 @@
 Example Applications
 ====================
 
-This section provides example applications demonstrating the LabArchives API client in various scenarios.
+This section provides example applications demonstrating the LabArchives API client in various scenarios. Start with :ref:`quick_start` for setup and :ref:`guide` for deeper API concepts before running these scripts.
 
 Available Examples
 ------------------
