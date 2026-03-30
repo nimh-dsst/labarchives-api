@@ -13,11 +13,19 @@ when working with deeply nested structures.
 
 .. code-block:: python
 
+    from labapi import TraversalError
+
     # Index access (chained)
     page = notebook["Experiments"]["2024"]["Results"]
 
     # Path-based (equivalent)
     page = notebook.traverse("Experiments/2024/Results")
+
+    try:
+        notebook.traverse("Experiments/2024/Results/Figure 1")
+    except TraversalError:
+        # An intermediate segment exists but is not a directory
+        ...
 
 Traversing the Tree
 -------------------
@@ -114,7 +122,7 @@ automatically.
     # Create a page at a nested path; intermediate directories are created as needed
     page = notebook.create(NotebookPage, "Experiments/2024/Results", parents=True)
 
-    # Without parents=True, a RuntimeError is raised if an intermediate directory is missing
+    # Without parents=True, a ValueError is raised if an intermediate directory is missing
     page = notebook.create(NotebookPage, "Experiments/2024/Results")  # raises if missing
 
 See :ref:`creating_pages` for details on the ``if_exists`` parameter and other creation options.

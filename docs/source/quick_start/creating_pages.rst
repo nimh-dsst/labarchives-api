@@ -39,7 +39,7 @@ available on any :class:`~labapi.tree.notebook.Notebook` or
 Handling Existing Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` will raise a :class:`RuntimeError` if a node with the same name and type already 
+By default, :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` will raise a :class:`~labapi.NodeExistsError` if a node with the same name and type already
 exists. You can control this behavior using the ``if_exists`` parameter:
 
 .. code-block:: python
