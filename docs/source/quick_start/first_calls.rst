@@ -88,6 +88,9 @@ so more complex uses, like those involving a client-server model, should not use
   If a compatible browser is not detected, the API will prompt you in the terminal to open a link. 
   Simply copy the link and login.
 
+.. note::
+  This path is best for local interactive usage. For server, CI, and other headless environments, see :ref:`auth` and use :meth:`~labapi.client.Client.generate_auth_url` + :meth:`~labapi.client.Client.login` instead.
+
 External App Authentication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -106,6 +109,20 @@ If you cannot use a browser on the machine where your script is running, or for 
 
 .. note::
    The External App password token is valid for only one hour.
+
+Service / Non-Interactive Authentication
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For backend systems, scheduled jobs, and CI pipelines, do not depend on a local browser session.
+
+Recommended flow:
+
+1. In your web/service layer, redirect users to ``client.generate_auth_url(callback_url)``.
+2. Capture ``email`` and ``auth_code`` from the callback request.
+3. Exchange those values via :meth:`~labapi.client.Client.login`.
+4. Store any resulting credentials/secrets using your platform's secret manager.
+
+For implementation detail and operational guidance, see the full :ref:`Authentication guide <auth>`.
 
 Getting a Notebook
 ------------------

@@ -12,6 +12,27 @@ Both systems return authentication tokens that can be used alongside a user emai
 Since the time-based system requires the user to find the **External App authentication** button and copy the email and token into the login method (or to your app), it is generally
 more preferable to use the callback flow, which has the additional benefit of allowing Single Sign-On.
 
+Choosing an Auth Pattern
+------------------------
+
+Use the flow that matches where your code runs:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Scenario
+     - Recommended approach
+     - Why
+   * - Local scripts, notebooks, ad-hoc analysis on a workstation
+     - :meth:`~labapi.client.Client.default_authenticate`
+     - Fastest "happy path" and easiest onboarding.
+   * - Headless hosts (containers, CI workers, cron jobs, orchestrators)
+     - :meth:`~labapi.client.Client.generate_auth_url` + callback handler + :meth:`~labapi.client.Client.login`
+     - Avoids dependence on a local browser session.
+   * - One-off/manual testing without callback wiring
+     - :meth:`~labapi.client.Client.login` with External App credentials
+     - Useful for quick experiments when interactive callback flow is not available.
+
 Interactive Authentication
 --------------------------
 
@@ -37,6 +58,18 @@ Server-Based Authentication
 
 For deeper integrations with other systems, or for use in servers, ``labapi`` provides access to the :meth:`~labapi.client.Client.generate_auth_url` function.
 This function generates a LabArchives authentication url that eventually redirects to the ``callback_url`` passed to it, allowed application developers to implement the credential capture on their own servers.
+
+For service environments, this is the recommended flow:
+
+1. Your app exposes a callback URL (for example ``https://my-service.example.org/labarchives/callback``).
+2. Your app sends users to ``client.generate_auth_url(callback_url)``.
+3. LabArchives redirects back to your callback URL with ``email`` and ``auth_code`` query parameters.
+4. Your callback handler exchanges those values via :meth:`~labapi.client.Client.login`.
+5. Your service stores only what it needs for subsequent calls, following your organization's secret-management policy.
+
+.. note::
+   ``labapi`` currently does not provide a separate client-credentials style service principal flow.
+   Service integrations should use callback capture + :meth:`~labapi.client.Client.login` for user context, or External App authentication where operationally appropriate.
 
 
 Example Flask App
@@ -75,6 +108,43 @@ Example Flask App
 
     if __name__ == "__main__":
         app.run(port=8080)
+
+
+Headless and CI Workflows
+-------------------------
+
+In non-interactive environments (CI, scheduled jobs, or batch workers), avoid :meth:`~labapi.client.Client.default_authenticate` because it expects a browser + local callback listener.
+
+Instead, pre-provision credentials for job execution and use :meth:`~labapi.client.Client.login` directly:
+
+.. code-block:: bash
+
+    export API_URL="https://api.labarchives.com"
+    export ACCESS_KEYID="your_access_key"
+    export ACCESS_PWD="your_access_password"
+    export LA_USER_EMAIL="service.user@example.org"
+    export LA_AUTH_CODE="short_lived_auth_code"
+
+.. code-block:: python
+
+    import os
+    from labapi import Client
+
+    client = Client()
+    user = client.login(
+        os.environ["LA_USER_EMAIL"],
+        os.environ["LA_AUTH_CODE"],
+    )
+
+    # continue your automated task...
+    # notebook = user.notebooks["Automation Notebook"]
+
+Operational guidance for automation:
+
+- Treat ``auth_code`` values as secrets; keep them in your CI secret store rather than source control.
+- Prefer short-lived credentials and regular rotation.
+- Build your own refresh/re-auth step in orchestration when codes expire.
+- Use least-privilege LabArchives users for automated jobs.
 
 Related Pages
 -------------

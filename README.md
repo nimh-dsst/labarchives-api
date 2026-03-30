@@ -48,17 +48,29 @@ ACCESS_PWD=your_access_password
 
 ### Authentication
 
-The client can authenticate via an interactive browser session (recommended for local use) or using pre-existing credentials.
+The client supports two patterns:
+
+- **Interactive/local development:** `default_authenticate()` opens the LabArchives flow and captures the callback on `localhost`.
+- **Service/headless automation (CI, schedulers, backend jobs):** your app owns the redirect endpoint and then calls `login(email, auth_code)` with the callback values.
+- **External App authentication (manual fallback):** use the email + password token from the LabArchives UI with `login(email, auth_code)`; this token expires after one hour.
 
 ```python
 from labapi import Client
 
-# Initialize the client (loads credentials from .env)
+# Initialize the client (loads ACCESS_KEYID / ACCESS_PWD / API_URL)
 client = Client()
 
-# Authenticate via browser (interactive)
+# Local interactive usage
 user = client.default_authenticate()
+
+# Service/headless usage:
+# 1) redirect users to client.generate_auth_url(callback_url)
+# 2) read email + auth_code from your callback handler
+# 3) exchange with client.login(...)
+# user = client.login(email, auth_code)
 ```
+
+For detailed service-oriented patterns (server callbacks, CI/scripted workflows, and token-handling guidance), see `docs/source/guide/auth.rst`.
 
 ### Navigating Notebooks
 
