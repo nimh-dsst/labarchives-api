@@ -101,6 +101,18 @@ Or check without making changes:
     ruff check .
     ruff format --check .
 
+Type checking
+~~~~~~~~~~~~~
+
+``labapi`` uses `Pyright <https://github.com/microsoft/pyright>`_ for static
+type checking.
+
+Run it locally with:
+
+.. code-block:: bash
+
+    uv run pyright
+
 Type System
 -----------
 

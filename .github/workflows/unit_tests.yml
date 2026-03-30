@@ -62,3 +62,30 @@ jobs:
       - name: Build Sphinx docs
         run: uv run sphinx-build -b html docs/source docs/_build
 
+    - name: Run tests with pytest
+      run: uv run pytest
+
+  typecheck:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        version: "latest"
+
+    - name: Set up Python
+      run: uv python install ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: uv sync --all-extras --dev
+
+    - name: Run pyright
+      run: uv run pyright

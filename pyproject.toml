@@ -47,6 +47,7 @@ dotenv = [
 dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
+    "pyright>=1.1.406",
     "ruff>=0.14.11",
     "pre-commit>=4.5.1",
     "sphinx>=9.1.0",
