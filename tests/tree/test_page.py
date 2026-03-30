@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from unittest.mock import Mock
 
+import pytest
+
 from labapi import Index, Notebook, NotebookPage
-from labapi.entry import Entries
+from labapi.entry import Entries, UnknownEntry
 from labapi.user import User
 
 
@@ -108,6 +110,66 @@ class TestNotebookPageIntegration:
         entries2 = page.entries
 
         assert entries1 is entries2
+        client.clear_log()
+
+    def test_page_entries_wrap_known_unimplemented_type(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test NotebookPage.entries preserves recognized-but-unimplemented entries."""
+        page = notebook_tree[Index.Id : "page-1"]
+
+        assert isinstance(page, NotebookPage)
+        client.clear_log()
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <entry>
+                <eid>entry_unknown_known</eid>
+                <part-type>sketch entry</part-type>
+                <attach-file-name></attach-file-name>
+                <attach-content-type></attach-content-type>
+                <entry-data><![CDATA[sketch payload]]></entry-data>
+            </entry>
+        </entries>
+        """
+
+        with pytest.warns(UserWarning, match="Wrapping as UnknownEntry"):
+            entries = page.entries
+
+        assert len(entries) == 1
+        assert isinstance(entries[0], UnknownEntry)
+        assert entries[0].content_type == "sketch entry"
+        assert entries[0].content == "sketch payload"
+        client.api_log
+        client.clear_log()
+
+    def test_page_entries_wrap_unknown_type(self, client, notebook_tree: Notebook):
+        """Test NotebookPage.entries preserves truly unknown entries."""
+        page = notebook_tree[Index.Id : "page-1"]
+
+        assert isinstance(page, NotebookPage)
+        client.clear_log()
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <entry>
+                <eid>entry_unknown_new</eid>
+                <part-type>future entry</part-type>
+                <attach-file-name></attach-file-name>
+                <attach-content-type></attach-content-type>
+                <entry-data><![CDATA[future payload]]></entry-data>
+            </entry>
+        </entries>
+        """
+
+        with pytest.warns(RuntimeWarning, match="Wrapping as UnknownEntry"):
+            entries = page.entries
+
+        assert len(entries) == 1
+        assert isinstance(entries[0], UnknownEntry)
+        assert entries[0].content_type == "future entry"
+        assert entries[0].content == "future payload"
+        client.api_log
         client.clear_log()
 
     def test_page_refresh(self, client, notebook_tree: Notebook):

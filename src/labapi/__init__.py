@@ -21,6 +21,7 @@ from .entry import (
     HeaderEntry,
     PlainTextEntry,
     TextEntry,
+    UnknownEntry,
     WidgetEntry,
 )
 from .exceptions import (
@@ -57,6 +58,7 @@ __all__ = [
     "NotebookPath",
     "TextEntry",
     "TraversalError",
+    "UnknownEntry",
     "User",
     "WidgetEntry",
 ]
