@@ -128,12 +128,27 @@ Writing Entries
 
 You can now start writing entries to your notebook. First, navigate to an existing page, then add an entry:
 
+.. tip::
+
+   Choose entry types based on what you want users to see in LabArchives:
+
+   - :class:`~labapi.entry.entries.text.TextEntry` renders HTML formatting.
+   - :class:`~labapi.entry.entries.text.PlainTextEntry` preserves text literally.
+   - :class:`~labapi.entry.entries.text.HeaderEntry` for section labels that visually organize the page.
+
+
 .. code-block:: python
 
-   from labapi import TextEntry
+   from labapi import TextEntry, PlainTextEntry, HeaderEntry
 
    # Navigate to a page by path
    page = notebook.traverse("Experiments/Project A/Results")
 
-   # Add a text entry
-   page.entries.create(TextEntry, "Successfully ran the first trial.")
+   # Rich text entry: LabArchives renders HTML formatting
+   page.entries.create(TextEntry, "<p><strong>Trial 1:</strong> Successfully ran.</p>")
+
+   # Plain text entry: LabArchives shows literal text (no HTML interpretation)
+   page.entries.create(PlainTextEntry, "<strong>Raw instrument log line</strong>")
+
+   # Header entry: LabArchives renders a visual section heading/divider
+   page.entries.create(HeaderEntry, "Follow-up Measurements")

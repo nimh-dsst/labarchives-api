@@ -85,18 +85,23 @@ page = notebook.traverse("Experiments/2026/Results")
 Create and manage different types of entries on a page:
 
 ```python
-from labapi import TextEntry, HeaderEntry
+from labapi import TextEntry, HeaderEntry, PlainTextEntry
 
-# Create a text entry
-page.entries.create(TextEntry, "<p>Initial observation: The reaction turned blue.</p>")
+# Rich-text content: LabArchives renders HTML formatting (bold, links, tables, etc.)
+page.entries.create(TextEntry, "<p><strong>Observation:</strong> The reaction turned blue.</p>")
 
-# Create a heading
-page.entries.create(HeaderEntry, "<h1>Final Conclusions</h1>")
+# Section label: LabArchives renders this as a heading/divider on the page
+page.entries.create(HeaderEntry, "Final Conclusions")
+
+# Literal text: LabArchives shows characters exactly as written (no HTML rendering)
+page.entries.create(PlainTextEntry, "<p>Keep this literal, including angle brackets.</p>")
 
 # Create a JSON entry (uploads as attachment + preview text)
 data = {"yield": 0.85, "purity": "99%"}
 page.entries.create_json_entry(data)
 ```
+
+For text-focused entries, use ``TextEntry`` for rendered HTML, ``PlainTextEntry`` for literal text, and ``HeaderEntry`` for section headings.
 
 ## Running the tests
 
@@ -129,4 +134,3 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 ## License
 
 This project is licensed under the CC0 1.0 Universal License - see the [LICENSE](LICENSE) file for details (or `pyproject.toml`).
-

@@ -8,7 +8,7 @@ Entries are the fundamental building blocks of a LabArchives page. They contain 
 Accessing Entries
 -----------------
 
-You can access the entries of a :class:`~labapi.tree.page.NotebookPage` through its ``entries`` property. This property returns an :class:`~labapi.entry.collection.Entries` object, which behaves like a sequence.
+You can access the entries of a :class:`~labapi.tree.page.NotebookPage` through its ``entries`` property. This property returns an :class:`~labapi.entry.collection.Entries` object, which behaves like a sequence of entries.
 
 .. code-block:: python
 
@@ -43,9 +43,9 @@ Text-based entries store their content as strings.
    # Accessing text content
    text_entry = page.entries[0]
    print(text_entry.content)
-   
-   # Updating text content
-   text_entry.content = "<p>Updated rich text content</p>"
+
+   # Updating rich text content
+   text_entry.content = "<p>Updated <strong>rich text</strong> content</p>"
 
 Attachment Entries
 ~~~~~~~~~~~~~~~~~~
@@ -81,14 +81,14 @@ You can create new entries using the :meth:`~labapi.entry.collection.Entries.cre
 
    from labapi import TextEntry, HeaderEntry, PlainTextEntry
 
-   # Create a rich text entry
-   page.entries.create(TextEntry, "<h1>New Section</h1><p>Some content...</p>")
-   
-   # Create a heading
+   # Create a rich text entry (HTML is rendered in LabArchives)
+   page.entries.create(TextEntry, "<h2>New Section</h2><p>Some <em>formatted</em> content...</p>")
+
+   # Create a heading (displayed as a section label/divider)
    page.entries.create(HeaderEntry, "Experiment Notes")
-   
-   # Create a plain text entry
-   page.entries.create(PlainTextEntry, "Raw data string")
+
+   # Create a plain text entry (displayed literally)
+   page.entries.create(PlainTextEntry, "<h2>Raw instrument output</h2>")
 
 Creating Attachments
 ~~~~~~~~~~~~~~~~~~~~
