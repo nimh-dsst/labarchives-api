@@ -6,6 +6,11 @@ Navigating the Tree
 Once you have a :class:`~labapi.tree.notebook.Notebook` object, you can navigate its structure to find the pages and entries you need.
 The notebook is organized as a tree, and you can move through it in several ways.
 
+.. warning::
+   Duplicate-name and first-match behavior are documented in
+   :ref:`index_access`. Review that section before using name-based lookup in
+   automation code.
+
 Traversing the tree with Paths
 ------------------------------
 
@@ -48,6 +53,10 @@ Accessing Children by Name
 
 You can access the immediate children of a node by their name using dictionary-style indexing. This will return the first child that
 matches the given name.
+
+.. note::
+   For integration code that must always target a specific node, prefer
+   ID-based access with :attr:`~labapi.util.types.Index.Id`.
 
 .. code-block:: python
 

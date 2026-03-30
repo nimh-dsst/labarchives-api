@@ -7,6 +7,10 @@ Paths provide a way to navigate, reference, and create nodes in the notebook tre
 slash-separated strings. This is an alternative to chained index access and is especially useful
 when working with deeply nested structures.
 
+.. warning::
+   For duplicate-name and first-match lookup behavior, see
+   :ref:`index_access`. This page focuses on path syntax and traversal rules.
+
 .. code-block:: python
 
     # Index access (chained)
@@ -25,6 +29,11 @@ and accepts a slash-separated path string.
 
     folder = notebook.traverse("Experiments")
     page = notebook.traverse("Experiments/2024/Results")
+
+.. note::
+   If duplicate sibling names appear in a path segment, ``traverse()``
+   selects the first match for that segment. For deterministic selection,
+   index from the parent container with ``Index.Id`` (see :ref:`index_access`).
 
 Absolute vs Relative Paths
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,8 +60,10 @@ Use ``..`` to navigate to the parent container.
     grandparent = page.traverse("../..")
 
 .. note::
-   When multiple children share the same name, ``traverse`` returns the first match. Use
-   :ref:`index_access` with ``Index.Name`` to retrieve all matches.
+   To inspect duplicate child names under a container, use explicit indexing
+   on that container (for example, ``container[Index.Name: "Results"]``)
+   to retrieve all matches; then use ``Index.Id`` to select exactly one
+   (see :ref:`index_access`).
 
 .. warning::
    Nodes with the literal name ``".."`` cannot be accessed via ``traverse``, as ``..`` is

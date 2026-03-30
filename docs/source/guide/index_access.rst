@@ -5,6 +5,22 @@ Accessing Items with Index
 
 The ``Index`` utility, located in ``labapi.util``, is used to specify how you want to index into a collection.
 
+.. warning::
+   Name-based lookup is ambiguous when duplicate names exist.
+   ``coll["name"]`` returns the **first match** and can silently select the
+   wrong item.
+
+   For deterministic access in integration and automation code, use
+   ``coll[Index.Id: "..."]``.
+
+   Example:
+
+   - A directory contains two pages named ``"Results"`` for different projects.
+   - ``directory["Results"]`` returns whichever ``Results`` node appears first,
+     not necessarily the one your workflow intended.
+   - ``directory[Index.Name: "Results"]`` returns both, and
+     ``directory[Index.Id: "<tree-id>"]`` returns the exact target.
+
 Supported Collection Types
 --------------------------
 
