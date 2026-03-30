@@ -17,5 +17,6 @@ including custom authentication, specialized entry types, and direct API access.
   index_access
   paths
   clearing_cache
+  architecture
   integration_design
   contributing
