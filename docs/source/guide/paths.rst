@@ -108,6 +108,67 @@ automatically.
 
 See :ref:`creating_pages` for details on the ``if_exists`` parameter and other creation options.
 
+Convenience Methods: ``dir()`` and ``page()``
+----------------------------------------------
+
+For common "ensure this path exists" workflows, use the convenience methods
+:meth:`~labapi.tree.mixins.AbstractTreeContainer.dir` and
+:meth:`~labapi.tree.mixins.AbstractTreeContainer.page`.
+
+These methods are shorthand for :meth:`~labapi.tree.mixins.AbstractTreeContainer.create`
+with:
+
+* ``parents=True`` (create missing intermediate directories), and
+* ``if_exists=InsertBehavior.Retain`` (return an existing matching node instead of raising).
+
+.. code-block:: python
+
+    from labapi import NotebookDirectory, NotebookPage, InsertBehavior
+
+    # Equivalent calls:
+    reports_dir = notebook.dir("Experiments/2024/Reports")
+    reports_dir = notebook.create(
+        NotebookDirectory,
+        "Experiments/2024/Reports",
+        parents=True,
+        if_exists=InsertBehavior.Retain,
+    )
+
+    summary_page = notebook.page("Experiments/2024/Summary")
+    summary_page = notebook.create(
+        NotebookPage,
+        "Experiments/2024/Summary",
+        parents=True,
+        if_exists=InsertBehavior.Retain,
+    )
+
+When to use them
+~~~~~~~~~~~~~~~~
+
+Use ``dir()`` and ``page()`` when you want concise, idempotent setup code.
+They are especially useful in scripts that may run repeatedly.
+
+.. code-block:: python
+
+    # Safe to run multiple times; existing nodes are returned.
+    notebook.dir("Experiments/2024").page("Results")
+    notebook.page("Experiments/2024/Raw Data")
+
+Because both methods retain existing nodes, calling them again for the same
+path returns the existing directory/page instead of creating a duplicate.
+
+They can also be used for navigation when you expect the path to already
+exist: the same call either returns the existing node or creates it if
+missing.
+
+.. code-block:: python
+
+    # Navigate to an existing directory (or create it if needed)
+    reports = notebook.dir("Experiments/2024/Reports")
+
+    # Navigate to an existing page (or create it if needed)
+    summary = notebook.page("Experiments/2024/Summary")
+
 The NotebookPath Class
 ----------------------
 
