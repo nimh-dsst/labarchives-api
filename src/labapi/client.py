@@ -16,7 +16,7 @@ from io import BufferedIOBase
 from operator import itemgetter
 from os import getenv
 from socketserver import TCPServer
-from typing import Any, Generator, Mapping, Sequence, override
+from typing import Any, Generator, Mapping, Self, Sequence, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cryptography.hazmat.primitives.hashes import SHA512
@@ -145,8 +145,42 @@ class Client:
             bytes(akpass, "utf8") if isinstance(akpass, str) else akpass, SHA512()
         )
         self.session = Session()
+        self._closed = False
         if not strict_cert:
             self.session.mount("https://", _313HTTPAdapter())
+
+    def close(self) -> None:
+        """Closes the underlying requests session.
+
+        Once closed, this client should not be used for further API requests.
+        Any :class:`~labapi.user.User` objects derived from this client should
+        also be treated as no longer usable for API calls.
+        """
+        if not self._closed:
+            self.session.close()
+            self._closed = True
+
+    def __enter__(self) -> Self:
+        """Returns this client for use as a context manager."""
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        """Closes the client session when exiting a context-manager block."""
+        self.close()
+
+    def __del__(self) -> None:
+        """Best-effort cleanup for the underlying session at object finalization."""
+        try:
+            self.close()
+        except Exception:
+            # __del__ may run during interpreter shutdown where module globals can
+            # already be torn down; ignore cleanup failures in that phase.
+            pass
+
+    def _ensure_open(self) -> None:
+        """Raises if the client has already been closed."""
+        if self._closed:
+            raise RuntimeError("Client session is closed")
 
     def generate_auth_url(self, redirect_url: str) -> str:
         """
@@ -258,6 +292,7 @@ class Client:
         :returns: The full requests.Response object after the stream has been consumed.
         :raises RuntimeError: If the API request fails.
         """
+        self._ensure_open()
         with self.session.get(
             self.construct_url(api_method_uri, query=kwargs), stream=True
         ) as request:
@@ -288,6 +323,7 @@ class Client:
         :returns: The full requests.Response object after the stream has been consumed.
         :raises RuntimeError: If the API request fails.
         """
+        self._ensure_open()
         with self.session.post(
             self.construct_url(api_method_uri, query=kwargs), data=body, stream=True
         ) as request:
@@ -314,6 +350,7 @@ class Client:
         :returns: The requests.Response object containing the API response.
         :raises RuntimeError: If the API request fails.
         """
+        self._ensure_open()
         request = self.session.get(self.construct_url(api_method_uri, query=kwargs))
         Client._handle_request_status(request)
 
@@ -339,6 +376,7 @@ class Client:
         :returns: The requests.Response object containing the API response.
         :raises RuntimeError: If the API request fails.
         """
+        self._ensure_open()
         request = self.session.post(
             self.construct_url(api_method_uri, query=kwargs), data=body
         )
@@ -408,6 +446,7 @@ class Client:
         :raises ImportError: If selenium is not installed.
         :raises RuntimeError: If authentication fails.
         """
+        self._ensure_open()
         auth_url = self.generate_auth_url("http://localhost:8089/")
 
         driver = None
