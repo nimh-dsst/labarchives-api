@@ -83,6 +83,10 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
     @override
     def __iter__(self) -> Iterator[str]:
         return iter([c.name for c in self._notebooks])
+    
+    @override
+    def __reversed__(self) -> Iterator[str]:
+        return reversed([c.name for c in self._notebooks])
 
     @override
     def __len__(self) -> int:

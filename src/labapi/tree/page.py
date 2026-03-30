@@ -63,6 +63,11 @@ class NotebookPage(AbstractTreeNode):
         This property lazily loads the entries from the LabArchives API if they
         have not been loaded yet.
 
+        .. note::
+           Slicing on the returned collection provides snapshots.
+           Iterators are also snapshots and are therefore 
+           insulated from later collection mutations.
+
         :returns: An :class:`~labapi.entry.Entries` object managing the page's entries.
         """
         if self._entries is None:

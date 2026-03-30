@@ -50,7 +50,7 @@ class TestEntriesUnit:
         assert entries[1].id == "eid_2"
 
     def test_entries_getitem_by_slice(self):
-        """Test Entries.__getitem__ with slice."""
+        """Test Entries.__getitem__ with slice returns list snapshot."""
         mock_user = Mock(spec=User)
         mock_page = Mock()
 
@@ -61,6 +61,7 @@ class TestEntriesUnit:
         entries = Entries([entry1, entry2, entry3], mock_user, mock_page)
 
         sliced = entries[0:2]
+        assert isinstance(sliced, list)
         assert len(sliced) == 2
         assert sliced[0].id == "eid_1"
         assert sliced[1].id == "eid_2"
@@ -78,6 +79,44 @@ class TestEntriesUnit:
 
         entry_ids = [entry.id for entry in entries]
         assert entry_ids == ["eid_1", "eid_2", "eid_3"]
+
+    def test_entries_iter_snapshot_stable_after_mutation(self):
+        """Entries iteration should remain stable after later mutations."""
+        mock_user = Mock(spec=User)
+        mock_page = Mock()
+
+        entry1 = TextEntry("eid_1", "<p>Entry 1</p>", mock_user)
+        entry2 = HeaderEntry("eid_2", "<h1>Header</h1>", mock_user)
+        entry3 = PlainTextEntry("eid_3", "Plain text", mock_user)
+
+        entries = Entries([entry1, entry2], mock_user, mock_page)
+        iterator = iter(entries)
+
+        assert next(iterator).id == "eid_1"
+
+        entries._entries.append(entry3)  # pyright: ignore[reportPrivateUsage]
+        assert next(iterator).id == "eid_2"
+        with pytest.raises(StopIteration):
+            next(iterator)
+
+    def test_entries_reversed_snapshot_stable_after_mutation(self):
+        """Reverse iteration should remain stable after later mutations."""
+        mock_user = Mock(spec=User)
+        mock_page = Mock()
+
+        entry1 = TextEntry("eid_1", "<p>Entry 1</p>", mock_user)
+        entry2 = HeaderEntry("eid_2", "<h1>Header</h1>", mock_user)
+        entry3 = PlainTextEntry("eid_3", "Plain text", mock_user)
+
+        entries = Entries([entry1, entry2], mock_user, mock_page)
+        iterator = reversed(entries)
+
+        assert next(iterator).id == "eid_2"
+
+        entries._entries.append(entry3)  # pyright: ignore[reportPrivateUsage]
+        assert next(iterator).id == "eid_1"
+        with pytest.raises(StopIteration):
+            next(iterator)
 
 
 class TestEntriesIntegration:

@@ -205,6 +205,25 @@ class TestNotebooksIntegration:
         assert api_call[1]["name"] == "New Notebook"
         assert api_call[1]["initial_folders"] == "Empty"
 
+    def test_notebooks_name_index_snapshot_stable_after_mutation(
+        self, client, notebooks: Notebooks
+    ):
+        """Previously returned name-index snapshots should not change after create."""
+        snapshot = notebooks[Index.Name : "Test Notebook 3"]
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <notebooks>
+            <nbid>new_nb_id_for_snapshot_test</nbid>
+        </notebooks>
+        """
+        notebooks.create_notebook("Test Notebook 3")
+
+        assert len(snapshot) == 2
+        assert all(nb.id in {"testnb2", "testnb3"} for nb in snapshot)
+
+        latest = notebooks[Index.Name : "Test Notebook 3"]
+        assert len(latest) == 3
+
     def test_notebooks_create_notebook_duplicate_id_raises(
         self, client, notebooks: Notebooks
     ):

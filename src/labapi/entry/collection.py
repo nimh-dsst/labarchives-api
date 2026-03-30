@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from datetime import datetime
 from io import BytesIO
 from json import dumps
@@ -53,8 +53,12 @@ class Entries(Sequence["Entry[Any]"]):
         return self._entries[index]
 
     @override
-    def __iter__(self):
-        return iter(self._entries)
+    def __iter__(self) -> Iterator[Entry[Any]]:
+        return iter(tuple(self._entries))
+
+    @override
+    def __reversed__(self) -> Iterator[Entry[Any]]:
+        return reversed(tuple(self._entries))
 
     @override
     def __len__(self):
