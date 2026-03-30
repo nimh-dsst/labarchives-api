@@ -46,41 +46,4 @@ class TestNotebookIntegration:
         assert api_call[1]["name"] == "Updated Notebook Name"
         assert notebook.name == "Updated Notebook Name"
 
-    def test_notebook_inserts_from_bottom(self, client, notebook: Notebook):
-        """Test Notebook.inserts_from_bottom lazy loads from API."""
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <notebooks>
-            <notebook>
-                <id>testnb1</id>
-                <add-entry-to-page-top type="boolean">false</add-entry-to-page-top>
-            </notebook>
-        </notebooks>
-        """
 
-        client.clear_log()
-
-        result = notebook.inserts_from_bottom
-
-        assert result is True
-
-        api_call = client.api_log
-        assert api_call[0] == "notebooks/notebook_info"
-        assert api_call[1]["nbid"] == "testnb1"
-
-    def test_notebook_inserts_from_bottom_caching(self, client, notebook: Notebook):
-        """Test Notebook.inserts_from_bottom caches the result."""
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <notebooks>
-            <notebook>
-                <id>testnb1</id>
-                <add-entry-to-page-top type="boolean">true</add-entry-to-page-top>
-            </notebook>
-        </notebooks>
-        """
-
-        result1 = notebook.inserts_from_bottom
-        client.clear_log()
-
-        result2 = notebook.inserts_from_bottom
-
-        assert result1 is result2

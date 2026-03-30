@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from labapi.util import extract_etree, to_bool
 
 from .mixins import AbstractTreeContainer, HasNameMixin
 
@@ -40,7 +39,6 @@ class Notebook(AbstractTreeContainer):
         self._id = init.id
         self._is_default = init.is_default
         self._notebooks = notebooks
-        self._inserts_from_bottom: bool | None = None
 
     @property
     @override
@@ -70,22 +68,3 @@ class Notebook(AbstractTreeContainer):
         :returns: True if the notebook is the default, False otherwise.
         """
         return self._is_default
-
-    @property
-    def inserts_from_bottom(self) -> bool:
-        """Determines whether new entries are inserted at the bottom of pages in this notebook.
-
-        This property fetches the setting from the LabArchives API if it hasn't
-        been loaded yet.
-
-        :returns: True if new entries are inserted at the bottom, False if at the top.
-        """
-        if (
-            self._inserts_from_bottom is None
-        ):  # XXX we can probably get this on init, should we?
-            self._inserts_from_bottom = not extract_etree(
-                self._user.api_get("notebooks/notebook_info", nbid=self.id),
-                {"notebook": {"add-entry-to-page-top": to_bool}},
-            )["add-entry-to-page-top"]
-
-        return self._inserts_from_bottom
