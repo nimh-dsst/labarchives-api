@@ -120,6 +120,41 @@ class TestTreeMixinsIntegration:
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["parent_tree_id"] == folder_a.tree_id
 
+    def test_move_to_self_raises_without_api_call(self, client, notebook_tree: Notebook):
+        """Test move_to rejects moving a directory into itself locally."""
+        folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
+
+        with pytest.raises(ValueError, match="Cannot move a node to itself"):
+            folder_a.move_to(folder_a)
+
+        assert client._api_logs == []  # pyright: ignore[reportPrivateUsage]
+
+    def test_move_to_descendant_raises_without_api_call(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test move_to rejects moving a directory into a descendant locally."""
+        source_dir = notebook_tree[Index.Id : "dir-2"].as_dir()
+        descendant_dir = source_dir[Index.Id : "dir-2-1"].as_dir()
+
+        with pytest.raises(
+            ValueError, match="Cannot move a directory into one of its descendants"
+        ):
+            source_dir.move_to(descendant_dir)
+
+        assert client._api_logs == []  # pyright: ignore[reportPrivateUsage]
+
+    def test_move_to_other_notebook_raises_without_api_call(
+        self, client, notebook_tree: Notebook, notebooks
+    ):
+        """Test move_to rejects cross-notebook moves locally."""
+        page = notebook_tree[Index.Id : "page-1"]
+        other_notebook = notebooks[Index.Id : "testnb2"]
+
+        with pytest.raises(ValueError, match="Cannot move a node across notebooks"):
+            page.move_to(other_notebook)
+
+        assert client._api_logs == []  # pyright: ignore[reportPrivateUsage]
+
     def test_delete(self, client, notebook_tree: Notebook):
         """Test deleting a node (moving to API Deleted Items)."""
         page = notebook_tree[Index.Id : "page-1"].as_page()

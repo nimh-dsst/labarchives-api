@@ -279,6 +279,15 @@ class AbstractTreeNode(AbstractBaseTreeNode):
         :param destination: The target container to move the node to.
         :returns: The instance of the moved node.
         """
+        if destination is self:
+            raise ValueError("Cannot move a node to itself")
+
+        if isinstance(self, AbstractTreeContainer) and self.is_parent_of(destination):
+            raise ValueError("Cannot move a directory into one of its descendants")
+
+        if destination.root is not self.root:
+            raise ValueError("Cannot move a node across notebooks")
+
         self._user.api_get(
             "tree_tools/update_node",
             nbid=self.root.id,
