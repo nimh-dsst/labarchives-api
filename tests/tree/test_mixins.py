@@ -7,7 +7,7 @@ from datetime import timedelta
 import pytest
 
 from labapi import Index, Notebook, NotebookDirectory, NotebookPage
-from labapi.exceptions import NodeExistsError, TraversalError
+from labapi.exceptions import NodeExistsError, TraversalError, TreeChildParseError
 from labapi.tree.mixins import (
     AbstractTreeContainer,
 )
@@ -244,6 +244,36 @@ class TestTreeMixinsIntegration:
         assert any(
             child.name == "Snapshot Test Page" for child in notebook_tree.children
         )
+
+    def test_children_parse_failure_has_context(self, client, notebook_tree: Notebook):
+        """Test malformed tree children raise errors with container and node context."""
+        dir_1 = notebook_tree[Index.Id : "dir-1"].as_dir()
+        dir_1._populated = False
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <level-nodes type="array">
+                <level-node>
+                    <is-page type="boolean">false</is-page>
+                    <tree-id>broken-child</tree-id>
+                    <display-text />
+                </level-node>
+            </level-nodes>
+        </tree-tools>
+        """
+
+        with pytest.raises(
+            TreeChildParseError,
+            match=(
+                r"Could not parse tree child at /tree-tools/level-nodes/level-node "
+                r"for parent tree_id='dir-1'"
+            ),
+        ):
+            _ = dir_1.children
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/get_tree_level"
+        assert api_call[1]["parent_tree_id"] == "dir-1"
 
     def test_enumeration(self, notebook_tree: Notebook):
         """Test enumerate_all, enumerate_dirs, and enumerate_pages."""

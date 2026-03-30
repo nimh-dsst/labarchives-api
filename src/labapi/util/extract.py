@@ -10,6 +10,8 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Any
 
+from labapi.exceptions import ExtractionError
+
 if TYPE_CHECKING:
     from lxml.etree import Element
 
@@ -82,26 +84,31 @@ def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]
                    Keys are XML element tags (or paths), and values are either
                    nested `EtreeExtractorDict` or callable functions to process the text.
     :returns: A dictionary containing the extracted and processed data.
-    :raises ValueError: If an element specified in the format is not found in the etree,
-                        or if a callable extractor fails to process a value.
+    :raises ExtractionError: If an element specified in the format is not found in the etree,
+                             or if a callable extractor fails to process a value.
     """
     flat = _flatten_dict(format)
 
     items: dict[str, Any] = {}
+    etree_path = _etree.getroottree().getpath(_etree)
 
     for key, mapper in flat.items():
-        value = _etree.findtext(f"./{key}")
+        query_path = f"./{key}"
+        value = _etree.findtext(query_path)
 
         if (
             value is None
         ):  # XXX should we collate errors and return at end with the dict or?
-            raise ValueError(f"Could not find value for './{key}'")
+            raise ExtractionError(
+                f"Could not find value for {query_path!r} while parsing element at {etree_path}"
+            )
 
         try:
             items[key.split("/")[-1]] = mapper(value)
         except ValueError as err:
-            raise ValueError(
-                f"Could not map value {value} with {mapper.__name__} for './{key}'"
+            raise ExtractionError(
+                f"Could not map value {value!r} with {mapper.__name__} for "
+                f"{query_path!r} while parsing element at {etree_path}"
             ) from err
 
     return items

@@ -33,3 +33,11 @@ class NodeExistsError(LabArchivesError):
 
 class TraversalError(LabArchivesError):
     """Path traversal failed — an intermediate segment is not a directory."""
+
+
+class ExtractionError(LabArchivesError, ValueError):
+    """Structured parse/extraction failure while reading XML data."""
+
+
+class TreeChildParseError(ExtractionError):
+    """A tree child node could not be parsed from a tree-level response."""

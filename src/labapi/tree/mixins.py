@@ -22,7 +22,7 @@ from collections.abc import (
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Literal, Self, Type, TypeVar, cast, overload, override
 
-from labapi.exceptions import NodeExistsError, TraversalError
+from labapi.exceptions import ExtractionError, NodeExistsError, TraversalError, TreeChildParseError
 from labapi.util import (
     IdIndex,
     IdOrNameIndex,
@@ -384,14 +384,21 @@ class AbstractTreeContainer(
             nodes: list[AbstractTreeNode] = []
 
             for subtree in xml_tree.iterfind(".//level-node"):
-                node = extract_etree(
-                    subtree,
-                    {
-                        "is-page": to_bool,
-                        "tree-id": str,
-                        "display-text": str,
-                    },
-                )  # TODO do we want to handle errors here?
+                subtree_path = subtree.getroottree().getpath(subtree)
+                try:
+                    node = extract_etree(
+                        subtree,
+                        {
+                            "is-page": to_bool,
+                            "tree-id": str,
+                            "display-text": str,
+                        },
+                    )
+                except ExtractionError as err:
+                    raise TreeChildParseError(
+                        "Could not parse tree child at "
+                        f"{subtree_path} for parent tree_id={self.tree_id!r}"
+                    ) from err
 
                 args = (
                     node["tree-id"],
