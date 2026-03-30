@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from os import getenv
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from lxml.etree import XMLSyntaxError
@@ -256,6 +256,18 @@ class TestClientUnit:
 
         with pytest.raises(XMLSyntaxError):
             client.api_post("entries/add_entry", {"entry_data": "<p>Hello</p>"})
+
+    def test_default_authenticate_warns_when_no_browser_detected(self, capsys):
+        """Test warning path when no compatible browser is detected."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client.collect_auth_response = Mock(return_value=Mock(spec=User))
+
+        with patch("labapi.client.default_browser", None):
+            client.default_authenticate()
+
+        captured = capsys.readouterr()
+        assert "WARNING: No compatible browser detected" in captured.out
+        assert "Open authentication URL in your browser:" in captured.out
 
     def test_stream_api_get_yields_chunks_and_returns_response(self):
         """Test stream_api_get yields streamed chunks and returns the response."""

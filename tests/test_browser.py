@@ -68,7 +68,7 @@ def test_browser_detection_fallback_list(mock_installed_browsers):
 
 
 def test_browser_detection_terminal_fallback(mock_installed_browsers):
-    """Test fallback to 'terminal' when no compatible browser is found."""
+    """Test no-browser sentinel when no compatible browser is found."""
     mock_installed_browsers["what_is_the_default_browser"].return_value = None
     mock_installed_browsers["browsers"].return_value = []
 
@@ -77,12 +77,22 @@ def test_browser_detection_terminal_fallback(mock_installed_browsers):
             del sys.modules["labapi.browser"]
         import labapi.browser
 
-        assert labapi.browser.default_browser == "terminal"
+        assert labapi.browser.default_browser is None
 
 
 def test_browser_detection_import_error():
-    """Test fallback to 'terminal' when installed_browsers cannot be imported."""
+    """Test no-browser sentinel when installed_browsers cannot be imported."""
     with patch.dict("sys.modules", {"installed_browsers": None}):
+        if "labapi.browser" in sys.modules:
+            del sys.modules["labapi.browser"]
+        import labapi.browser
+
+        assert labapi.browser.default_browser is None
+
+
+def test_browser_detection_explicit_terminal_override(mock_installed_browsers):
+    """Test terminal override from LA_AUTH_BROWSER."""
+    with patch("os.getenv", return_value="terminal"):
         if "labapi.browser" in sys.modules:
             del sys.modules["labapi.browser"]
         import labapi.browser

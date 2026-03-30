@@ -435,7 +435,7 @@ class Client:
                 case "terminal":
                     print("Open authentication URL in your browser:")
                     print(auth_url)
-                case _:
+                case None:
                     print(
                         "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
                     )
