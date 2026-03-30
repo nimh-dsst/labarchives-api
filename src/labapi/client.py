@@ -397,9 +397,7 @@ class Client:
         :raises RuntimeError: If the API request fails or the response is not valid XML.
         """
 
-        return fromstring(
-            bytes(self.raw_api_get(api_method_uri, **kwargs).text, encoding="utf-8")
-        )
+        return fromstring(self.raw_api_get(api_method_uri, **kwargs).content)
 
     def api_post(
         self,
@@ -421,11 +419,7 @@ class Client:
         :raises RuntimeError: If the API request fails or the response is not valid XML.
         """
 
-        return fromstring(
-            bytes(
-                self.raw_api_post(api_method_uri, body, **kwargs).text, encoding="utf-8"
-            )
-        )
+        return fromstring(self.raw_api_post(api_method_uri, body, **kwargs).content)
 
     def default_authenticate(self) -> User:
         """

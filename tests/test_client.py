@@ -137,6 +137,38 @@ class TestClientUnit:
         assert "redirect_uri=http%3A%2F%2Flocalhost%3A8089%2F" in auth_url
         assert "akid=test_akid" in auth_url
 
+    def test_client_api_get_parses_raw_response_bytes(self):
+        """Test Client.api_get parses response.content rather than re-encoded text."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        response = Response()
+        response.status_code = 200
+        response.encoding = "iso-8859-1"
+        response._content = (
+            b'<?xml version="1.0" encoding="ISO-8859-1"?>'
+            b"<root><value>caf\xe9</value></root>"
+        )
+        client.raw_api_get = Mock(return_value=response)  # pyright: ignore[reportAttributeAccessIssue]
+
+        result = client.api_get("test_endpoint")
+
+        assert result.findtext("./value") == "café"
+
+    def test_client_api_post_parses_raw_response_bytes(self):
+        """Test Client.api_post parses response.content rather than re-encoded text."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        response = Response()
+        response.status_code = 200
+        response.encoding = "iso-8859-1"
+        response._content = (
+            b'<?xml version="1.0" encoding="ISO-8859-1"?>'
+            b"<root><value>caf\xe9</value></root>"
+        )
+        client.raw_api_post = Mock(return_value=response)  # pyright: ignore[reportAttributeAccessIssue]
+
+        result = client.api_post("test_endpoint", {"data": "test"})
+
+        assert result.findtext("./value") == "café"
+
     def test_client_handle_request_status_success(self):
         """Test Client._handle_request_status with successful response."""
         response = Mock(spec=Response)
