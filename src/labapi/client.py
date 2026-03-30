@@ -131,7 +131,15 @@ class Client:
                 "ACCESS_KEYID or ACCESS_PWD environment variables not set, and parameters were not provided."
             )
 
-        self._base_url = urlsplit(base_url).geturl()
+        parsed_base_url = urlsplit(base_url)
+        normalized_base_url = parsed_base_url.geturl()
+        if parsed_base_url.scheme not in {"http", "https"} or not parsed_base_url.netloc:
+            raise AuthenticationError(
+                "Invalid API_URL/base_url: expected a full HTTP(S) URL such as "
+                "'https://api.labarchives.com'."
+            )
+
+        self._base_url = normalized_base_url
         self._akid = akid
         self._hmac = HMAC(
             bytes(akpass, "utf8") if isinstance(akpass, str) else akpass, SHA512()

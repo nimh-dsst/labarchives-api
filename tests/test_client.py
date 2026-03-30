@@ -328,6 +328,16 @@ class TestClientUnit:
         assert client._base_url == "https://custom.api.com"
         assert client._akid == "my_akid"
 
+    def test_client_initialization_rejects_non_http_scheme(self):
+        """Test Client initialization rejects unsupported base URL schemes."""
+        with pytest.raises(AuthenticationError, match="expected a full HTTP\\(S\\) URL"):
+            Client("ftp://api.test.com", "test_akid", "test_password")
+
+    def test_client_initialization_rejects_malformed_base_url(self):
+        """Test Client initialization rejects malformed base URLs."""
+        with pytest.raises(AuthenticationError, match="API_URL/base_url"):
+            Client("not-a-url", "test_akid", "test_password")
+
     def test_client_initialization_from_env_vars(self, monkeypatch):
         """Test Client initialization reads from environment variables."""
         monkeypatch.setenv("ACCESS_KEYID", "test_akid")
