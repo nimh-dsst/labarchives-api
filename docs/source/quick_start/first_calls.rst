@@ -117,9 +117,13 @@ Once you have a :class:`~labapi.user.User` object, you can access your notebooks
    # Get a notebook by name
    notebook = user.notebooks["My Notebook"]
 
-   # Or list all your notebooks
+   # Or list all your notebook names
    for notebook_name in user.notebooks:
        print(notebook_name)
+
+   # Use values() when you need Notebook objects instead of names
+   for notebook in user.notebooks.values():
+       print(notebook.name, notebook.id)
 
 
 

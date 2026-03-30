@@ -69,9 +69,9 @@ Example Flask App
         # Log the user in and get the user object
         user = client.login(email, auth_code)
 
-        # Now you can use the user object to make API calls, or save the user object in a session
-        notebooks = user.notebooks
-        return f"Logged in as {user.id}. Notebooks: {[n.name for n in notebooks]}"
+        # Iterate over user.notebooks for names, or use values() for Notebook objects
+        notebook_names = list(user.notebooks)
+        return f"Logged in as {user.id}. Notebooks: {notebook_names}"
 
     if __name__ == "__main__":
         app.run(port=8080)
