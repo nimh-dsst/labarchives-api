@@ -21,13 +21,20 @@ Install the package with its development dependencies using ``uv``:
 Running Tests
 -------------
 
-The test suite is split into unit tests and integration tests.
+The test suite is split into unit tests and integration tests. Plain ``pytest`` deselects integration tests by
+default
+
+To run the full suite, including integration tests:
+
+.. code-block:: bash
+
+    pytest --integration
 
 Unit tests
 ~~~~~~~~~~
 
 Unit tests use a ``MockClient`` that replays pre-recorded API responses, so
-they run entirely offline:
+they run entirely offline. 
 
 .. code-block:: bash
 
@@ -66,10 +73,7 @@ Run them explicitly:
 
 .. code-block:: bash
 
-    pytest tests/test_integration.py
-
-They are excluded from the default ``pytest`` run when credentials are absent
-(the fixture calls ``pytest.skip`` automatically).
+        pytest --integration tests/test_integration.py
 
 Code Style
 ----------
