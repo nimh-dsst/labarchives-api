@@ -9,6 +9,7 @@ including custom authentication, specialized entry types, and direct API access.
 .. toctree::
   :maxdepth: 2
 
+  limitations
   auth
   entries
   json_entries

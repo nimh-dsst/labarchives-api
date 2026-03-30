@@ -222,4 +222,9 @@ nodes or strings, combined with ``/``, and converted back to strings. It is used
 
     page_path.is_relative_to(folder)   # True if page is inside folder
     page_path.is_relative_to(notebook) # True (everything is inside the notebook)
+    
+Related Pages
+-------------
+
+* :ref:`limitations`
 

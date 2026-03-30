@@ -186,9 +186,10 @@ and add entries programmatically rather than using ``copy_to()``:
 
 This approach gives you more control and avoids potential issues with unsupported entry types.
 
-See Also
---------
+Related Pages
+-------------
 
-* :ref:`delete` - For information on moving pages to the deleted items directory
-* :doc:`navigating` - For details on navigating to source and destination locations
-* :doc:`creating_pages` - For creating new pages instead of copying
+* :ref:`limitations` - Centralized capability and caveat summary.
+* :ref:`delete` - Information on moving pages to the deleted items directory.
+* :doc:`navigating` - Details on navigating to source and destination locations.
+* :doc:`creating_pages` - Creating new pages instead of copying.

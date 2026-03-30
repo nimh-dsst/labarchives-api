@@ -165,3 +165,8 @@ The following data is cached and will be cleared by ``refresh()``:
 
 * User authentication state
 * Notebook metadata accessed through :class:`~labapi.user.User`
+
+Related Pages
+-------------
+
+* :ref:`limitations`

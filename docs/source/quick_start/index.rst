@@ -17,3 +17,8 @@ and performing basic operations like creating pages and navigating notebooks.
   writing_rich_text
   copying
   deleting
+
+Related Pages
+-------------
+
+* :ref:`limitations`
