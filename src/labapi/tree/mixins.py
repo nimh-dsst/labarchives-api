@@ -676,9 +676,9 @@ class AbstractTreeContainer(
                 nbid=self.root.id,
                 parent_tree_id=self.tree_id,
                 display_text=path.name,
-                is_folder="false"
-                if cls.__name__ == "NotebookPage"
-                else "true",  # TODO make more resilient
+                is_folder=(
+                    "true" if issubclass(cls, AbstractTreeContainer) else "false"
+                ),
             )
 
             tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
