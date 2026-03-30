@@ -30,7 +30,15 @@ The :func:`~labapi.util.extract.extract_etree` function allows you to define a "
 
    from labapi.util.extract import extract_etree, to_bool
 
-   # Define what we want to extract from the <notebook> element
+   # XML that this format_dict maps:
+   # <notebooks>
+   #   <notebook>
+   #     <name>Demo Notebook</name>
+   #     <id>12345.6</id>
+   #     <is-student>false</is-student>
+   #     <signing>standard</signing>
+   #   </notebook>
+   # </notebooks>
    format_dict = {
        "notebook": {
            "name": str,
