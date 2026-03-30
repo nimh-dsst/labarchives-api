@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 import pytest
 
 from labapi import Index, Notebook, NotebookDirectory, NotebookPage
@@ -230,6 +232,38 @@ class TestTreeMixinsIntegration:
         pages = notebook_tree.enumerate_pages(depth=2)
         assert "Test Page 1" in pages
         assert "Test Folder A/Dir1 Test Page A" in pages
+
+    def test_enumeration_warns_on_timeout(self, notebook_tree: Notebook, monkeypatch):
+        """Test enumerate_* emits warnings when traversal times out."""
+        monotonic_values = iter([0.0, 1.0, 1.1, 1.2])
+        monkeypatch.setattr(
+            "labapi.tree.mixins.time.monotonic", lambda: next(monotonic_values)
+        )
+
+        with pytest.warns(RuntimeWarning, match="partial"):
+            all_items = notebook_tree.enumerate_all(timeout=timedelta(seconds=0))
+        assert all_items == []
+
+        monotonic_values = iter([0.0, 1.0, 1.1, 1.2])
+        monkeypatch.setattr(
+            "labapi.tree.mixins.time.monotonic", lambda: next(monotonic_values)
+        )
+        with pytest.warns(RuntimeWarning, match="partial"):
+            dirs = notebook_tree.enumerate_dirs(timeout=timedelta(seconds=0))
+        assert dirs == []
+
+        monotonic_values = iter([0.0, 1.0, 1.1, 1.2])
+        monkeypatch.setattr(
+            "labapi.tree.mixins.time.monotonic", lambda: next(monotonic_values)
+        )
+        with pytest.warns(RuntimeWarning, match="partial"):
+            pages = notebook_tree.enumerate_pages(timeout=timedelta(seconds=0))
+        assert pages == []
+
+    def test_enumeration_raise_on_timeout(self, notebook_tree: Notebook, monkeypatch):
+        """Raise mode is no longer supported in enumeration APIs."""
+        with pytest.raises(TypeError):
+            notebook_tree.enumerate_all(on_truncation="raise")  # pyright: ignore[reportCallIssue]
 
     def test_create_page(self, client, notebook_tree: Notebook):
         """Test creating a new page."""
