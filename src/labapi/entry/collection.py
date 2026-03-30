@@ -127,7 +127,11 @@ class Entries(Sequence["Entry[Any]"]):
         :raises RuntimeError: If the API call to create the entry fails.
         """
         if issubclass(cls, AttachmentEntry):
-            assert isinstance(data, Attachment)
+            if not isinstance(data, Attachment):
+                raise TypeError(
+                    f"{cls.__name__} requires Attachment data, got "
+                    f"{type(data).__name__}"
+                )
             entry_tree = self._user.api_post(
                 "entries/add_attachment",
                 data._backing,  # pyright: ignore[reportPrivateUsage, reportArgumentType]
@@ -143,7 +147,10 @@ class Entries(Sequence["Entry[Any]"]):
             entry = cls(eid, data.caption, self._user)
 
         else:
-            assert isinstance(data, str)
+            if not isinstance(data, str):
+                raise TypeError(
+                    f"{cls.__name__} requires str data, got {type(data).__name__}"
+                )
             entry_tree = self._user.api_post(
                 "entries/add_entry",
                 {"entry_data": data},

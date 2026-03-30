@@ -303,17 +303,7 @@ class AbstractTreeNode(AbstractBaseTreeNode):
 
         :returns: The instance of the deleted node.
         """
-        api_deleted_items = self.root[Index.Name : "API Deleted Items"]
-
-        if len(api_deleted_items) == 0:
-            from .directory import NotebookDirectory
-
-            api_deleted_items = self.root.create(
-                NotebookDirectory, "API Deleted Items", if_exists=InsertBehavior.Retain
-            )
-        else:
-            api_deleted_items = api_deleted_items[0]
-            assert isinstance(api_deleted_items, AbstractTreeContainer)
+        api_deleted_items = self.root.dir("API Deleted Items")
 
         self.name = (
             f"{self.name} - Deleted at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
