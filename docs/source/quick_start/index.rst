@@ -9,6 +9,7 @@ and performing basic operations like creating pages and navigating notebooks. Co
 .. toctree::
   :maxdepth: 1
 
+  tutorial
   installation
   first_calls
   creating_pages

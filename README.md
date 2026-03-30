@@ -44,6 +44,10 @@ ACCESS_KEYID=your_access_key_id
 ACCESS_PWD=your_access_password
 ```
 
+## First Success Tutorial
+
+If you want a single copy/paste path from install to a visible result in LabArchives, start with the [First Success Tutorial](docs/source/quick_start/tutorial.rst).
+
 ## Usage
 
 ### Authentication
