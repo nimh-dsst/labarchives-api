@@ -104,10 +104,55 @@ class TestNotebooksUnit:
         ]
         notebooks = Notebooks(notebooks_init, mock_user)
 
-        values = list(notebooks.values())
+        values = notebooks.values()
 
         assert len(values) == 2
         assert all(isinstance(nb, Notebook) for nb in values)
+
+    def test_notebooks_mapping_methods_are_mapping_compatible(self):
+        """Test keys(), items(), and values() return mapping views."""
+        mock_user = Mock(spec=User)
+        notebooks_init = [
+            NotebookInit(id="nb1", name="Shared", is_default=True),
+            NotebookInit(id="nb2", name="Shared", is_default=False),
+            NotebookInit(id="nb3", name="Unique", is_default=False),
+        ]
+        notebooks = Notebooks(notebooks_init, mock_user)
+
+        keys = notebooks.keys()
+        assert set(keys) == {"Shared", "Unique"}
+
+        values = notebooks.values()
+        assert [notebook.id for notebook in values] == ["nb2", "nb3"]
+
+        items = notebooks.items()
+        assert [(name, notebook.id) for name, notebook in items] == [
+            ("Shared", "nb2"),
+            ("Unique", "nb3"),
+        ]
+
+    def test_notebooks_duplicate_mapping_methods_preserve_duplicate_names(self):
+        """Test duplicate_* methods preserve duplicate notebook names."""
+        mock_user = Mock(spec=User)
+        notebooks_init = [
+            NotebookInit(id="nb1", name="Shared", is_default=True),
+            NotebookInit(id="nb2", name="Shared", is_default=False),
+            NotebookInit(id="nb3", name="Unique", is_default=False),
+        ]
+        notebooks = Notebooks(notebooks_init, mock_user)
+
+        keys = notebooks.all_keys()
+        assert keys == ["Shared", "Shared", "Unique"]
+
+        values = notebooks.all_values()
+        assert [notebook.id for notebook in values] == ["nb1", "nb2", "nb3"]
+
+        items = notebooks.all_items()
+        assert [(name, notebook.id) for name, notebook in items] == [
+            ("Shared", "nb1"),
+            ("Shared", "nb2"),
+            ("Unique", "nb3"),
+        ]
 
 
 class TestNotebooksIntegration:

@@ -426,30 +426,36 @@ class AbstractTreeContainer(
 
     @override
     def keys(self) -> KeysView[str]:
-        """A view of the names of the children within this container.
-
-        :returns: A keys view of child names.
-        """
+        """A mapping-compatible view of child names."""
         self._ensure_populated()
         return KeysView({node.name: node for node in self.children})
 
     @override
     def items(self) -> ItemsView[str, AbstractBaseTreeNode]:
-        """A view of the names and child nodes within this container.
-
-        :returns: An items view of (name, node) pairs.
-        """
+        """A mapping-compatible view of ``(name, child)`` pairs."""
         self._ensure_populated()
         return ItemsView({node.name: node for node in self.children})
 
     @override
     def values(self) -> ValuesView[AbstractBaseTreeNode]:
-        """A view of the child nodes within this container.
-
-        :returns: A values view of child nodes.
-        """
+        """A mapping-compatible view of child nodes."""
         self._ensure_populated()
         return ValuesView({node.name: node for node in self.children})
+
+    def all_keys(self) -> Sequence[str]:
+        """A list of child names in container order, preserving duplicates."""
+        self._ensure_populated()
+        return tuple([node.name for node in self.children])
+
+    def all_items(self) -> Sequence[tuple[str, AbstractBaseTreeNode]]:
+        """A list of ``(name, child)`` tuples in container order, preserving duplicates."""
+        self._ensure_populated()
+        return tuple([(node.name, node) for node in self.children])
+
+    def all_values(self) -> Sequence[AbstractBaseTreeNode]:
+        """A list of child nodes in container order, preserving duplicates."""
+        self._ensure_populated()
+        return tuple(self.children)
 
     @overload
     def __getitem__(self, key: str) -> AbstractBaseTreeNode: ...

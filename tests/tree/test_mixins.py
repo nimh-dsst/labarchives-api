@@ -146,16 +146,42 @@ class TestTreeMixinsIntegration:
 
     def test_mapping_methods(self, notebook_tree: Notebook):
         """Test keys(), values(), and items() on a container."""
-        keys = list(notebook_tree.keys())
+        keys = notebook_tree.keys()
         assert "Test Folder A" in keys
         assert "Test Folder B" in keys
         assert "Test Page 1" in keys
 
-        values = list(notebook_tree.values())
+        values = notebook_tree.values()
         assert any(v.name == "Test Folder A" for v in values)
 
-        items = dict(notebook_tree.items())
-        assert items["Test Folder A"].id == "dir-1"
+        items = notebook_tree.items()
+        assert ("Test Folder A", notebook_tree[Index.Id : "dir-1"]) in items
+
+    def test_duplicate_mapping_methods_preserve_duplicate_names(
+        self, notebook_tree: Notebook
+    ):
+        """Test duplicate_* helpers preserve duplicate-name children."""
+        duplicate_page = NotebookPage(
+            "page-duplicate",
+            "Test Page 1",
+            notebook_tree,
+            notebook_tree,
+            notebook_tree.user,
+        )
+        notebook_tree._children.append(duplicate_page)  # pyright: ignore[reportPrivateUsage]
+
+        keys = notebook_tree.all_keys()
+        assert keys.count("Test Page 1") == 2
+
+        values = notebook_tree.all_values()
+        duplicate_ids = [node.id for node in values if node.name == "Test Page 1"]
+        assert duplicate_ids == ["page-1", "page-duplicate"]
+
+        items = notebook_tree.all_items()
+        duplicate_pairs = [
+            (name, node.id) for name, node in items if name == "Test Page 1"
+        ]
+        assert duplicate_pairs == [("Test Page 1", "page-1"), ("Test Page 1", "page-duplicate")]
 
     def test_children_returns_snapshot(self, client, notebook_tree: Notebook):
         """Test children returns an immutable snapshot instead of a live list."""

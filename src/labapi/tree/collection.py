@@ -90,7 +90,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
     @override
     def keys(self) -> KeysView[str]:
-        """A view of the names of the notebooks in the collection.
+        """A mapping-compatible view of notebook names.
 
         :returns: A keys view of notebook names.
         """
@@ -98,19 +98,31 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
     @override
     def items(self) -> ItemsView[str, Notebook]:
-        """A view of the names and notebook objects in the collection.
+        """A mapping-compatible view of ``(name, notebook)`` pairs.
 
-        :returns: An items view of (name, notebook) pairs.
+        :returns: An items view of ``(name, notebook)`` pairs.
         """
         return ItemsView({n.name: n for n in self._notebooks})
 
     @override
     def values(self) -> ValuesView[Notebook]:
-        """A view of the notebook objects in the collection.
+        """A mapping-compatible view of notebook objects.
 
         :returns: A values view of notebook objects.
         """
         return ValuesView({n.name: n for n in self._notebooks})
+
+    def all_keys(self) -> Sequence[str]:
+        """A list of notebook names in collection order, preserving duplicates."""
+        return tuple([n.name for n in self._notebooks])
+
+    def all_items(self) -> Sequence[tuple[str, Notebook]]:
+        """A list of ``(name, notebook)`` tuples in collection order, preserving duplicates."""
+        return tuple([(n.name, n) for n in self._notebooks])
+
+    def all_values(self) -> Sequence[Notebook]:
+        """A list of notebook objects in collection order, preserving duplicates."""
+        return tuple(self._notebooks)
 
     def create_notebook(self, name: str) -> Notebook:
         """Creates a new notebook in LabArchives.

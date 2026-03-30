@@ -31,6 +31,10 @@ By default, using a string as a key will look up an item by its name.
 
 .. note::
    If multiple items have the same name, the first match is returned.
+   The ``keys()``, ``items()``, and ``values()`` helpers on ``Notebooks`` and
+   tree containers follow standard mapping semantics.
+   Use ``all_keys()``, ``all_items()``, and ``all_values()``
+   when you need ordered, duplicate-preserving results.
 
 Explicit Indexing with Index
 ----------------------------
