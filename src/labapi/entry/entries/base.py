@@ -22,6 +22,10 @@ class Entry(ABC, Generic[T]):
     text entries, headers, attachments, and widgets. It uses a generic type
     parameter `T` to represent the content type of the entry.
 
+    LabArchives does not currently expose an API endpoint for deleting
+    individual entries, so this class intentionally does not provide a
+    ``delete()`` method.
+
     :param T: The type of content stored in the entry (e.g., str for text, Attachment for files).
     """
 

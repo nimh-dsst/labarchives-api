@@ -30,7 +30,6 @@ class TestEntryUnit:
         )
         assert AttachmentEntry("e", "", Mock(spec=User)).content_type == "Attachment"
 
-
 class TestEntryIntegration:
     """Integration tests with real objects and mocked API."""
 

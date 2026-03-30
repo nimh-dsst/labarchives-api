@@ -150,3 +150,7 @@ For attachments, setting the ``content`` property with a new :class:`~labapi.ent
    with open("updated_data.csv", "rb+") as f:
        new_attachment = Attachment.from_file(f)
        attachment_entry.content = new_attachment
+
+LabArchives does not currently expose an API endpoint for deleting individual
+page entries (text entries, attachments, headers, widgets, etc.), so ``labapi``
+does not provide entry-level deletion methods at this time.
