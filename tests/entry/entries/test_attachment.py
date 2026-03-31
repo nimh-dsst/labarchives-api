@@ -5,6 +5,7 @@ from __future__ import annotations
 from io import BytesIO
 from unittest.mock import Mock
 
+from labapi.client import StreamingResponse
 from labapi.entry.attachment import Attachment
 from labapi.entry.entries.attachment import AttachmentEntry
 from labapi.user import User
@@ -42,13 +43,8 @@ class TestAttachmentEntryIntegration:
             "Content-Disposition": 'attachment; filename="test.txt"',
         }
 
-        def mock_stream():
-            yield b"Test "
-            yield b"file "
-            yield b"content"
-            return mock_response
-
-        client.stream_api_get = Mock(return_value=mock_stream())
+        mock_response.iter_content.return_value = [b"Test ", b"file ", b"content"]
+        client.stream_api_get = Mock(return_value=StreamingResponse(mock_response))
 
         # Get attachment
         attachment = entry.get_attachment(use_tempfile=False)
@@ -78,11 +74,8 @@ class TestAttachmentEntryIntegration:
             "Content-Disposition": 'attachment; filename="document.pdf"',
         }
 
-        def mock_stream():
-            yield b"PDF content"
-            return mock_response
-
-        client.stream_api_get = Mock(return_value=mock_stream())
+        mock_response.iter_content.return_value = [b"PDF content"]
+        client.stream_api_get = Mock(return_value=StreamingResponse(mock_response))
 
         # Access content property
         attachment = entry.content
@@ -132,11 +125,8 @@ class TestAttachmentEntryIntegration:
             "Content-Disposition": 'attachment; filename="test.txt"',
         }
 
-        def mock_stream():
-            yield b"Content"
-            return mock_response
-
-        client.stream_api_get = Mock(return_value=mock_stream())
+        mock_response.iter_content.return_value = [b"Content"]
+        client.stream_api_get = Mock(return_value=StreamingResponse(mock_response))
 
         # First call
         attachment1 = entry.get_attachment()

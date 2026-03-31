@@ -16,7 +16,8 @@ from io import BufferedIOBase
 from operator import itemgetter
 from os import getenv
 from socketserver import TCPServer
-from typing import Any, Generator, Mapping, Self, Sequence, override
+from types import TracebackType
+from typing import Any, Generator, Self, Iterator, Mapping, Sequence, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cryptography.hazmat.primitives.hashes import SHA512
@@ -50,6 +51,54 @@ except ImportError:
 
 
 context = ssl.create_default_context()
+
+
+class StreamingResponse:
+    """Wrapper for streamed API responses.
+
+    Exposes both the chunk iterator and the underlying HTTP response object so
+    callers can read headers/status without relying on ``StopIteration.value``.
+    """
+
+    def __init__(self, response: Response):
+        self._response = response
+        self._closed = False
+
+    def __getattr__(self, name: str) -> Any:
+        """Proxy response attributes (e.g., ``headers`` / ``status_code``)."""
+        return getattr(self._response, name)
+
+    def __iter__(self) -> Iterator[bytes]:
+        """Iterate over response bytes in 1MiB chunks."""
+        try:
+            yield from self._response.iter_content(1024 * 1024)
+        finally:
+            self.close()
+
+    @property
+    def response(self) -> Response:
+        """The raw response object backing the stream."""
+        return self._response
+
+    def close(self) -> None:
+        """Close the underlying response and release its connection."""
+        if self._closed:
+            return
+        self._response.close()
+        self._closed = True
+
+    def __enter__(self) -> StreamingResponse:
+        """Enter a context that guarantees connection cleanup on exit."""
+        return self
+
+    def __exit__(
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
+    ) -> None:
+        """Close the stream when leaving a ``with`` block."""
+        self.close()
 
 
 class _313HTTPAdapter(HTTPAdapter):
@@ -278,7 +327,7 @@ class Client:
 
     def stream_api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any
-    ) -> Generator[bytes, None, Response]:
+    ) -> StreamingResponse:
         """
         Makes a GET request to the LabArchives API and returns the response as a byte stream.
 
@@ -288,27 +337,27 @@ class Client:
         :param api_method_uri: The API method URI (e.g., "get_file_attachment").
                                Can be a string or a sequence of strings representing path segments.
         :param kwargs: Additional query parameters to pass to the API method.
-        :yields: Chunks of bytes from the API response.
-        :returns: The full requests.Response object after the stream has been consumed.
+        :returns: A wrapper with both an iterable byte stream and the full requests.Response.
         :raises RuntimeError: If the API request fails.
         """
         self._ensure_open()
-        with self.session.get(
+        request = self.session.get(
             self.construct_url(api_method_uri, query=kwargs), stream=True
-        ) as request:
+        )
+        try:
             Client._handle_request_status(request)
+        except Exception:
+            request.close()
+            raise
 
-            for chunk in request.iter_content(1024 * 1024):
-                yield chunk
-
-            return request
+        return StreamingResponse(request)
 
     def stream_api_post(
         self,
         api_method_uri: str | Sequence[str],
         body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
-    ) -> Generator[bytes, None, Response]:
+    ) -> StreamingResponse:
         """
         Makes a POST request to the LabArchives API and returns the response as a byte stream.
 
@@ -319,20 +368,20 @@ class Client:
                                Can be a string or a sequence of strings representing path segments.
         :param body: The request body, which can be a mapping of form data or a file-like object.
         :param kwargs: Additional query parameters to pass to the API method.
-        :yields: Chunks of bytes from the API response.
-        :returns: The full requests.Response object after the stream has been consumed.
+        :returns: A wrapper with both an iterable byte stream and the full requests.Response.
         :raises RuntimeError: If the API request fails.
         """
         self._ensure_open()
-        with self.session.post(
+        request = self.session.post(
             self.construct_url(api_method_uri, query=kwargs), data=body, stream=True
-        ) as request:
+        )
+        try:
             Client._handle_request_status(request)
+        except Exception:
+            request.close()
+            raise
 
-            for chunk in request.iter_content(1024 * 1024):
-                yield chunk
-
-            return request
+        return StreamingResponse(request)
 
     def raw_api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any

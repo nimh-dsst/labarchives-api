@@ -54,33 +54,32 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
         #      to it
         # TODO: we should probably return a new temporary copy every time it's asked for, tbh?
         if self._filedata is None or self._filedata.closed:
-            attachment = self._user.client.stream_api_get(
-                "entries/entry_attachment", uid=self._user.id, eid=self.id
-            )
-
             if use_tempfile:
                 output = TemporaryFile()
             else:
                 output = BytesIO()
 
-            try:
-                while True:
-                    output.write(next(attachment))
-            except StopIteration as stopit:
-                response = stopit.value
+            with self._user.client.stream_api_get(
+                "entries/entry_attachment", uid=self._user.id, eid=self.id
+            ) as attachment_stream:
+                for chunk in attachment_stream:
+                    output.write(chunk)
 
-                msg = Message()
-                msg["Content-Type"] = (
-                    response.headers.get("Content-Type") or "application/octet-stream"
+            msg = Message()
+            msg["Content-Type"] = (
+                attachment_stream.headers.get("Content-Type")
+                or "application/octet-stream"
+            )
+            msg["Content-Disposition"] = attachment_stream.headers.get(
+                "Content-Disposition"
+            )
+            filename = msg.get_filename()
+            mime_type = msg.get_content_type()
+
+            if filename is None:
+                raise ApiError(
+                    "Could not determine filename from API response headers"
                 )
-                msg["Content-Disposition"] = response.headers.get("Content-Disposition")
-                filename = msg.get_filename()
-                mime_type = msg.get_content_type()
-
-                if filename is None:
-                    raise ApiError(
-                        "Could not determine filename from API response headers"
-                    )
 
             output.seek(0)
 

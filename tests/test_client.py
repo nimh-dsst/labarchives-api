@@ -351,47 +351,52 @@ class TestClientUnit:
         """Test stream_api_get yields streamed chunks and returns the response."""
         client = Client("https://api.test.com", "test_akid", "test_password")
         response = MagicMock(spec=Response)
-        response.__enter__.return_value = response
-        response.__exit__.return_value = None
         response.status_code = 200
+        response.headers = {"Content-Type": "application/octet-stream"}
         response.iter_content.return_value = [b"chunk-1", b"chunk-2"]
         client.session.get = Mock(return_value=response)
 
         stream = client.stream_api_get("attachments/download", eid="123")
-        chunks: list[bytes] = []
-
-        while True:
-            try:
-                chunks.append(next(stream))
-            except StopIteration as stop:
-                returned_response = stop.value
-                break
+        chunks = list(stream)
 
         assert chunks == [b"chunk-1", b"chunk-2"]
-        assert returned_response is response
+        assert stream.response is response
+        assert stream.headers == {"Content-Type": "application/octet-stream"}
 
     def test_stream_api_get_raises_api_error_before_yielding_chunks(self):
         """Test stream_api_get raises before yielding when the response is not OK."""
         client = Client("https://api.test.com", "test_akid", "test_password")
         response = MagicMock(spec=Response)
-        response.__enter__.return_value = response
-        response.__exit__.return_value = None
         response.status_code = 404
         response.url = "https://api.test.com/api/attachments/download"
         response.text = "Not Found"
         client.session.get = Mock(return_value=response)
 
         with pytest.raises(ApiError, match="API request failed with status code 404"):
-            next(client.stream_api_get("attachments/download", eid="123"))
+            client.stream_api_get("attachments/download", eid="123")
 
         response.iter_content.assert_not_called()
+        response.close.assert_called_once()
 
-    def test_stream_api_post_yields_chunks_and_returns_response(self):
-        """Test stream_api_post yields streamed chunks and returns the response."""
+    def test_stream_api_post_raises_api_error_and_closes_response(self):
+        """Test stream_api_post closes failed streamed responses before raising."""
         client = Client("https://api.test.com", "test_akid", "test_password")
         response = MagicMock(spec=Response)
-        response.__enter__.return_value = response
-        response.__exit__.return_value = None
+        response.status_code = 500
+        response.url = "https://api.test.com/api/attachments/upload"
+        response.text = "Internal Server Error"
+        client.session.post = Mock(return_value=response)
+
+        with pytest.raises(ApiError, match="API request failed with status code 500"):
+            client.stream_api_post("attachments/upload", {"entry_data": "test"}, eid="1")
+
+        response.iter_content.assert_not_called()
+        response.close.assert_called_once()
+
+    def test_stream_api_post_returns_streaming_response(self):
+        """Test stream_api_post returns an iterable wrapper with the response."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        response = MagicMock(spec=Response)
         response.status_code = 200
         response.iter_content.return_value = [b"chunk-1", b"chunk-2"]
         client.session.post = Mock(return_value=response)
@@ -399,17 +404,38 @@ class TestClientUnit:
         stream = client.stream_api_post(
             "attachments/upload", {"entry_data": "test"}, eid="123"
         )
-        chunks: list[bytes] = []
-
-        while True:
-            try:
-                chunks.append(next(stream))
-            except StopIteration as stop:
-                returned_response = stop.value
-                break
+        chunks = list(stream)
 
         assert chunks == [b"chunk-1", b"chunk-2"]
-        assert returned_response is response
+        assert stream.response is response
+
+    def test_streaming_response_closes_after_iteration(self):
+        """Test StreamingResponse closes the response when iteration completes."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        response = MagicMock(spec=Response)
+        response.status_code = 200
+        response.iter_content.return_value = [b"chunk-1"]
+        client.session.get = Mock(return_value=response)
+
+        stream = client.stream_api_get("attachments/download", eid="123")
+        assert list(stream) == [b"chunk-1"]
+
+        response.close.assert_called_once()
+
+    def test_streaming_response_supports_context_manager(self):
+        """Test StreamingResponse can be used as a context manager."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        response = MagicMock(spec=Response)
+        response.status_code = 200
+        response.iter_content.return_value = [b"chunk-1"]
+        client.session.get = Mock(return_value=response)
+
+        with client.stream_api_get("attachments/download", eid="123") as stream:
+            assert list(stream) == [b"chunk-1"]
+            assert stream.response is response
+
+        # Closing is idempotent even though both iterator and context manager clean up.
+        response.close.assert_called_once()
 
     def test_client_initialization_with_params(self):
         """Test Client initialization stores parameters correctly."""
