@@ -520,6 +520,13 @@ class Client:
                     print("Open authentication URL in your browser:")
                     print(auth_url)
                 case None:
+                    if not getenv("LA_AUTH_BROWSER", "").strip():
+                        warnings.warn(
+                            "Automatic browser detection requires the 'builtin-auth' extra: "
+                            "pip install 'labapi[builtin-auth]'\n"
+                            "Falling back to terminal-based authentication.",
+                            stacklevel=2,
+                        )
                     print(
                         "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
                     )

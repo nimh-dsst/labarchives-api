@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from datetime import datetime, timedelta
 from os import getenv
 from unittest.mock import MagicMock, Mock, patch
@@ -335,17 +336,37 @@ class TestClientUnit:
         with pytest.raises(XMLSyntaxError):
             client.api_post("entries/add_entry", {"entry_data": "<p>Hello</p>"})
 
-    def test_default_authenticate_warns_when_no_browser_detected(self, capsys):
+    def test_default_authenticate_warns_when_no_browser_detected(
+        self, capsys, monkeypatch
+    ):
         """Test warning path when no compatible browser is detected."""
         client = Client("https://api.test.com", "test_akid", "test_password")
         client.collect_auth_response = Mock(return_value=Mock(spec=User))
+        monkeypatch.delenv("LA_AUTH_BROWSER", raising=False)
 
         with patch("labapi.client.default_browser", None):
-            client.default_authenticate()
+            with pytest.warns(
+                UserWarning,
+                match="Automatic browser detection requires the 'builtin-auth' extra",
+            ):
+                client.default_authenticate()
 
         captured = capsys.readouterr()
         assert "WARNING: No compatible browser detected" in captured.out
         assert "Open authentication URL in your browser:" in captured.out
+
+    def test_default_authenticate_does_not_warn_when_terminal_is_explicit(
+        self, monkeypatch
+    ):
+        """Test no warning is shown when terminal auth is explicitly configured."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client.collect_auth_response = Mock(return_value=Mock(spec=User))
+        monkeypatch.setenv("LA_AUTH_BROWSER", "terminal")
+
+        with patch("labapi.client.default_browser", None):
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                client.default_authenticate()
 
     def test_stream_api_get_yields_chunks_and_returns_response(self):
         """Test stream_api_get yields streamed chunks and returns the response."""
