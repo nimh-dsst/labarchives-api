@@ -153,24 +153,42 @@ class NotebookPage(AbstractTreeNode):
 
         :param destination: The target container to copy the page to.
         :returns: A new instance of the copied page in the destination.
-        :raises AttributeError: If an unsupported entry type is encountered
-        """
-        # TODO: Add specific handling for attachment entries to work around
-        #   LabArchives renaming behavior
+        Copy behavior for attachments is explicit:
 
+        - attachment payloads are copied by reading and re-uploading the attachment content,
+        - attachment resources opened during copy are always released,
+        - any per-entry copy failure is reported via warning and that entry is skipped.
+
+        .. note::
+           This method is best-effort and may produce partial copies if one or more
+           entries fail while others succeed.
+
+        :raises RuntimeWarning: Emitted when an individual entry fails to copy.
+        """
         new_page = destination.create(
             NotebookPage, self.name, if_exists=InsertBehavior.Ignore
         )
 
         for entry in self.entries:
-            new_page.entries.create(
-                entry.__class__,
-                entry.content,
-            )
-
-            if isinstance(entry.content, Attachment):
-                # TODO release attachment
-                pass
+            entry_content: Any | None = None
+            try:
+                entry_content = entry.content
+                # Re-upload behavior is intentional: copy_to creates a new entry on the
+                # destination page using the source entry's runtime class and content.
+                # For attachments, Entries.create uploads the payload and returns a
+                # distinct destination attachment entry; it does not mutate the source
+                # entry or preserve source attachment IDs.
+                new_page.entries.create(entry.__class__, entry_content)
+            except Exception as exc:
+                warnings.warn(
+                    f"Failed to copy entry {entry.id!r} ({entry.content_type!r}) from page "
+                    f"{self.id!r} to page {new_page.id!r}: {exc}. This entry was skipped.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+            finally:
+                if isinstance(entry_content, Attachment):
+                    entry_content.close()
 
         return new_page
 
