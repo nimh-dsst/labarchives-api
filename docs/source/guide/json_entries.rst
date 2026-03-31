@@ -32,7 +32,7 @@ Example JSON Entry Creation
 .. code-block:: python
 
     from labapi import Client
-    from labapi.util import JsonData
+    from labapi import JsonData
 
     ...
 

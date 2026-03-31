@@ -14,6 +14,7 @@ import sys
 from io import BytesIO
 
 from labapi import (
+    Attachment,
     AttachmentEntry,
     Client,
     HeaderEntry,
@@ -21,9 +22,8 @@ from labapi import (
     NotebookPage,
     PlainTextEntry,
     TextEntry,
+    User,
 )
-from labapi.entry import Attachment
-from labapi.user import User
 
 
 def populate_notebook(notebook_name: str) -> None:

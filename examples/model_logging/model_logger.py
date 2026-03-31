@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Any, Sequence
 
 from labapi import (
+    Attachment,
     AttachmentEntry,
     Client,
     InsertBehavior,
@@ -18,7 +19,7 @@ from labapi import (
     NotebookPage,
     TextEntry,
 )
-from labapi.user import User
+from labapi import User
 
 
 class ModelLogger:
@@ -109,8 +110,6 @@ class ModelLogger:
 
         # 4. Log Results
         from io import BytesIO
-
-        from labapi.entry import Attachment
 
         results_attachment = Attachment(
             BytesIO(results),

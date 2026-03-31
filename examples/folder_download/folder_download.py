@@ -17,10 +17,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from labapi import Client
-from labapi.tree.mixins import AbstractTreeContainer
-from labapi.tree.page import NotebookPage
-from labapi.user import User
+from labapi import Client, AbstractTreeContainer, NotebookPage, User
 
 
 def sanitize_filename(name: str) -> str:

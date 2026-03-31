@@ -78,7 +78,7 @@ To get a single child by its unique ID, use :attr:`~labapi.util.types.Index.Id`:
 
 .. code-block:: python
 
-   from labapi.util import Index
+   from labapi import Index
 
    # Get a specific page by its ID
    page = notebook[Index.Id:"123.45"]
@@ -90,7 +90,7 @@ To get a list of all children that match a given name, use :attr:`~labapi.util.t
 
 .. code-block:: python
 
-   from labapi.util import Index
+   from labapi import Index
 
    # Get all pages named "Results"
    results_pages = notebook[Index.Name:"Results"]

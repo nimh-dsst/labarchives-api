@@ -28,7 +28,7 @@ The :func:`~labapi.util.extract.extract_etree` function allows you to define a "
 
 .. code-block:: python
 
-   from labapi.util.extract import extract_etree, to_bool
+   from labapi.util import extract_etree, to_bool
 
    # XML that this format_dict maps:
    # <notebooks>

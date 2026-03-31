@@ -57,7 +57,7 @@ To recover a deleted item, you can navigate to the "API Deleted Items" directory
 
 .. code-block:: python
 
-    from labapi.util import Index
+    from labapi import Index
 
     # Access the API Deleted Items directory
     deleted_items = notebook[Index.Name:"API Deleted Items"][0]

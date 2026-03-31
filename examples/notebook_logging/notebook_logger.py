@@ -21,6 +21,7 @@ from mimetypes import guess_type
 from typing import Any
 
 from labapi import (
+    Attachment,
     AttachmentEntry,
     Client,
     InsertBehavior,
@@ -28,9 +29,8 @@ from labapi import (
     NotebookPage,
     PlainTextEntry,
     TextEntry,
+    User,
 )
-from labapi.entry import Attachment
-from labapi.user import User
 
 try:
     from IPython import get_ipython

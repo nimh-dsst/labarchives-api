@@ -32,15 +32,17 @@ from .exceptions import (
     TraversalError,
 )
 from .tree import (
+    AbstractTreeContainer,
     Notebook,
     NotebookDirectory,
     NotebookPage,
 )
 from .user import User
-from .util import Index, InsertBehavior, NotebookPath
+from .util import Index, InsertBehavior, JsonData, NotebookPath
 
 __all__ = [
     "ApiError",
+    "AbstractTreeContainer",
     "Attachment",
     "AttachmentEntry",
     "AuthenticationError",
@@ -49,6 +51,7 @@ __all__ = [
     "HeaderEntry",
     "Index",
     "InsertBehavior",
+    "JsonData",
     "LabArchivesError",
     "Notebook",
     "NotebookDirectory",

@@ -17,14 +17,20 @@ import json
 import sys
 from pathlib import Path
 
-from labapi import Client, InsertBehavior
-from labapi.entry import AttachmentEntry
-from labapi.tree.mixins import AbstractTreeContainer
-from labapi.tree.page import NotebookPage
-from labapi.user import User
+from labapi import (
+    AttachmentEntry,
+    Client,
+    InsertBehavior,
+    AbstractTreeContainer,
+    NotebookDirectory,
+    NotebookPage,
+    User,
+)
 
 
-def get_or_create_page(container: AbstractTreeContainer, path: str) -> NotebookPage:
+def get_or_create_page(
+    container: AbstractTreeContainer, path: str
+) -> NotebookPage:
     """Return an existing page at ``path`` or create it with missing parents."""
     try:
         node = container.traverse(path)
