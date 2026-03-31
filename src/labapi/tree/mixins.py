@@ -184,8 +184,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
         :param path: The slash-separated path to the desired node (e.g., "My Folder/My Page" or "/Folder/Subfolder/Page").
         :returns: The :class:`AbstractTreeContainer` or :class:`AbstractTreeNode` found at the specified path.
-        :raises RuntimeError: If a segment in the path does not lead to a directory.
-        :raises KeyError: If a node at any segment of the path is not found.
+        :raises TraversalError: If traversal cannot continue through a segment.
         """
         canonical = NotebookPath(path) if isinstance(path, str) else path
         canonical = canonical.resolve(self.path)
@@ -199,9 +198,36 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
             if segment == "..":
                 curr = curr.parent
             elif isinstance(curr, AbstractTreeContainer):
-                curr = curr[segment]
+                try:
+                    curr = curr[segment]
+                except KeyError as exc:
+                    resolved_parent = (
+                        "/" if len(parsed_segments) == 1 else f"/{'/'.join(parsed_segments[:-1])}"
+                    )
+                    available_children = sorted(node.name for node in curr.children)
+                    raise TraversalError(
+                        (
+                            f'Unable to traverse "{canonical}" at segment "{segment}": '
+                            f'child "{segment}" not found in "{resolved_parent}"'
+                        ),
+                        path=str(canonical),
+                        segment=segment,
+                        parent=resolved_parent,
+                        available_children=available_children,
+                    ) from exc
             else:
-                raise TraversalError(f"{'/'.join(parsed_segments)} is not a directory")
+                resolved_parent = (
+                    "/" if len(parsed_segments) == 1 else f"/{'/'.join(parsed_segments[:-1])}"
+                )
+                raise TraversalError(
+                    (
+                        f'Unable to traverse "{canonical}" at segment "{segment}": '
+                        f'"{"/".join(parsed_segments)}" is not a directory'
+                    ),
+                    path=str(canonical),
+                    segment=segment,
+                    parent=resolved_parent,
+                )
 
         return curr
 
@@ -497,14 +523,19 @@ class AbstractTreeContainer(
                 for node in self.children:
                     if node.id == val:
                         return node
-                raise KeyError(f'Node with id "{val}" not found')
+                raise KeyError(
+                    f'Node with id "{val}" not found in "{self.path}"'
+                )
             case slice(start=Index.Name, stop=val):
                 return [node for node in self.children if node.name == val]
             case str():
                 for node in self.children:
                     if node.name == key:
                         return node
-                raise KeyError(f'Node with name "{key}" not found')
+                available_children = sorted(node.name for node in self.children)
+                raise KeyError(
+                    f'Child "{key}" not found in "{self.path}" (available: {available_children})'
+                )
             case _:
                 raise TypeError(
                     "Invalid key type. Use `str`, `Index.Id:<id>`, or `Index.Name:<name>`."

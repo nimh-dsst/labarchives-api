@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Iterator, overload, override
 
+from labapi.exceptions import PathError
+
 if TYPE_CHECKING:
     from labapi.tree.mixins import AbstractBaseTreeNode
 
@@ -52,12 +54,16 @@ class NotebookPath(Sequence[str]):
             ``part``. Segments are split on ``/`` and normalised.
         :param parent: An absolute path (or node) that anchors a relative
             string path for later resolution. Must be absolute.
-        :raises ValueError: If ``parent`` is not absolute.
+        :raises PathError: If ``parent`` is not absolute.
         """
         if parent is not None:
             self._parent = NotebookPath(parent)
             if not self._parent.is_absolute():
-                raise ValueError("parent path must be absolute")
+                raise PathError(
+                    "Parent path must be absolute",
+                    path=str(part),
+                    parent=str(self._parent),
+                )
         else:
             self._parent = None
 
@@ -127,7 +133,7 @@ class NotebookPath(Sequence[str]):
             path is already absolute or has a stored parent anchor.
         :param recurse: If ``True``, ``parent`` itself is resolved before use.
         :returns: A new absolute ``NotebookPath``.
-        :raises ValueError: If the path is relative and no parent is available
+        :raises PathError: If the path is relative and no parent is available
             to resolve against.
         """
         if self.is_absolute():
@@ -138,8 +144,9 @@ class NotebookPath(Sequence[str]):
                     parent.resolve() if recurse else parent, *self._parts
                 )
             else:
-                raise ValueError(
-                    "relative path cannot be resolved without an absolute parent"
+                raise PathError(
+                    "Cannot resolve relative path without an absolute parent",
+                    path=str(self),
                 )
         else:
             return NotebookPath(self._parent, *self._parts)
@@ -188,7 +195,7 @@ class NotebookPath(Sequence[str]):
 
         :param other: The ancestor path or tree node to relativise against.
         :returns: A relative ``NotebookPath`` from ``other`` to this path.
-        :raises ValueError: If this path is not located inside ``other``.
+        :raises PathError: If this path is not located inside ``other``.
         """
         # # TODO walk_up param
 
@@ -196,7 +203,11 @@ class NotebookPath(Sequence[str]):
             other = NotebookPath(other)
 
         if not self.is_relative_to(other):
-            raise ValueError(f'Path "{self}" is outside of "{other}"')
+            raise PathError(
+                f'Cannot compute relative path: "{self}" is outside of "{other}"',
+                path=str(self),
+                parent=str(other),
+            )
 
         if not other._absolute and other._parent is None:
             return NotebookPath(*self[len(other) :])

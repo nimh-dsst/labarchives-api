@@ -31,8 +31,38 @@ class NodeExistsError(LabArchivesError):
     """A tree node with the given name already exists (raised by InsertBehavior.Raise)."""
 
 
+class PathError(LabArchivesError):
+    """Path construction or resolution failed."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        path: str | None = None,
+        parent: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.path = path
+        self.parent = parent
+
+
 class TraversalError(LabArchivesError):
-    """Path traversal failed — an intermediate segment is not a directory."""
+    """Tree traversal failed."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        path: str | None = None,
+        segment: str | None = None,
+        parent: str | None = None,
+        available_children: list[str] | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.path = path
+        self.segment = segment
+        self.parent = parent
+        self.available_children = available_children
 
 
 class ExtractionError(LabArchivesError, ValueError):

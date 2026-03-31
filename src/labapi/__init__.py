@@ -29,6 +29,7 @@ from .exceptions import (
     AuthenticationError,
     LabArchivesError,
     NodeExistsError,
+    PathError,
     TraversalError,
 )
 from .tree import (
@@ -57,6 +58,7 @@ __all__ = [
     "NotebookDirectory",
     "NotebookPage",
     "NodeExistsError",
+    "PathError",
     "PlainTextEntry",
     "NotebookPath",
     "TextEntry",

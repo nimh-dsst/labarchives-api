@@ -41,13 +41,30 @@ class TestTreeMixinsIntegration:
 
     def test_traverse_not_found(self, notebook_tree: Notebook):
         """Test traversing to a non-existent path."""
-        with pytest.raises(KeyError):
+        with pytest.raises(
+            TraversalError,
+            match='Unable to traverse "/NonExistent" at segment "NonExistent"',
+        ) as err:
             notebook_tree.traverse("NonExistent")
+        assert err.value.path == "/NonExistent"
+        assert err.value.segment == "NonExistent"
+        assert err.value.parent == "/"
+        assert err.value.available_children == [
+            "Test Folder A",
+            "Test Folder B",
+            "Test Page 1",
+        ]
 
     def test_traverse_not_a_directory(self, notebook_tree: Notebook):
         """Test traversing through a non-directory node."""
-        with pytest.raises(TraversalError, match="is not a directory"):
+        with pytest.raises(
+            TraversalError,
+            match='Unable to traverse "/Test Page 1/Something" at segment "Something"',
+        ) as err:
             notebook_tree.traverse("Test Page 1/Something")
+        assert err.value.path == "/Test Page 1/Something"
+        assert err.value.segment == "Something"
+        assert err.value.available_children is None
 
     def test_getitem_invalid_key_type_raises(self, notebook_tree: Notebook):
         """Test __getitem__ raises TypeError for unsupported key types."""

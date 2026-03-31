@@ -6,6 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from labapi.exceptions import PathError
 from labapi.util.path import NotebookPath
 
 
@@ -83,12 +84,13 @@ def test_notebook_path_resolve_relative():
 
 
 def test_notebook_path_resolve_no_parent_raises():
-    """Test resolve raises ValueError when no parent is available."""
+    """Test resolve raises PathError when no parent is available."""
     rel = NotebookPath("relative/path")
     with pytest.raises(
-        ValueError, match="relative path cannot be resolved without an absolute parent"
-    ):
+        PathError, match="Cannot resolve relative path without an absolute parent"
+    ) as err:
         rel.resolve()
+    assert err.value.path == "relative/path"
 
 
 def test_notebook_path_relative_to_success():
@@ -102,12 +104,14 @@ def test_notebook_path_relative_to_success():
 
 
 def test_notebook_path_relative_to_failure():
-    """Test relative_to raises ValueError if path is outside base."""
+    """Test relative_to raises PathError if path is outside base."""
     path = NotebookPath("/Experiments/2024")
     other = NotebookPath("/Analysis")
 
-    with pytest.raises(ValueError, match="is outside of"):
+    with pytest.raises(PathError, match="is outside of") as err:
         path.relative_to(other)
+    assert err.value.path == "/Experiments/2024"
+    assert err.value.parent == "/Analysis"
 
 
 def test_notebook_path_properties():
