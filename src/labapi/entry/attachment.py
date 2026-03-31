@@ -6,6 +6,7 @@ import shutil
 import tempfile
 from collections.abc import Buffer
 from mimetypes import guess_type
+from os.path import basename
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
@@ -40,12 +41,14 @@ class Attachment:
 
         The content of the provided file is copied into a temporary buffer,
         making the Attachment independent of the original file's state.
-        The MIME type is automatically guessed from the file's name.
-        If the MIME type cannot be determined, it defaults to "application/octet-stream".
+        The MIME type is automatically guessed from the local file name.
+        If the MIME type cannot be determined, it defaults to
+        "application/octet-stream".
 
         :param file: The file object to create an attachment from. Must have a `name` attribute.
         :returns: A new Attachment object wrapping a clone of the file.
         """
+        remote_filename = basename(file.name)
         mime_type = guess_type(file.name)[0] or "application/octet-stream"
 
         # Create a spooled temporary file as the new backing buffer.
@@ -57,7 +60,7 @@ class Attachment:
         return Attachment(
             backing,  # pyright: ignore[reportArgumentType]
             mime_type,
-            file.name,
+            remote_filename,
             caption=f"API-uploaded {mime_type} file.",
         )
 

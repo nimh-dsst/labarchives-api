@@ -23,7 +23,7 @@ def test_attachment_from_file():
         with open(temp_file_path, "r+b") as file:
             attachment = Attachment.from_file(file)
 
-            assert attachment.filename == temp_file_path
+            assert attachment.filename == Path(temp_file_path).name
             assert attachment.mime_type == "text/plain"
             assert attachment.caption == "API-uploaded text/plain file."
     finally:
@@ -47,7 +47,7 @@ def test_attachment_from_file_buffered_reader():
 
             # Read content from attachment to verify cloning
             assert attachment.read() == b"Test content for BufferedReader"
-            assert attachment.filename == temp_file_path
+            assert attachment.filename == Path(temp_file_path).name
             assert attachment.mime_type == "text/plain"
     finally:
         # Clean up
