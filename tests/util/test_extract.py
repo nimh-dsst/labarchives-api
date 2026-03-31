@@ -227,6 +227,33 @@ def test_extract_etree_mapper_fails_raises():
         extract_etree(element, format_dict)
 
 
+def test_extract_etree_warns_on_duplicate_leaf_names():
+    """Test duplicate leaf extraction warns and last assignment wins."""
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+    <root>
+        <a>
+            <id>first</id>
+        </a>
+        <b>
+            <id>second</id>
+        </b>
+    </root>
+    """
+    element = etree.fromstring(bytes(xml, encoding="utf-8"))
+    format_dict: EtreeExtractorDict = {
+        "a": {"id": str},
+        "b": {"id": str},
+    }
+
+    with pytest.warns(
+        UserWarning,
+        match=r"Duplicate extractor leaf 'id' encountered at '\.//b/id'; overwriting previous value",
+    ):
+        result = extract_etree(element, format_dict)
+
+    assert result == {"id": "second"}
+
+
 def test_extract_etree_deeply_nested():
     """Test extract_etree with deeply nested structure."""
     xml = """<?xml version="1.0" encoding="UTF-8"?>

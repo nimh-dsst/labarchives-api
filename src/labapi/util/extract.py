@@ -8,6 +8,7 @@ strings to booleans, and a general-purpose XML extraction function.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+import warnings
 from typing import TYPE_CHECKING, Any
 
 from labapi.exceptions import ExtractionError
@@ -103,8 +104,16 @@ def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]
                 f"Could not find value for {query_path!r} while parsing element at {etree_path}"
             )
 
+        leaf = key.split("/")[-1]
+
+        if leaf in items:
+            warnings.warn(
+                f"Duplicate extractor leaf '{leaf}' encountered at './{key}'; "
+                "overwriting previous value"
+            )
+
         try:
-            items[key.split("/")[-1]] = mapper(value)
+            items[leaf] = mapper(value)
         except ValueError as err:
             raise ExtractionError(
                 f"Could not map value {value!r} with {mapper.__name__} for "
