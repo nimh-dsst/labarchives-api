@@ -22,9 +22,16 @@ uv add labapi
 pip install labapi
 ```
 
+If you want `Client()` to automatically load credentials from a local `.env` file, install the optional `dotenv` extra:
+
+```bash
+pip install 'labapi[dotenv]'
+```
+
 ### Configuration
 
-Create a `.env` file in your project root with your LabArchives API credentials:
+Create a `.env` file in your project root with your LabArchives API credentials.
+`.env` files are only auto-loaded when `python-dotenv` is installed (for example via `labapi[dotenv]`):
 
 ```env
 API_URL=https://api.labarchives.com
@@ -49,7 +56,8 @@ The client supports two patterns:
 ```python
 from labapi import Client
 
-# Initialize the client (loads ACCESS_KEYID / ACCESS_PWD / API_URL)
+# Initialize the client (loads ACCESS_KEYID / ACCESS_PWD / API_URL from env vars
+# and optionally from .env if you installed labapi[dotenv])
 client = Client()
 
 # Local interactive usage

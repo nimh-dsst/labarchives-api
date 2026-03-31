@@ -45,6 +45,8 @@ _AUTH_ERROR_CODES: frozenset[int] = frozenset(
 try:
     from dotenv import load_dotenv
 
+    # Optional behavior: auto-load local `.env` values when `labapi[dotenv]`
+    # (python-dotenv) is installed.
     load_dotenv()
 except ImportError:
     pass

@@ -40,6 +40,13 @@ We recommend using uv to install labapi.
       
       pip install labapi
 
+If you want :class:`~labapi.client.Client` to automatically load ``API_URL``, ``ACCESS_KEYID``, and ``ACCESS_PWD``
+from a local ``.env`` file, install the ``dotenv`` optional dependency group:
+
+.. code-block:: bash
+
+  pip install 'labapi[dotenv]'
+
 
 .. _optional-deps:
 
@@ -76,7 +83,8 @@ Optional Dependencies
 .. dropdown:: dotenv
 
   This group of dependencies allows the :class:`~labapi.client.Client` constructor to use environment variables 
-  specified in the ``.env`` file in a project.
+  specified in the ``.env`` file in a project. Without this optional dependency, ``Client`` reads only already-set
+  process environment variables.
 
   .. tab-set::
 
@@ -97,7 +105,6 @@ Optional Dependencies
       .. code-block:: bash
         
         pip install 'labapi[dotenv]'
-
 
 
 

@@ -39,7 +39,6 @@ builtin-auth = [
     "installed-browsers>=0.1.5"
 ]
 dotenv = [
-    "labapi",
     "python-dotenv>=1.2.1",
 ]
 
