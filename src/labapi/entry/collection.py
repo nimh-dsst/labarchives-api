@@ -45,11 +45,22 @@ class Entries(Sequence["Entry[Any]"]):
         pass
 
     @overload
+    def __getitem__(self, index: str) -> Entry[Any]:
+        pass
+
+    @overload
     def __getitem__(self, index: slice) -> Sequence[Entry[Any]]:
         pass
 
     @override
-    def __getitem__(self, index: int | slice) -> Entry[Any] | Sequence[Entry[Any]]:
+    def __getitem__(
+        self, index: int | str | slice
+    ) -> Entry[Any] | Sequence[Entry[Any]]:
+        if isinstance(index, str):
+            for entry in self._entries:
+                if entry.id == eid:
+                    return entry
+            raise KeyError(f"Entry with id '{eid}' not found")
         return self._entries[index]
 
     @override
@@ -63,6 +74,7 @@ class Entries(Sequence["Entry[Any]"]):
     @override
     def __len__(self):
         return len(self._entries)
+
 
     # TODO delete entries
 

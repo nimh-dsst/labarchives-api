@@ -66,6 +66,21 @@ class TestEntriesUnit:
         assert sliced[0].id == "eid_1"
         assert sliced[1].id == "eid_2"
 
+    def test_entries_getitem_by_id(self):
+        """Test Entries.__getitem__ with string entry id."""
+        mock_user = Mock(spec=User)
+        mock_page = Mock()
+
+        entry1 = TextEntry("eid_1", "<p>Entry 1</p>", mock_user)
+        entry2 = HeaderEntry("eid_2", "<h1>Header</h1>", mock_user)
+        entries = Entries([entry1, entry2], mock_user, mock_page)
+
+        assert entries["eid_1"] is entry1
+        assert entries["eid_2"] is entry2
+
+        with pytest.raises(KeyError, match="Entry with id 'missing' not found"):
+            _ = entries["missing"]
+
     def test_entries_iter(self):
         """Test Entries.__iter__ returns iterator over entries."""
         mock_user = Mock(spec=User)
