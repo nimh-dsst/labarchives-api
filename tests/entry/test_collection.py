@@ -267,6 +267,35 @@ class TestEntriesIntegration:
         assert api_call[0] == "entries/add_attachment"
         assert api_call[1]["client_ip"] == "203.0.113.7"
 
+    def test_entries_create_attachment_rewinds_seekable_stream(
+        self, client, user: User, mock_page
+    ):
+        """Test Entries.create rewinds seekable attachments before upload."""
+        entries = Entries([], user, mock_page)
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>rewound_attachment_eid</eid>
+            </entry>
+        </entries>
+        """
+
+        backing = BytesIO(b"File content")
+        attachment = Attachment(
+            backing=backing,
+            mime_type="text/plain",
+            filename="test.txt",
+            caption="Test file",
+        )
+        attachment.read(4)
+
+        entries.create(AttachmentEntry, attachment)
+
+        assert backing.tell() == 0
+        _ = client.api_log
+
     def test_entries_create_json_entry(self, client, user: User, mock_page):
         """Test Entries.create_json_entry creates both attachment and text entry."""
         entries = Entries([], user, mock_page)

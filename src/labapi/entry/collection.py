@@ -143,11 +143,15 @@ class Entries(Sequence["Entry[Any]"]):
         :raises RuntimeError: If the API call to create the entry fails.
         """
         if issubclass(cls, AttachmentEntry):
+          
             if not isinstance(data, Attachment):
                 raise TypeError(
                     f"{cls.__name__} requires Attachment data, got "
                     f"{type(data).__name__}"
                 )
+                
+            if data._backing.seekable():  # pyright: ignore[reportPrivateUsage]
+              data._backing.seek(0)  # pyright: ignore[reportPrivateUsage]
             
             upload_kwargs = {
                 "filename": data.filename,
