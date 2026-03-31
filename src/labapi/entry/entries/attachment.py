@@ -50,14 +50,12 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
                              Defaults to False.
         :returns: An :class:`~labapi.entry.attachment.Attachment` object containing the file data and metadata.
         """
-        # BUG: currently the implementation means that the backing buffer can be used while a reference is maintained
-        #      to it
-        # TODO: we should probably return a new temporary copy every time it's asked for, tbh?
         if self._filedata is None or self._filedata.closed:
-            if use_tempfile:
-                output = TemporaryFile()
-            else:
-                output = BytesIO()
+            attachment = self._user.client.stream_api_get(
+                "entries/entry_attachment", uid=self._user.id, eid=self.id
+            )
+
+            output = TemporaryFile() if use_tempfile else BytesIO()
 
             with self._user.client.stream_api_get(
                 "entries/entry_attachment", uid=self._user.id, eid=self.id
@@ -85,7 +83,21 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
 
             self._filedata = Attachment(output, mime_type, filename, self._data)
 
-        return self._filedata
+        assert self._filedata is not None
+        output = TemporaryFile() if use_tempfile else BytesIO()
+
+        # Return an independent copy so each caller gets isolated read/seek/close state
+        # while still sharing a single downloaded backing attachment in the cache.
+        self._filedata.seek(0)
+        output.write(self._filedata.read())
+        output.seek(0)
+
+        return Attachment(
+            output,
+            self._filedata.mime_type,
+            self._filedata.filename,
+            self._filedata.caption,
+        )
 
     @property
     @override
