@@ -647,18 +647,30 @@ class Client:
                                  Useful for methods like `api_user_login` where the
                                  actual method name differs from the URI path.
         :returns: The fully constructed and signed URL.
+        :raises ValueError: If ``api_method_uri`` does not contain any non-empty
+                            path segments after normalization.
         """
         if isinstance(api_method_uri, str):
             api_method_uri = api_method_uri.split("/")
 
-        method_parts = tuple(filter(lambda k: len(k.strip()) != 0, api_method_uri))
+        method_parts = tuple(part for part in api_method_uri if part.strip())
+
+        if not method_parts:
+            raise ValueError(
+                "api_method_uri must contain at least one non-empty path segment"
+            )
 
         if should_prefix_api:
             if method_parts[0] != "api":
-                method_parts = ["api", *method_parts]
+                method_parts = ("api", *method_parts)
         else:
             if method_parts[0] == "api":
                 method_parts = method_parts[1:]
+
+        if not method_parts:
+            raise ValueError(
+                "api_method_uri must contain at least one non-empty path segment"
+            )
 
         api_method = method_parts[-1] if signature_method is None else signature_method
 

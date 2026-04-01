@@ -126,6 +126,29 @@ class TestClientUnit:
         assert "/api_user_login" in url
         assert "akid=test_akid" in url
 
+    @pytest.mark.parametrize(
+        ("api_method_uri", "kwargs"),
+        [
+            ("", {}),
+            ("/", {}),
+            (["", "   "], {}),
+            ("api", {"should_prefix_api": False}),
+        ],
+    )
+    def test_client_construct_url_rejects_empty_normalized_paths(
+        self,
+        api_method_uri: str | list[str],
+        kwargs: dict[str, bool],
+    ):
+        """Test construct_url rejects paths that normalize to no segments."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+
+        with pytest.raises(
+            ValueError,
+            match="api_method_uri must contain at least one non-empty path segment",
+        ):
+            client.construct_url(api_method_uri, {"uid": "123"}, **kwargs)
+
     def test_client_generate_auth_url(self):
         """Test Client.generate_auth_url generates correct authentication URL."""
         client = Client("https://api.test.com", "test_akid", "test_password")
