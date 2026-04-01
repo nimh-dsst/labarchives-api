@@ -426,6 +426,13 @@ class AbstractTreeContainer(
                         f"{subtree_path} for parent tree_id={self.tree_id!r}"
                     ) from err
 
+                if not node["display-text"].strip():
+                    raise TreeChildParseError(
+                        "Could not parse tree child at "
+                        f"{subtree_path} for parent tree_id={self.tree_id!r}: "
+                        "display-text cannot be empty"
+                    )
+
                 args = (
                     node["tree-id"],
                     node["display-text"],
