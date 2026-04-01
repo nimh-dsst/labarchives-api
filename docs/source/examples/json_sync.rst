@@ -31,14 +31,14 @@ Usage Examples
 .. code-block:: bash
 
     # Upload all JSON files from ./data to a page in LabArchives
-    python json_sync.py upload ./data "Experiments/2024/Data Analysis" --notebook "My Notebook"
+    uv run python examples/json_sync/json_sync.py upload ./data "Experiments/2024/Data Analysis" --notebook "My Notebook"
 
 **Download JSON entries from LabArchives:**
 
 .. code-block:: bash
 
     # Download all JSON entries from a page to ./output
-    python json_sync.py download "Experiments/2024/Data Analysis" ./output --notebook "My Notebook"
+    uv run python examples/json_sync/json_sync.py download "Experiments/2024/Data Analysis" ./output --notebook "My Notebook"
 
 Configuration
 -------------
@@ -60,7 +60,8 @@ Notes
 -----
 
 - JSON files are uploaded using the :meth:`~labapi.entry.collection.Entries.create_json_entry` method
-- JSON entries are stored as attachments with ``application/json`` MIME type
+- Each upload creates a JSON attachment with ``application/json`` MIME type and
+  a companion rich-text preview entry
 - Invalid JSON files are skipped with an error message
 - The script creates the output folder if it doesn't exist during download
 

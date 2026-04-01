@@ -19,7 +19,7 @@ from secrets import token_urlsafe
 from socketserver import TCPServer
 from time import monotonic
 from types import TracebackType
-from typing import Any, Self, Iterator, Mapping, Sequence, override
+from typing import Any, Iterator, Mapping, Self, Sequence, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cryptography.hazmat.primitives.hashes import SHA512
@@ -51,7 +51,7 @@ _DEFAULT_AUTH_CALLBACK_TIMEOUT = 300.0
 
 
 try:
-    from dotenv import load_dotenv
+    from dotenv import load_dotenv  # pyright: ignore[reportMissingImports]
 
     # Optional behavior: auto-load local `.env` values when `labapi[dotenv]`
     # (python-dotenv) is installed.
@@ -638,17 +638,17 @@ class Client:
             try:
                 match detect_default_browser():
                     case "chrome":
-                        import selenium.webdriver as webdriver
+                        import selenium.webdriver as webdriver  # pyright: ignore[reportMissingImports]
 
                         driver = webdriver.Chrome(options=webdriver.ChromeOptions())
                         print("Opening Chrome for authentication...")
                     case "firefox":
-                        import selenium.webdriver as webdriver
+                        import selenium.webdriver as webdriver  # pyright: ignore[reportMissingImports]
 
                         driver = webdriver.Firefox(options=webdriver.FirefoxOptions())
                         print("Opening Firefox for authentication...")
                     case "edge":
-                        import selenium.webdriver as webdriver
+                        import selenium.webdriver as webdriver  # pyright: ignore[reportMissingImports]
 
                         driver = webdriver.Edge(options=webdriver.EdgeOptions())
                         print("Opening Edge for authentication...")

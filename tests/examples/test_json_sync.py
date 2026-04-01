@@ -13,10 +13,7 @@ from labapi import InsertBehavior, NotebookPage, TraversalError
 def load_json_sync_module():
     """Load the example script as a module for direct unit testing."""
     script_path = (
-        Path(__file__).resolve().parents[2]
-        / "examples"
-        / "json_sync"
-        / "json_sync.py"
+        Path(__file__).resolve().parents[2] / "examples" / "json_sync" / "json_sync.py"
     )
     spec = importlib.util.spec_from_file_location("json_sync_example", script_path)
     assert spec is not None
@@ -36,7 +33,9 @@ class RecordingContainer:
     def __init__(self, traverse_result=None, traverse_error: Exception | None = None):
         self.traverse_result = traverse_result
         self.traverse_error = traverse_error
-        self.create_calls: list[tuple[type[NotebookPage], str, bool, InsertBehavior]] = []
+        self.create_calls: list[
+            tuple[type[NotebookPage], str, bool, InsertBehavior]
+        ] = []
 
     def traverse(self, _path: str):
         if self.traverse_error is not None:
@@ -138,4 +137,6 @@ def test_download_json_entries_exits_on_traversal_error(capsys):
         )
 
     captured = capsys.readouterr()
-    assert "Could not find page 'Missing/Page' in notebook 'My Notebook'" in captured.out
+    assert (
+        "Could not find page 'Missing/Page' in notebook 'My Notebook'" in captured.out
+    )

@@ -38,12 +38,12 @@ Example usage:
 .. code-block:: python
 
     import os
-    os.environ['LA_AUTH_BROWSER'] = 'firefox'
+    os.environ["LA_AUTH_BROWSER"] = "firefox"
 
     from labapi import Client
-    client = Client()
-    user = client.default_authenticate()
-    # Firefox will be selected for authentication
+
+    with Client() as client:
+        user = client.default_authenticate()
 
 
 SSL/TLS Certificate Verification

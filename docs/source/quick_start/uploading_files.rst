@@ -18,12 +18,13 @@ file-like object (e.g., a file opened in binary mode).
 
     from labapi import Attachment
 
-    with open("my_file.txt", "rb+") as f:
+    with open("my_file.txt", "rb") as f:
         attachment = Attachment.from_file(f)
 
 .. note::
-    Currently, the file must be opened in a read-writable mode (e.g., "rb+").
-    This is a limitation of the current implementation and will be addressed in a future update.
+    :meth:`~labapi.entry.attachment.Attachment.from_file` requires a seekable
+    binary file object. Standard file handles opened with ``"rb"`` or
+    ``"rb+"`` work; non-seekable streams do not.
 
 The :meth:`~labapi.entry.attachment.Attachment.from_file` method automatically guesses the MIME type from the file's name. If the MIME type cannot be determined, it 
 defaults to ``application/octet-stream``.

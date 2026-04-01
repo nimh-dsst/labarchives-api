@@ -78,7 +78,7 @@ Creating Entries
     page.entries.create(PlainTextEntry, "Simple unformatted text")
 
     # Add an attachment
-    with open("results.csv", "rb+") as f:
+    with open("results.csv", "rb") as f:
         attachment = Attachment(f, "text/csv", "results.csv", "Experiment data")
         page.entries.create(AttachmentEntry, attachment)
 

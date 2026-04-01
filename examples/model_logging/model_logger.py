@@ -18,26 +18,22 @@ from labapi import (
     NotebookDirectory,
     NotebookPage,
     TextEntry,
+    User,
 )
-from labapi import User
 
 
 class ModelLogger:
     """Logs model training runs and metadata to LabArchives."""
 
-    def __init__(self, notebook_name: str, client: Client | None = None):
+    def __init__(self, notebook_name: str, user: User):
         """
-        Initialize the logger and authenticate.
+        Initialize the logger with an authenticated user.
 
         :param notebook_name: Name of the LabArchives notebook.
-        :param client: Optional pre-configured client.
+        :param user: Authenticated LabArchives user session.
         """
-        self.client = client or Client()
-        self.user: User = self.client.default_authenticate()
+        self.user = user
         self.notebook_name = notebook_name
-
-        # Store user session in memory (self.user)
-        print(f"Authenticated as: {self.user.email} (ID: {self.user.id})")
 
     def log(
         self,
@@ -133,17 +129,18 @@ class ModelLogger:
 
 
 def main() -> None:
-    # Example usage
-    logger = ModelLogger(notebook_name="My Research")
+    with Client() as client:
+        user = client.default_authenticate()
+        print(f"Authenticated as: {user.email} (ID: {user.id})")
 
-    # Example data
-    logger.log(
-        tags=["baseline", ["resnet50", "imagenet"], "v1.0"],
-        metrics={"f1": 0.88, "accuracy": 0.92, "loss": 0.15},
-        results=b"Prediction results data...",
-        figures=[b"fake figure 1 content", b"fake figure 2 content"],
-        commit="a1b2c3d4e5f67890",
-    )
+        logger = ModelLogger(notebook_name="My Research", user=user)
+        logger.log(
+            tags=["baseline", ["resnet50", "imagenet"], "v1.0"],
+            metrics={"f1": 0.88, "accuracy": 0.92, "loss": 0.15},
+            results=b"Prediction results data...",
+            figures=[b"fake figure 1 content", b"fake figure 2 content"],
+            commit="a1b2c3d4e5f67890",
+        )
 
 
 if __name__ == "__main__":

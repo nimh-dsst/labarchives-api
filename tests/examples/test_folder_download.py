@@ -14,7 +14,9 @@ def load_folder_download_module():
         / "folder_download"
         / "folder_download.py"
     )
-    spec = importlib.util.spec_from_file_location("folder_download_example", script_path)
+    spec = importlib.util.spec_from_file_location(
+        "folder_download_example", script_path
+    )
     assert spec is not None
     assert spec.loader is not None
 
@@ -75,8 +77,12 @@ def test_download_page_uses_collision_safe_directory_names(tmp_path):
     """Test page downloads do not merge different names into one directory."""
     used_paths: set[Path] = set()
 
-    folder_download.download_page(FakePage("Experiment:1", "page-one"), tmp_path, used_paths)
-    folder_download.download_page(FakePage("Experiment/1", "page-two"), tmp_path, used_paths)
+    folder_download.download_page(
+        FakePage("Experiment:1", "page-one"), tmp_path, used_paths
+    )
+    folder_download.download_page(
+        FakePage("Experiment/1", "page-two"), tmp_path, used_paths
+    )
 
     assert (tmp_path / "Experiment_1").is_dir()
     assert (tmp_path / "Experiment_1_page-two").is_dir()

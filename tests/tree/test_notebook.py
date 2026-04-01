@@ -45,5 +45,3 @@ class TestNotebookIntegration:
         assert api_call[1]["nbid"] == "testnb1"
         assert api_call[1]["name"] == "Updated Notebook Name"
         assert notebook.name == "Updated Notebook Name"
-
-

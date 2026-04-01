@@ -15,17 +15,14 @@ from labapi import InsertBehavior, NotebookPage, TraversalError
 def load_csv_table_module():
     """Load the example script as a module for direct unit testing."""
     script_path = (
-        Path(__file__).resolve().parents[2]
-        / "examples"
-        / "csv_table"
-        / "csv_table.py"
+        Path(__file__).resolve().parents[2] / "examples" / "csv_table" / "csv_table.py"
     )
     spec = importlib.util.spec_from_file_location("csv_table_example", script_path)
     assert spec is not None
     assert spec.loader is not None
 
     fake_bs4 = ModuleType("bs4")
-    fake_bs4.BeautifulSoup = object
+    setattr(fake_bs4, "BeautifulSoup", object)
     previous_bs4 = sys.modules.get("bs4")
     sys.modules["bs4"] = fake_bs4
     try:
@@ -49,7 +46,9 @@ class RecordingContainer:
     def __init__(self, traverse_result=None, traverse_error: Exception | None = None):
         self.traverse_result = traverse_result
         self.traverse_error = traverse_error
-        self.create_calls: list[tuple[type[NotebookPage], str, bool, InsertBehavior]] = []
+        self.create_calls: list[
+            tuple[type[NotebookPage], str, bool, InsertBehavior]
+        ] = []
 
     def traverse(self, _path: str):
         if self.traverse_error is not None:

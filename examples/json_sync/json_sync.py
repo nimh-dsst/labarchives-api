@@ -28,9 +28,7 @@ from labapi import (
 )
 
 
-def get_or_create_page(
-    container: AbstractTreeContainer, path: str
-) -> NotebookPage:
+def get_or_create_page(container: AbstractTreeContainer, path: str) -> NotebookPage:
     """Return an existing page at ``path`` or create it with missing parents."""
     try:
         node = container.traverse(path)
@@ -74,7 +72,7 @@ def upload_json_folder(
         sys.exit(1)
 
     # Find all JSON files
-    json_files = list(local_folder.glob("*.json"))
+    json_files = sorted(local_folder.glob("*.json"))
 
     if not json_files:
         print(f"No JSON files found in '{local_folder}'")
@@ -87,7 +85,7 @@ def upload_json_folder(
         print(f"Uploading {json_file.name}...", end=" ")
 
         try:
-            with open(json_file, "r") as f:
+            with json_file.open("r", encoding="utf-8") as f:
                 data = json.load(f)
 
             # Create JSON entry
@@ -115,15 +113,15 @@ def download_json_entries(
     try:
         notebook = notebooks[notebook_name]
     except KeyError as e:
-        print(
-            f"Error: Could not find notebook '{notebook_name}': {e}"
-        )
+        print(f"Error: Could not find notebook '{notebook_name}': {e}")
         print(f"Available notebooks: {list(notebooks.keys())}")
         sys.exit(1)
     try:
         page = notebook.traverse(page_path).as_page()
     except TraversalError as e:
-        print(f"Error: Could not find page '{page_path}' in notebook '{notebook_name}': {e}")
+        print(
+            f"Error: Could not find page '{page_path}' in notebook '{notebook_name}': {e}"
+        )
         sys.exit(1)
     except TypeError:
         print(f"Error: '{page_path}' refers to a directory, but a page is required")
@@ -163,7 +161,7 @@ def download_json_entries(
             data = json.load(attachment)
 
             # Write to local file
-            with open(output_path, "w") as f:
+            with output_path.open("w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
 
             print("✓")
@@ -199,29 +197,27 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    # Initialize client and authenticate
     print("Connecting to LabArchives...")
     try:
-        client = Client()  # Loads credentials from .env
-        print("Authenticating...")
-        user = client.default_authenticate()  # Opens browser for OAuth
-        print("✓ Authenticated successfully")
+        with Client() as client:
+            print("Authenticating...")
+            user = client.default_authenticate()
+            print("✓ Authenticated successfully")
+
+            if args.action == "upload":
+                local_folder = Path(args.source)
+                page_path = args.destination
+                upload_json_folder(user, args.notebook, page_path, local_folder)
+            else:  # download
+                page_path = args.source
+                local_folder = Path(args.destination)
+                download_json_entries(user, args.notebook, page_path, local_folder)
     except Exception as e:
         print(f"Authentication error: {e}")
         print("\nMake sure you have a .env file with your credentials:")
         print("  ACCESS_KEYID=your_access_key_id")
         print("  ACCESS_PWD=your_password")
         sys.exit(1)
-
-    # Perform requested action
-    if args.action == "upload":
-        local_folder = Path(args.source)
-        page_path = args.destination
-        upload_json_folder(user, args.notebook, page_path, local_folder)
-    else:  # download
-        page_path = args.source
-        local_folder = Path(args.destination)
-        download_json_entries(user, args.notebook, page_path, local_folder)
 
 
 if __name__ == "__main__":

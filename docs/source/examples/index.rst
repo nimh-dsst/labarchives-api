@@ -79,9 +79,17 @@ Prerequisites
 Running the Examples
 ~~~~~~~~~~~~~~~~~~~~
 
-Each example is a standalone script. Run them using the appropriate arguments:
+Run the examples from the repository root so the relative paths in the example
+``pyproject.toml`` files and docs stay aligned:
 
 .. code-block:: bash
 
     # Example usage for JSON sync
-    python json_sync.py upload ./data "My Notebook/Results" --notebook "My Notebook"
+    uv run python examples/json_sync/json_sync.py upload ./data "My Notebook/Results" --notebook "My Notebook"
+
+Additional Local Examples
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The repository also includes ``examples/model_logging`` and
+``examples/notebook_logging``. They are maintained alongside the published
+examples above, but do not yet have dedicated Sphinx pages.

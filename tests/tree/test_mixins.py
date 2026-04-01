@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any, cast
 
 import pytest
 
@@ -17,6 +18,18 @@ from labapi.tree.mixins import (
     AbstractTreeContainer,
 )
 from labapi.util import InsertBehavior, NotebookPath
+
+
+def expect_dir(node: object) -> NotebookDirectory:
+    """Narrow a dynamically-returned tree node to NotebookDirectory."""
+    assert isinstance(node, NotebookDirectory)
+    return node
+
+
+def expect_page(node: object) -> NotebookPage:
+    """Narrow a dynamically-returned tree node to NotebookPage."""
+    assert isinstance(node, NotebookPage)
+    return node
 
 
 class TestTreeMixinsIntegration:
@@ -74,7 +87,7 @@ class TestTreeMixinsIntegration:
     def test_getitem_invalid_key_type_raises(self, notebook_tree: Notebook):
         """Test __getitem__ raises TypeError for unsupported key types."""
         with pytest.raises(TypeError, match="Invalid key type"):
-            notebook_tree[123]  # pyright: ignore[reportArgumentType]
+            notebook_tree[cast(Any, 123)]
 
     def test_is_parent_of(self, notebook_tree: Notebook, notebooks):
         """Test ancestor checks for nodes in the same and different roots."""
@@ -114,7 +127,7 @@ class TestTreeMixinsIntegration:
 
     def test_name_setter(self, client, notebook_tree: Notebook):
         """Test updating a node's name."""
-        page = notebook_tree[Index.Id : "page-1"]
+        page = expect_page(notebook_tree[Index.Id : "page-1"])
         client.api_response = "<success/>"
 
         page.name = "New Name"
@@ -128,8 +141,8 @@ class TestTreeMixinsIntegration:
         self, client, notebook_tree: Notebook
     ):
         """Test renaming a directory clears cached descendant paths."""
-        folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
-        page_a = notebook_tree.traverse("/Test Folder A/Dir1 Test Page A").as_page()
+        folder_a = expect_dir(notebook_tree[Index.Id : "dir-1"])
+        page_a = expect_page(notebook_tree.traverse("/Test Folder A/Dir1 Test Page A"))
         original_path = str(page_a.path)
         assert original_path == "/Test Folder A/Dir1 Test Page A"
 
@@ -145,8 +158,8 @@ class TestTreeMixinsIntegration:
 
     def test_move_to(self, client, notebook_tree: Notebook):
         """Test moving a node to a new container."""
-        page = notebook_tree[Index.Id : "page-1"]
-        folder_a = notebook_tree[Index.Id : "dir-1"]
+        page = expect_page(notebook_tree[Index.Id : "page-1"])
+        folder_a = expect_dir(notebook_tree[Index.Id : "dir-1"])
         old_parent = page.parent
 
         client.api_response = "<success/>"
@@ -165,11 +178,13 @@ class TestTreeMixinsIntegration:
         self, client, notebook_tree: Notebook
     ):
         """Test moving a directory clears cached descendant paths."""
-        destination = notebook_tree[Index.Id : "dir-1"].as_dir()
-        source_dir = notebook_tree[Index.Id : "dir-2"].as_dir()
-        descendant = notebook_tree.traverse(
-            "/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
-        ).as_dir()
+        destination = expect_dir(notebook_tree[Index.Id : "dir-1"])
+        source_dir = expect_dir(notebook_tree[Index.Id : "dir-2"])
+        descendant = expect_dir(
+            notebook_tree.traverse(
+                "/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
+            )
+        )
         original_path = str(descendant.path)
         assert (
             original_path
@@ -193,7 +208,7 @@ class TestTreeMixinsIntegration:
         self, client, notebook_tree: Notebook
     ):
         """Test move_to rejects moving a directory into itself locally."""
-        folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
+        folder_a = expect_dir(notebook_tree[Index.Id : "dir-1"])
 
         with pytest.raises(ValueError, match="Cannot move a node to itself"):
             folder_a.move_to(folder_a)
@@ -204,8 +219,8 @@ class TestTreeMixinsIntegration:
         self, client, notebook_tree: Notebook
     ):
         """Test move_to rejects moving a directory into a descendant locally."""
-        source_dir = notebook_tree[Index.Id : "dir-2"].as_dir()
-        descendant_dir = source_dir[Index.Id : "dir-2-1"].as_dir()
+        source_dir = expect_dir(notebook_tree[Index.Id : "dir-2"])
+        descendant_dir = expect_dir(source_dir[Index.Id : "dir-2-1"])
 
         with pytest.raises(
             ValueError, match="Cannot move a directory into one of its descendants"
@@ -218,7 +233,7 @@ class TestTreeMixinsIntegration:
         self, client, notebook_tree: Notebook, notebooks
     ):
         """Test move_to rejects cross-notebook moves locally."""
-        page = notebook_tree[Index.Id : "page-1"]
+        page = expect_page(notebook_tree[Index.Id : "page-1"])
         other_notebook = notebooks[Index.Id : "testnb2"]
 
         with pytest.raises(ValueError, match="Cannot move a node across notebooks"):

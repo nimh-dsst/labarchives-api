@@ -109,8 +109,8 @@ class TestNotebookDirectoryIntegration:
     def test_directory_copy_to_descendant_raises(self, notebook_tree: Notebook):
         """Test NotebookDirectory.copy_to rejects copying into a descendant."""
         source_dir = notebook_tree[Index.Id : "dir-2"]
-        descendant_dir = source_dir[Index.Id : "dir-2-1"]
         assert isinstance(source_dir, NotebookDirectory)
+        descendant_dir = source_dir[Index.Id : "dir-2-1"]
         assert isinstance(descendant_dir, NotebookDirectory)
 
         with pytest.raises(ValueError, match="Cannot copy"):

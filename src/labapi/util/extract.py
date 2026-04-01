@@ -98,8 +98,8 @@ def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]
         value = _etree.findtext(f"./{key}")
 
         if (
-                value is None
-            ):  # XXX should we collate errors and return at end with the dict or?
+            value is None
+        ):  # XXX should we collate errors and return at end with the dict or?
             raise ExtractionError(
                 f"Could not find value for './{key}' while parsing element at {etree_path}"
             )

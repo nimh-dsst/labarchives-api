@@ -198,9 +198,7 @@ def test_extract_etree_missing_element_raises():
 
     with pytest.raises(
         ExtractionError,
-        match=(
-            r"Could not find value for '.+/missing' while parsing element at /root"
-        ),
+        match=(r"Could not find value for '.+/missing' while parsing element at /root"),
     ):
         extract_etree(element, format_dict)
 

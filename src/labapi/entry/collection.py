@@ -7,7 +7,7 @@ from datetime import datetime
 from html import escape
 from io import BytesIO
 from json import dumps
-from typing import TYPE_CHECKING, Any, Type, TypeVar, overload, override
+from typing import TYPE_CHECKING, Any, SupportsIndex, Type, TypeVar, overload, override
 
 from labapi.util import extract_etree
 
@@ -42,7 +42,7 @@ class Entries(Sequence["Entry[Any]"]):
         self._entries: list[Entry[Any]] = list(entries)
 
     @overload
-    def __getitem__(self, index: int) -> Entry[Any]:
+    def __getitem__(self, index: SupportsIndex) -> Entry[Any]:
         pass
 
     @overload
@@ -55,7 +55,7 @@ class Entries(Sequence["Entry[Any]"]):
 
     @override
     def __getitem__(
-        self, index: int | str | slice
+        self, index: SupportsIndex | str | slice[Any, Any, Any]
     ) -> Entry[Any] | Sequence[Entry[Any]]:
         if isinstance(index, str):
             for entry in self._entries:

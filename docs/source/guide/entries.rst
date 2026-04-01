@@ -72,6 +72,11 @@ Widget entries (:class:`~labapi.entry.entries.widget.WidgetEntry`) embed interac
 .. note::
    Widget entries are currently read-only in ``labapi``. Their ``content`` property returns the widget's internal data as a JSON-formatted string.
 
+If LabArchives returns an entry type that ``labapi`` does not model yet,
+:attr:`~labapi.tree.page.NotebookPage.entries` wraps it as
+:class:`~labapi.entry.entries.unknown.UnknownEntry` and emits a warning instead
+of silently dropping it.
+
 Creating New Entries
 --------------------
 
@@ -113,7 +118,7 @@ You can also create an attachment directly from a file on disk:
 
    from labapi import Attachment, AttachmentEntry
 
-   with open("data.csv", "rb+") as f:
+   with open("data.csv", "rb") as f:
        attachment = Attachment.from_file(f)
        page.entries.create(AttachmentEntry, attachment)
 
@@ -147,7 +152,7 @@ For attachments, setting the ``content`` property with a new :class:`~labapi.ent
 
 .. code-block:: python
 
-   with open("updated_data.csv", "rb+") as f:
+   with open("updated_data.csv", "rb") as f:
        new_attachment = Attachment.from_file(f)
        attachment_entry.content = new_attachment
 

@@ -7,13 +7,7 @@ import tempfile
 from collections.abc import Buffer
 from mimetypes import guess_type
 from os.path import basename
-from typing import TYPE_CHECKING, TypeAlias
-
-if TYPE_CHECKING:
-    from io import BufferedRandom, BufferedReader, BytesIO
-    from tempfile import (  # pyright: ignore[reportPrivateUsage]
-        SpooledTemporaryFile,
-    )
+from typing import Any, BinaryIO, Protocol, TypeAlias
 
 # NOTE: from Pylance
 # Unfortunately PEP 688 does not allow us to distinguish read-only
@@ -22,6 +16,25 @@ if TYPE_CHECKING:
 # distinguish these cases in the type system.
 # Same as WriteableBuffer, but also includes read-only buffer types (like bytes).
 ReadableBuffer: TypeAlias = Buffer  # stable
+
+
+class NamedBinaryIO(Protocol):
+    """Binary file-like object with a ``name`` attribute."""
+
+    @property
+    def name(self) -> str: ...
+
+    def read(self, size: int = -1, /) -> bytes: ...
+
+    def write(self, data: ReadableBuffer, /) -> int: ...
+
+    def seek(self, offset: int, whence: int = 0, /) -> int: ...
+
+    def tell(self) -> int: ...
+
+    def close(self) -> None: ...
+
+    def seekable(self) -> bool: ...
 
 
 class Attachment:
@@ -36,7 +49,7 @@ class Attachment:
     """
 
     @staticmethod
-    def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
+    def from_file(file: NamedBinaryIO) -> Attachment:
         """Creates an Attachment from a file object by cloning its content.
 
         The content of the provided file is copied into a temporary buffer,
@@ -66,7 +79,7 @@ class Attachment:
         backing.seek(0)
 
         return Attachment(
-            backing,  # pyright: ignore[reportArgumentType]
+            backing,
             mime_type,
             remote_filename,
             caption=f"API-uploaded {mime_type} file.",
@@ -74,10 +87,7 @@ class Attachment:
 
     def __init__(
         self,
-        backing: BufferedRandom
-        | BufferedReader
-        | BytesIO
-        | SpooledTemporaryFile[bytes],
+        backing: BinaryIO,
         mime_type: str,
         filename: str,
         caption: str,
@@ -98,7 +108,7 @@ class Attachment:
         self._filename = filename
         self._caption = caption
 
-    def __getattr__(self, attr: str):
+    def __getattr__(self, attr: str) -> Any:
         """Delegates attribute access to the backing file-like object.
 
         This allows the Attachment to behave like the underlying file object
@@ -109,6 +119,30 @@ class Attachment:
         :raises AttributeError: If the attribute does not exist on the backing object.
         """
         return getattr(self._backing, attr)
+
+    def read(self, size: int = -1, /) -> bytes:
+        """Read bytes from the backing attachment stream."""
+        return self._backing.read(size)
+
+    def write(self, data: ReadableBuffer, /) -> int:
+        """Write bytes to the backing attachment stream."""
+        return self._backing.write(data)
+
+    def seek(self, offset: int, whence: int = 0, /) -> int:
+        """Move the backing stream cursor."""
+        return self._backing.seek(offset, whence)
+
+    def tell(self) -> int:
+        """Return the current backing stream cursor position."""
+        return self._backing.tell()
+
+    def close(self) -> None:
+        """Close the backing attachment stream."""
+        self._backing.close()
+
+    def seekable(self) -> bool:
+        """Return whether the backing stream supports random access."""
+        return self._backing.seekable()
 
     @property
     def filename(self) -> str:

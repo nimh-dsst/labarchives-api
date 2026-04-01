@@ -13,7 +13,7 @@ pytestmark = pytest.mark.integration
 
 type AnyDict = Mapping[str, AnyDict | str | bool | int | float]
 try:
-    from dotenv import load_dotenv
+    from dotenv import load_dotenv  # pyright: ignore[reportMissingImports]
 
     load_dotenv()
 except ImportError:
@@ -125,7 +125,7 @@ def get_or_create_page_with_json(
     """
     existing = parent[Index.Name : name]
     if len(existing) > 0:
-        return existing[0]
+        return existing[0].as_page()
 
     new_page = parent.create(LA.NotebookPage, name)
     # create_json_entry returns (AttachmentEntry, TextEntry)
@@ -300,6 +300,8 @@ def test_fix_metadata(test_env):
 
     if not rich_text_entry or not attachment_entry:
         pytest.fail("Dual JSON entries (Attachment + Text) not found on page.")
+    assert rich_text_entry is not None
+    assert attachment_entry is not None
 
     # 1. Prepare new data
     new_data = {"id": "test subject 1 id", "gender": "male"}

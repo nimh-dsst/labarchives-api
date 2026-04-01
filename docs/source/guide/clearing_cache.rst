@@ -52,7 +52,7 @@ Similarly, you can refresh directories and notebooks to reload their children:
     children = directory.children  # Re-fetches from API
 
 When You Usually Do Not Need Refresh
------------------------------------
+------------------------------------
 
 If you create, rename, move, or delete nodes through this client, the in-memory tree is updated immediately as part of the same operation. In those cases, you usually do not need to call ``refresh()`` just to observe your own change locally.
 

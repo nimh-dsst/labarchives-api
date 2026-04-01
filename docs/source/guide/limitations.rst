@@ -20,10 +20,13 @@ Current Capabilities
 Known Limitations and Caveats
 -----------------------------
 
-Unsupported entry types are skipped
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Unsupported entry types are wrapped as ``UnknownEntry``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a page contains entry types that ``labapi`` does not model yet, those entries are currently skipped while reading page entries.
+When a page contains entry types that ``labapi`` does not model yet, those
+entries are wrapped as :class:`~labapi.entry.entries.unknown.UnknownEntry` and
+loaded with a warning. This preserves page order and IDs, but editing behavior
+is limited for those fallback objects.
 
 Widget entries are read-only
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

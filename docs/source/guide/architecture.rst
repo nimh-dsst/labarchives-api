@@ -16,8 +16,8 @@ At a high level, runtime flow goes through these layers:
 
 1. :class:`~labapi.client.Client`
 2. :class:`~labapi.user.User`
-3. Tree model (:class:`~labapi.tree.collection.Notebooks` →
-   :class:`~labapi.tree.notebook.Notebook` →
+3. Tree model (:class:`~labapi.tree.collection.Notebooks` ->
+   :class:`~labapi.tree.notebook.Notebook` ->
    :class:`~labapi.tree.directory.NotebookDirectory` /
    :class:`~labapi.tree.page.NotebookPage`)
 4. Entry model (:class:`~labapi.entry.collection.Entries` and
@@ -30,9 +30,8 @@ Client and User boundary
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 :class:`~labapi.client.Client` is responsible for connection/auth concerns and
-request signing.
-Its URL construction/signing helpers append the AKID, expiry, and HMAC-SHA512
-signature to requests.
+request signing. Its URL construction/signing helpers append the AKID, expiry,
+and HMAC-SHA512 signature to requests.
 
 :class:`~labapi.user.User` wraps an authenticated session and provides
 :meth:`~labapi.user.User.api_get`/:meth:`~labapi.user.User.api_post` that always
@@ -114,17 +113,18 @@ Invariant: repeated ``page.entries`` access should return the same
 Path cache (``_has_path``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every tree node memoizes its :class:`~labapi.util.NotebookPath`:
+Every tree node memoizes its :class:`~labapi.util.path.NotebookPath`:
 
 * first :attr:`~labapi.tree.mixins.AbstractBaseTreeNode.path` access computes
-  and caches :class:`~labapi.util.path.NotebookPath` for the node.
-* :meth:`~labapi.tree.mixins.AbstractTreeNode.move_to` explicitly invalidates
-  only the moved node by setting ``_has_path=False``.
+  and caches a :class:`~labapi.util.path.NotebookPath` for the node.
+* :meth:`~labapi.tree.mixins.AbstractBaseTreeNode._invalidate_path` clears the
+  cached path for the current node and any loaded descendants.
+* rename and move operations call
+  :meth:`~labapi.tree.mixins.AbstractBaseTreeNode._invalidate_path` after
+  mutating local tree state.
 
-Invariant: cached paths are stable for nodes that have not moved.
-
-Important caveat: descendants of moved containers are **not recursively path-
-invalidated** today (see TODO section and issue ``#78``).
+Invariant: cached paths are stable until the node or one of its loaded
+ancestors is renamed or moved.
 
 Path stability and traversal expectations
 -----------------------------------------
@@ -142,6 +142,16 @@ Tree traversal uses path resolution semantics from
 :class:`~labapi.util.path.NotebookPath`.
 :meth:`~labapi.tree.mixins.AbstractBaseTreeNode.traverse` resolves relative
 paths against ``self.path`` and then walks segments from ``self.root``.
+
+Enumeration helpers build on the same traversal model:
+
+* :meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_nodes` returns
+  ``(relative_path, node)`` pairs for concrete descendant objects.
+* :meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_all`,
+  :meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_dirs`, and
+  :meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_pages` derive
+  from that shared traversal so duplicate names do not get re-resolved through
+  ``traverse()``.
 
 Mutation invariants and refresh expectations
 --------------------------------------------
@@ -171,7 +181,7 @@ then mutates both local parents:
 * removes the node from old parent ``_children``
 * switches ``_parent``
 * appends to destination ``_children``
-* invalidates only the moved node's cached path
+* invalidates cached paths for the moved node and any loaded descendants
 
 Delete operations
 ~~~~~~~~~~~~~~~~~
@@ -206,33 +216,26 @@ Entry registry and dispatch
 
 :class:`~labapi.entry.entries.base.Entry` classes self-register through
 :meth:`~labapi.entry.entries.base.Entry.__init_subclass__` by declaring a
-``part_type``. The global registry maps ``part_type`` → class.
+``part_type``. The global registry maps ``part_type`` -> class.
 
 When page entries are loaded,
 :meth:`~labapi.entry.entries.base.Entry.from_part_type` dispatches to the
-registered class. Unknown/unsupported types are skipped with warnings in
+registered class. Recognized-but-unimplemented and fully unknown types are
+wrapped as :class:`~labapi.entry.entries.unknown.UnknownEntry` with warnings in
 :attr:`~labapi.tree.page.NotebookPage.entries`.
 
 Known shortcuts and TODO areas
 ------------------------------
 
-These are known design shortcuts that contributors should treat carefully:
+These are current incomplete areas that contributors should treat carefully:
 
-* :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` currently uses
-  ``cls.__name__ == "NotebookPage"`` to choose ``is_folder`` value (issue
-  ``#43``). This is brittle if class names change or new page-like types are
-  added.
-* Path invalidation after moves does not cascade to descendants (issue ``#78``).
-  Moved containers can leave stale descendant ``path`` caches.
-* Streaming/tree enumeration paths rely on ``StopIteration.value`` propagation
-  behavior in generator internals (issue ``#54``), which is concise but less
-  explicit than dedicated result objects.
-* Additional TODO markers in core modules highlight incomplete areas:
-
-  * container refresh does not reconcile detached child objects
-  * page refresh does not invalidate existing entry objects
-  * entry copy/upload and JSON helper workflows still contain implementation
-    TODOs
+* container refresh clears the owner's child cache, but detached child objects
+  held elsewhere are not reconciled in place
+* page refresh clears the page-level entries cache, but existing entry objects
+  are not invalidated in place
+* individual entry deletion is not implemented
+* ``create_json_entry()`` still creates two concrete entries and does not yet
+  model that pair as one logical unit
 
 Contributor checklist for internal changes
 ------------------------------------------

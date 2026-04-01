@@ -24,18 +24,8 @@ from labapi import (
     TextEntry,
     User,
 )
-
-
-def populate_notebook(notebook_name: str) -> None:
+def populate_notebook(user: User, notebook_name: str) -> None:
     """Populate a notebook with a nested structure and various entry types."""
-
-    print("Connecting to LabArchives...")
-    try:
-        client = Client()
-        user: User = client.default_authenticate()
-    except Exception as e:
-        print(f"Error authenticating: {e}")
-        sys.exit(1)
 
     notebooks = user.notebooks
     try:
@@ -102,7 +92,16 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    populate_notebook(args.notebook)
+    print("Connecting to LabArchives...")
+    try:
+        with Client() as client:
+            print("Authenticating...")
+            user = client.default_authenticate()
+            print("✓ Authenticated successfully")
+            populate_notebook(user, args.notebook)
+    except Exception as e:
+        print(f"Error authenticating: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

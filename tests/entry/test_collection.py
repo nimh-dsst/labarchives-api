@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from io import BytesIO
+from typing import Any, cast
 from unittest.mock import Mock
 
 import pytest
@@ -126,7 +127,7 @@ class TestEntriesUnit:
         )
 
         with pytest.raises(TypeError, match="TextEntry requires str data"):
-            entries.create(TextEntry, attachment)  # pyright: ignore[reportArgumentType]
+            entries.create(TextEntry, cast(Any, attachment))
 
         mock_user.api_post.assert_not_called()
 

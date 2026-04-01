@@ -14,8 +14,7 @@ Install the package with its development dependencies using ``uv``:
 
 .. code-block:: bash
 
-    uv sync
-    source .venv/bin/activate
+    uv sync --all-groups
     pre-commit install --hook-type pre-commit --hook-type pre-push
 
 Running Tests
@@ -28,7 +27,7 @@ To run the full suite, including integration tests:
 
 .. code-block:: bash
 
-    pytest --integration
+    uv run pytest --integration
 
 Unit tests
 ~~~~~~~~~~
@@ -38,19 +37,19 @@ they run entirely offline.
 
 .. code-block:: bash
 
-    pytest
+    uv run pytest
 
 Coverage is reported automatically. To skip the report and just see pass/fail:
 
 .. code-block:: bash
 
-    pytest --no-cov
+    uv run pytest --no-cov
 
 To run a single test file:
 
 .. code-block:: bash
 
-    pytest tests/tree/test_mixins.py
+    uv run pytest tests/tree/test_mixins.py
 
 Integration tests
 ~~~~~~~~~~~~~~~~~
@@ -65,15 +64,24 @@ environment (or a ``.env`` file):
     ACCESS_PWD=your_password
     API_URL=https://api.labarchives.com
 
-    # Required for non-interactive login
+    # Required for non-interactive login used by tests/test_integration.py
     AUTH_EMAIL=your@email.com
     AUTH_KEY=your_auth_key
+
+    # Optional: use the browser callback flow instead
+    # AUTH_INTERACTIVE=true
 
 Run them explicitly:
 
 .. code-block:: bash
 
-        pytest --integration tests/test_integration.py
+    uv run pytest --integration tests/test_integration.py
+
+.. note::
+
+   ``Client()`` only auto-loads ``API_URL``, ``ACCESS_KEYID``, and
+   ``ACCESS_PWD``. ``AUTH_EMAIL`` and ``AUTH_KEY`` are conventions used by
+   this repository's integration-test fixtures.
 
 Code Style
 ----------
@@ -94,16 +102,16 @@ You can run them manually at any time:
 
 .. code-block:: bash
 
-    ruff check --fix .
-    ruff format .
+    uv run ruff check --fix .
+    uv run ruff format .
     uv run pytest --no-cov
 
 Or check without making changes:
 
 .. code-block:: bash
 
-    ruff check .
-    ruff format --check .
+    uv run ruff check .
+    uv run ruff format --check .
 
 Type checking
 ~~~~~~~~~~~~~
@@ -116,6 +124,21 @@ Run it locally with:
 .. code-block:: bash
 
     uv run pyright
+
+Continuous integration
+~~~~~~~~~~~~~~~~~~~~~~
+
+GitHub Actions split the main quality gates into separate workflows under
+``.github/workflows``:
+
+* unit tests
+* lint
+* format
+* typecheck
+* docs
+* manual integration tests
+
+Keeping these commands green locally is the fastest way to avoid CI surprises.
 
 Type System
 -----------

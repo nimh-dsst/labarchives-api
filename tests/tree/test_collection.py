@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
 from unittest.mock import Mock
 
 import pytest
@@ -80,7 +81,7 @@ class TestNotebooksUnit:
         notebooks = Notebooks(notebooks_init, mock_user)
 
         with pytest.raises(TypeError, match="Invalid key type"):
-            notebooks[123]  # pyright: ignore[reportArgumentType]
+            notebooks[cast(Any, 123)]
 
     def test_notebooks_iter(self):
         """Test Notebooks.__iter__ returns iterator over names."""

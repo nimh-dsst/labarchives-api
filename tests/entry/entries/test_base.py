@@ -41,6 +41,7 @@ class TestEntryUnit:
         """Test UnknownEntry avoids reserving a plausible upstream part-type value."""
         assert Entry.is_registered("unknown entry") is False
 
+
 class TestEntryIntegration:
     """Integration tests with real objects and mocked API."""
 

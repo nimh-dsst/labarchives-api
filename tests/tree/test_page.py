@@ -66,7 +66,9 @@ class TestNotebookPageUnit:
         NotebookPage.copy_to(source_page, destination)
 
         destination.create.assert_called_once()
-        new_page_entries.create.assert_called_once_with(attachment_entry.__class__, attachment)
+        new_page_entries.create.assert_called_once_with(
+            attachment_entry.__class__, attachment
+        )
         assert attachment.closed is True
 
     def test_copy_to_warns_and_continues_when_attachment_copy_fails(self):
@@ -101,7 +103,9 @@ class TestNotebookPageUnit:
         with pytest.warns(RuntimeWarning, match="This entry was skipped"):
             NotebookPage.copy_to(source_page, destination)
 
-        new_page_entries.create.assert_called_once_with(attachment_entry.__class__, attachment)
+        new_page_entries.create.assert_called_once_with(
+            attachment_entry.__class__, attachment
+        )
         assert attachment.closed is True
 
     def test_copy_to_warns_and_continues_when_entry_create_raises(self):

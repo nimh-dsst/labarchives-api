@@ -219,22 +219,20 @@ def main() -> None:
             print("Use --overwrite to overwrite existing files")
             sys.exit(1)
 
-    # Initialize client and authenticate
     print("Connecting to LabArchives...")
     try:
-        client = Client()  # Loads credentials from .env
-        print("Authenticating...")
-        user = client.default_authenticate()  # Opens browser for OAuth
-        print("✓ Authenticated successfully")
+        with Client() as client:
+            print("Authenticating...")
+            user = client.default_authenticate()
+            print("✓ Authenticated successfully")
+
+            download_notebook_or_folder(user, args.notebook, args.path, output_dir)
     except Exception as e:
         print(f"Authentication error: {e}")
         print("\nMake sure you have a .env file with your credentials:")
         print("  ACCESS_KEYID=your_access_key_id")
         print("  ACCESS_PWD=your_password")
         sys.exit(1)
-
-    # Download the requested path
-    download_notebook_or_folder(user, args.notebook, args.path, output_dir)
 
 
 if __name__ == "__main__":

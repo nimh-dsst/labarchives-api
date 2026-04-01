@@ -53,8 +53,8 @@ def test_browser_detection_env_var_is_resolved_at_call_time(
     browser_module, mock_installed_browsers, monkeypatch
 ):
     """Test LA_AUTH_BROWSER is read for each detection attempt."""
-    mock_installed_browsers.do_i_have_installed.side_effect = (
-        lambda browser_name: browser_name in {"firefox", "edge"}
+    mock_installed_browsers.do_i_have_installed.side_effect = lambda browser_name: (
+        browser_name in {"firefox", "edge"}
     )
 
     monkeypatch.setenv("LA_AUTH_BROWSER", "firefox")
@@ -96,7 +96,8 @@ def test_browser_detection_terminal_fallback(
     mock_installed_browsers.browsers.return_value = []
 
     with pytest.warns(
-        RuntimeWarning, match="Automatic browser detection failed: No compatible browser"
+        RuntimeWarning,
+        match="Automatic browser detection failed: No compatible browser",
     ):
         assert browser_module.detect_default_browser() == "terminal"
 

@@ -1,11 +1,12 @@
 .. _example_csv_table:
 
 CSV Table Upload/Download
-==========================
+=========================
 
-This example demonstrates how to upload CSV files as rich text HTML tables in LabArchives,
-and download those tables back as CSV files. This is useful for displaying tabular data
-in a formatted, readable way while maintaining the ability to extract it back to CSV.
+This example demonstrates how to upload CSV files as rich text HTML tables in
+LabArchives, and download those tables back as CSV files. This is useful for
+displaying tabular data in a formatted, readable way while maintaining the
+ability to extract it back to CSV.
 
 Use Case
 --------
@@ -45,20 +46,20 @@ Usage Examples
 .. code-block:: bash
 
     # Basic upload
-    python csv_table.py upload data.csv "Experiments/Results" --notebook "My Notebook"
+    uv run --with beautifulsoup4 python examples/csv_table/csv_table.py upload data.csv "Experiments/Results" --notebook "My Notebook"
 
     # Upload CSV without header row
-    python csv_table.py upload data.csv "Experiments/Results" --notebook "My Notebook" --no-header
+    uv run --with beautifulsoup4 python examples/csv_table/csv_table.py upload data.csv "Experiments/Results" --notebook "My Notebook" --no-header
 
 **Download a table as CSV:**
 
 .. code-block:: bash
 
     # Download the most recent table from a page
-    python csv_table.py download "Experiments/Results" output.csv --notebook "My Notebook"
+    uv run --with beautifulsoup4 python examples/csv_table/csv_table.py download "Experiments/Results" output.csv --notebook "My Notebook"
 
     # Download a specific entry by index (0-based)
-    python csv_table.py download "Experiments/Results" output.csv --notebook "My Notebook" --entry-index 2
+    uv run --with beautifulsoup4 python examples/csv_table/csv_table.py download "Experiments/Results" output.csv --notebook "My Notebook" --entry-index 2
 
 Example CSV Input
 -----------------
@@ -113,8 +114,7 @@ Dependencies
 ------------
 
 This example expects ``labapi[dotenv,builtin-auth]`` for local ``.env`` loading
-and browser auth, plus ``beautifulsoup4`` for HTML parsing
-
+and browser auth, plus ``beautifulsoup4`` for HTML parsing.
 
 Configuration
 -------------
@@ -133,17 +133,20 @@ See :ref:`first_calls` for more information on setting up credentials.
 Notes
 -----
 
-- Tables are uploaded as rich text entries, making them readable in the LabArchives web interface
+- Tables are uploaded as rich text entries, making them readable in the
+  LabArchives web interface
 - Tables are rendered with LabArchives' default styling (no inline CSS)
-- The script preserves table structure and can round-trip CSV → HTML → CSV
-- Multiple tables on one page are supported; by default, the download uses the most recent table
+- The script preserves table structure and can round-trip CSV -> HTML -> CSV
+- Multiple tables on one page are supported; by default, the download uses the
+  most recent table
 - Empty cells in CSV files are preserved in the HTML table
 - The script handles CSV files with or without header rows
 
 Limitations
 -----------
 
-- Cell formatting (bold, italic, colors) in existing tables may be lost during CSV export
+- Cell formatting (bold, italic, colors) in existing tables may be lost during
+  CSV export
 - Complex nested tables are not supported
 - Only the first table is extracted if an entry contains multiple tables
 - CSV files with special characters should use UTF-8 encoding

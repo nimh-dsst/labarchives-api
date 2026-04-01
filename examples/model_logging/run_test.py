@@ -9,6 +9,7 @@ import argparse
 import json
 from pathlib import Path
 
+from labapi import Client
 from model_logger import ModelLogger
 
 
@@ -22,28 +23,27 @@ def main() -> None:
     data_dir = Path(__file__).parent / "test_data"
 
     # 1. Load Metrics
-    with open(data_dir / "metrics.json", "r") as f:
+    with (data_dir / "metrics.json").open("r", encoding="utf-8") as f:
         metrics = json.load(f)
 
     # 2. Load Results
-    with open(data_dir / "results.csv", "rb") as f:
+    with (data_dir / "results.csv").open("rb") as f:
         results_bytes = f.read()
 
     # 3. Load Figure
-    with open(data_dir / "dummy_figure.png", "rb") as f:
+    with (data_dir / "dummy_figure.png").open("rb") as f:
         figure_bytes = f.read()
 
-    # Initialize logger (authenticates)
-    logger = ModelLogger(notebook_name=args.notebook)
-
-    # Perform the log
-    logger.log(
-        tags=["production", ["cnn", "pytorch"], "experiment-12"],
-        metrics=metrics,
-        results=results_bytes,
-        figures=[figure_bytes],
-        commit="f7e2a4c1",
-    )
+    with Client() as client:
+        user = client.default_authenticate()
+        logger = ModelLogger(notebook_name=args.notebook, user=user)
+        logger.log(
+            tags=["production", ["cnn", "pytorch"], "experiment-12"],
+            metrics=metrics,
+            results=results_bytes,
+            figures=[figure_bytes],
+            commit="f7e2a4c1",
+        )
 
 
 if __name__ == "__main__":

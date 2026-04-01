@@ -71,9 +71,7 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
             mime_type = msg.get_content_type()
 
             if filename is None:
-                raise ApiError(
-                    "Could not determine filename from API response headers"
-                )
+                raise ApiError("Could not determine filename from API response headers")
 
             output.seek(0)
 

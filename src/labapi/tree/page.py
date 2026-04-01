@@ -65,7 +65,7 @@ class NotebookPage(AbstractTreeNode):
 
         .. note::
            Slicing on the returned collection provides snapshots.
-           Iterators are also snapshots and are therefore 
+           Iterators over the collection are also snapshots and are therefore
            insulated from later collection mutations.
 
         :returns: An :class:`~labapi.entry.Entries` object managing the page's entries.
@@ -153,6 +153,7 @@ class NotebookPage(AbstractTreeNode):
 
         :param destination: The target container to copy the page to.
         :returns: A new instance of the copied page in the destination.
+
         Copy behavior for attachments is explicit:
 
         - attachment payloads are copied by reading and re-uploading the attachment content,
@@ -178,7 +179,8 @@ class NotebookPage(AbstractTreeNode):
                 # For attachments, Entries.create uploads the payload and returns a
                 # distinct destination attachment entry; it does not mutate the source
                 # entry or preserve source attachment IDs.
-                new_page.entries.create(entry.__class__, entry_content)
+                assert entry_content is not None
+                new_page.entries.create(cast(Any, entry.__class__), entry_content)
             except Exception as exc:
                 warnings.warn(
                     f"Failed to copy entry {entry.id!r} ({entry.content_type!r}) from page "

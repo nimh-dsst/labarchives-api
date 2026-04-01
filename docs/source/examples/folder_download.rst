@@ -1,10 +1,11 @@
 .. _example_folder_download:
 
 Folder Structure Download
-==========================
+=========================
 
-This example demonstrates how to download a complete LabArchives folder structure to your local computer,
-preserving the directory hierarchy. Pages become directories, and individual entries are saved as separate files.
+This example demonstrates how to download a complete LabArchives folder
+structure to your local computer, preserving the directory hierarchy. Pages
+become directories, and individual entries are saved as separate files.
 
 Use Case
 --------
@@ -27,16 +28,16 @@ The script mirrors the LabArchives structure:
     LabArchives Structure:          Local File Structure:
 
     My Notebook/                    output/
-    ├── Experiments/                ├── Experiments/
-    │   ├── Trial 1/  (page)        │   ├── Trial 1/
-    │   │   ├── Header entry        │   │   ├── 001_header.txt
-    │   │   ├── Text entry          │   │   ├── 002_text.html
-    │   │   └── Attachment          │   │   └── 003_attachment_image.png
-    │   └── Trial 2/  (page)        │   └── Trial 2/
-    │       └── Text entry          │       └── 001_text.html
-    └── Data/  (directory)          └── Data/
-        └── Results/  (page)            └── Results/
-            └── Attachment                  └── 001_attachment_data.csv
+    |- Experiments/                 |- Experiments/
+    |  |- Trial 1/  (page)          |  |- Trial 1/
+    |  |  |- Header entry           |  |  |- 001_header.txt
+    |  |  |- Text entry             |  |  |- 002_text.html
+    |  |  `- Attachment             |  |  `- 003_attachment_image.png
+    |  `- Trial 2/  (page)          |  `- Trial 2/
+    |     `- Text entry             |     `- 001_text.html
+    `- Data/  (directory)           `- Data/
+       `- Results/  (page)             `- Results/
+          `- Attachment                  `- 001_attachment_data.csv
 
 Example Code
 ------------
@@ -51,19 +52,19 @@ Usage Examples
 
 .. code-block:: bash
 
-    python folder_download.py ./backup --notebook "My Notebook"
+    uv run python examples/folder_download/folder_download.py ./backup --notebook "My Notebook"
 
 **Download specific folder:**
 
 .. code-block:: bash
 
-    python folder_download.py ./2024_experiments --notebook "My Notebook" --path "Experiments/2024"
+    uv run python examples/folder_download/folder_download.py ./2024_experiments --notebook "My Notebook" --path "Experiments/2024"
 
 **Overwrite existing files:**
 
 .. code-block:: bash
 
-    python folder_download.py ./backup --notebook "My Notebook" --overwrite
+    uv run python examples/folder_download/folder_download.py ./backup --notebook "My Notebook" --overwrite
 
 File Naming Convention
 ----------------------
@@ -81,7 +82,7 @@ Downloaded entries follow this naming pattern:
 - Entries are numbered in the order they appear on the page
 - Entry type is indicated in the filename
 - Attachments preserve their original filename
-- Captions are saved in separate `*_caption.txt` files
+- Captions are saved in separate ``*_caption.txt`` files
 
 Output Structure
 ----------------
@@ -119,7 +120,8 @@ Notes
 - Filenames are sanitized to be filesystem-safe
 - Widget entries are noted but cannot be fully exported (they're read-only)
 - Large notebooks may take significant time to download
-- The script creates a ``_metadata.txt`` file for each page with additional information
+- The script creates a ``_metadata.txt`` file for each page with additional
+  information
 
 Enhancements
 ------------

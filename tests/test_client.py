@@ -8,6 +8,7 @@ from http.client import HTTPConnection
 from os import getenv
 from threading import Thread
 from time import monotonic, sleep
+from typing import TypedDict
 from unittest.mock import MagicMock, Mock, patch
 from urllib.parse import parse_qsl, urlsplit
 
@@ -17,6 +18,10 @@ from requests import Response
 
 from labapi import Client, User
 from labapi.exceptions import ApiError, AuthenticationError
+
+
+class ConstructUrlKwargs(TypedDict, total=False):
+    should_prefix_api: bool
 
 
 class FakeLoopbackTCPServer:
@@ -188,7 +193,7 @@ class TestClientUnit:
     def test_client_construct_url_rejects_empty_normalized_paths(
         self,
         api_method_uri: str | list[str],
-        kwargs: dict[str, bool],
+        kwargs: ConstructUrlKwargs,
     ):
         """Test construct_url rejects paths that normalize to no segments."""
         client = Client("https://api.test.com", "test_akid", "test_password")
@@ -526,9 +531,7 @@ class TestClientUnit:
         assert "Open authentication URL in your browser:" in captured.out
         assert "https://auth.test/url" in captured.out
 
-    def test_default_authenticate_does_not_warn_when_terminal_is_explicit(
-        self, capsys
-    ):
+    def test_default_authenticate_does_not_warn_when_terminal_is_explicit(self, capsys):
         """Test no warning is shown when terminal auth is explicitly configured."""
         client = Client("https://api.test.com", "test_akid", "test_password")
         generate_auth_url = Mock(return_value="https://auth.test/url")
@@ -578,7 +581,10 @@ class TestClientUnit:
             ),
             patch("labapi.client.token_urlsafe", return_value="test-token"),
             patch("labapi.client.detect_default_browser", return_value="terminal"),
-            patch("builtins.print", side_effect=lambda *args, **kwargs: events.append("print")),
+            patch(
+                "builtins.print",
+                side_effect=lambda *args, **kwargs: events.append("print"),
+            ),
         ):
             client.default_authenticate()
 

@@ -16,19 +16,19 @@ This example demonstrates a structured way to log machine learning model metadat
 ## Usage
 
 ```python
+from labapi import Client
 from model_logger import ModelLogger
 
-# Initialize logger (will trigger browser authentication)
-logger = ModelLogger(notebook_name="My Research")
-
-# Log a model run
-logger.log(
-    tags=["baseline", "resnet50", "imagenet"],
-    metrics={"f1": 0.88, "accuracy": 0.92, "loss": 0.15},
-    results=b"Prediction results data...",
-    figures=[b"Figure 1 data...", b"Figure 2 data..."],
-    commit="a1b2c3d4e5f6..."
-)
+with Client() as client:
+    user = client.default_authenticate()
+    logger = ModelLogger(notebook_name="My Research", user=user)
+    logger.log(
+        tags=["baseline", "resnet50", "imagenet"],
+        metrics={"f1": 0.88, "accuracy": 0.92, "loss": 0.15},
+        results=b"Prediction results data...",
+        figures=[b"Figure 1 data...", b"Figure 2 data..."],
+        commit="a1b2c3d4e5f6..."
+    )
 ```
 
 ## Configuration

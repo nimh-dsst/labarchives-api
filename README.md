@@ -84,18 +84,20 @@ The client supports two patterns:
 ```python
 from labapi import Client
 
-# Initialize the client (loads ACCESS_KEYID / ACCESS_PWD / API_URL from env vars
-# and optionally from .env if you installed labapi[dotenv])
-client = Client()
-
 # Local interactive usage
-user = client.default_authenticate()
+with Client() as client:
+    user = client.default_authenticate()
+```
 
-# Service/headless usage:
-# 1) redirect users to client.generate_auth_url(callback_url)
-# 2) read email + auth_code from your callback handler
-# 3) exchange with client.login(...)
-# user = client.login(email, auth_code)
+```python
+from labapi import Client
+
+# Service/headless usage
+with Client() as client:
+    auth_url = client.generate_auth_url(callback_url)
+    # redirect the user to auth_url
+    # read email + auth_code from your callback handler
+    user = client.login(email, auth_code)
 ```
 
 For detailed service-oriented patterns (server callbacks, CI/scripted workflows, and token-handling guidance), see `docs/source/guide/auth.rst`.

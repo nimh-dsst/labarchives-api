@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
+from io import BufferedIOBase
 from typing import TYPE_CHECKING, Any, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -12,11 +13,9 @@ import requests
 from lxml import etree
 
 import labapi as LA
+from labapi.tree.collection import Notebooks
 
 # load_dotenv()
-
-if TYPE_CHECKING:
-    from io import BufferedIOBase
 
 
 def pytest_configure(config: pytest.Config):
@@ -114,11 +113,11 @@ class MockClient(LA.Client):
     def raw_api_post(
         self,
         api_method_uri: str | Sequence[str],
-        body: dict[str, str] | BufferedIOBase,
+        body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ) -> requests.Response:
         log_kwargs = {**kwargs}
-        if isinstance(body, dict):
+        if not isinstance(body, BufferedIOBase):
             log_kwargs.update(body)
 
         self._api_logs.append((api_method_uri, log_kwargs))
@@ -194,19 +193,19 @@ def user(client: MockClient):
 
 
 @pytest.fixture
-def notebooks(user: LA.User):
+def notebooks(user: LA.User) -> Notebooks:
     """Fixture providing a Notebooks collection."""
     return user.notebooks
 
 
 @pytest.fixture
-def notebook(notebooks: LA.Notebooks):
+def notebook(notebooks: Notebooks):
     """Fixture providing a single Notebook instance."""
     return notebooks[LA.Index.Id : "testnb1"]
 
 
 @pytest.fixture
-def new_notebook(client: MockClient, notebooks: LA.Notebooks):
+def new_notebook(client: MockClient, notebooks: Notebooks):
     """Fixture providing a newly created notebook."""
     client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
     <notebooks>
