@@ -99,6 +99,9 @@ Each downloaded location contains:
 Configuration
 -------------
 
+This example expects ``labapi[dotenv,builtin-auth]`` so ``Client()`` can read
+``.env`` and ``default_authenticate()`` can use the local browser flow.
+
 This example requires a ``.env`` file with your LabArchives credentials:
 
 .. code-block:: bash

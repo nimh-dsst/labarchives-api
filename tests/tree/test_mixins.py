@@ -124,6 +124,25 @@ class TestTreeMixinsIntegration:
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["display_text"] == "New Name"
 
+    def test_directory_rename_invalidates_descendant_path_cache(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test renaming a directory clears cached descendant paths."""
+        folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
+        page_a = notebook_tree.traverse("/Test Folder A/Dir1 Test Page A").as_page()
+        original_path = str(page_a.path)
+        assert original_path == "/Test Folder A/Dir1 Test Page A"
+
+        client.api_response = "<success/>"
+        folder_a.name = "Renamed Folder A"
+
+        assert str(page_a.path) == "/Renamed Folder A/Dir1 Test Page A"
+        assert page_a.traverse("..") is folder_a
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/update_node"
+        assert api_call[1]["display_text"] == "Renamed Folder A"
+
     def test_move_to(self, client, notebook_tree: Notebook):
         """Test moving a node to a new container."""
         page = notebook_tree[Index.Id : "page-1"]
@@ -141,6 +160,31 @@ class TestTreeMixinsIntegration:
         api_call = client.api_log
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["parent_tree_id"] == folder_a.tree_id
+
+    def test_move_to_invalidates_descendant_path_cache(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test moving a directory clears cached descendant paths."""
+        destination = notebook_tree[Index.Id : "dir-1"].as_dir()
+        source_dir = notebook_tree[Index.Id : "dir-2"].as_dir()
+        descendant = notebook_tree.traverse(
+            "/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
+        ).as_dir()
+        original_path = str(descendant.path)
+        assert original_path == "/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
+
+        client.api_response = "<success/>"
+        source_dir.move_to(destination)
+
+        assert (
+            str(descendant.path)
+            == "/Test Folder A/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
+        )
+        assert descendant.traverse("..").name == "Dir2 Subfolder B"
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/update_node"
+        assert api_call[1]["parent_tree_id"] == destination.tree_id
 
     def test_move_to_self_raises_without_api_call(self, client, notebook_tree: Notebook):
         """Test move_to rejects moving a directory into itself locally."""

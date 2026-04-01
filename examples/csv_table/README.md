@@ -6,14 +6,14 @@ This example demonstrates how to upload CSV files as rich text HTML tables in La
 
 This example requires the following packages:
 
-- `labapi` (the core library)
+- `labapi[dotenv,builtin-auth]` (the core library plus local auth helpers)
 - `beautifulsoup4` (for HTML parsing)
 
 You can install the dependencies using:
 
 ```bash
 # Using pip
-pip install .
+pip install -e "../../[dotenv,builtin-auth]" beautifulsoup4
 
 # Using uv (recommended)
 uv sync
@@ -49,7 +49,8 @@ uv run --with beautifulsoup4 python examples/csv_table/csv_table.py download "Ex
 
 ## Configuration
 
-Requires a `.env` file in the project root with your LabArchives credentials:
+Requires a `.env` file in the project root with your LabArchives credentials.
+The `.env` file is only auto-loaded when the `dotenv` extra is installed:
 
 ```env
 ACCESS_KEYID=your_access_key_id

@@ -112,16 +112,15 @@ The table will be displayed with LabArchives' default styling.
 Dependencies
 ------------
 
-This example requires the ``beautifulsoup4`` package for HTML parsing:
+This example expects ``labapi[dotenv,builtin-auth]`` for local ``.env`` loading
+and browser auth, plus ``beautifulsoup4`` for HTML parsing
 
-.. code-block:: bash
-
-    pip install beautifulsoup4
 
 Configuration
 -------------
 
-This example requires a ``.env`` file with your LabArchives credentials:
+This example requires a ``.env`` file with your LabArchives credentials. The
+``.env`` file is only auto-loaded when the ``dotenv`` extra is installed:
 
 .. code-block:: bash
 

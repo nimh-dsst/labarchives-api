@@ -3,7 +3,7 @@ name = "example-csv-table"
 version = "0.1.0"
 dependencies = [
     "beautifulsoup4>=4.12.3",
-    "labapi",
+    "labapi[dotenv,builtin-auth]",
 ]
 
 [tool.uv.sources]

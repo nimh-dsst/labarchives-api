@@ -26,6 +26,7 @@ from labapi import (
     AbstractTreeContainer,
     NotebookPage,
     TextEntry,
+    TraversalError,
     User,
 )
 
@@ -36,7 +37,9 @@ def get_or_create_page(
     """Return an existing page at ``path`` or create it with missing parents."""
     try:
         node = container.traverse(path)
-    except (KeyError, RuntimeError):
+    except TraversalError as err:
+        if err.available_children is None:
+            raise
         return container.create(
             NotebookPage,
             path,
@@ -164,7 +167,7 @@ def upload_csv_as_table(
         notebook = notebooks[notebook_name]
         print(f"Ensuring page path exists: {page_path}")
         page = get_or_create_page(notebook, page_path)
-    except Exception as e:
+    except (KeyError, TraversalError, TypeError, ValueError) as e:
         print(f"Error: Could not access or create path '{page_path}': {e}")
         sys.exit(1)
 
@@ -192,12 +195,19 @@ def download_table_as_csv(
     notebooks = user.notebooks
     try:
         notebook = notebooks[notebook_name]
-        page = notebook.traverse(page_path).as_page()
     except KeyError as e:
         print(
-            f"Error: Could not find notebook '{notebook_name}' or page '{page_path}': {e}"
+            f"Error: Could not find notebook '{notebook_name}': {e}"
         )
         print(f"Available notebooks: {list(notebooks.keys())}")
+        sys.exit(1)
+    try:
+        page = notebook.traverse(page_path).as_page()
+    except TraversalError as e:
+        print(f"Error: Could not find page '{page_path}' in notebook '{notebook_name}': {e}")
+        sys.exit(1)
+    except TypeError:
+        print(f"Error: '{page_path}' refers to a directory, but a page is required")
         sys.exit(1)
 
     entries = page.entries

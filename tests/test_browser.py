@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
+import importlib
 import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+
+def import_browser_module():
+    """Reload the browser module so import-time detection runs again."""
+    sys.modules.pop("labapi.browser", None)
+    return importlib.import_module("labapi.browser")
 
 
 @pytest.fixture
@@ -30,12 +37,8 @@ def test_browser_detection_env_var(mock_installed_browsers):
     mock_installed_browsers["do_i_have_installed"].return_value = True
 
     with patch("os.getenv", return_value="firefox"):
-        # Reload module to trigger detection logic
-        if "labapi.browser" in sys.modules:
-            del sys.modules["labapi.browser"]
-        import labapi.browser
-
-        assert labapi.browser.default_browser == "firefox"
+        browser = import_browser_module()
+        assert browser.default_browser == "firefox"
 
 
 def test_browser_detection_default_system(mock_installed_browsers):
@@ -45,11 +48,8 @@ def test_browser_detection_default_system(mock_installed_browsers):
     ].return_value = "Google Chrome"
 
     with patch("os.getenv", return_value=""):
-        if "labapi.browser" in sys.modules:
-            del sys.modules["labapi.browser"]
-        import labapi.browser
-
-        assert labapi.browser.default_browser == "chrome"
+        browser = import_browser_module()
+        assert browser.default_browser == "chrome"
 
 
 def test_browser_detection_fallback_list(mock_installed_browsers):
@@ -60,11 +60,8 @@ def test_browser_detection_fallback_list(mock_installed_browsers):
     ]
 
     with patch("os.getenv", return_value=""):
-        if "labapi.browser" in sys.modules:
-            del sys.modules["labapi.browser"]
-        import labapi.browser
-
-        assert labapi.browser.default_browser == "firefox"
+        browser = import_browser_module()
+        assert browser.default_browser == "firefox"
 
 
 def test_browser_detection_terminal_fallback(mock_installed_browsers):
@@ -73,28 +70,31 @@ def test_browser_detection_terminal_fallback(mock_installed_browsers):
     mock_installed_browsers["browsers"].return_value = []
 
     with patch("os.getenv", return_value=""):
-        if "labapi.browser" in sys.modules:
-            del sys.modules["labapi.browser"]
-        import labapi.browser
-
-        assert labapi.browser.default_browser is None
+        browser = import_browser_module()
+        assert browser.default_browser is None
 
 
 def test_browser_detection_import_error():
     """Test no-browser sentinel when installed_browsers cannot be imported."""
     with patch.dict("sys.modules", {"installed_browsers": None}):
-        if "labapi.browser" in sys.modules:
-            del sys.modules["labapi.browser"]
-        import labapi.browser
+        browser = import_browser_module()
+        assert browser.default_browser is None
 
-        assert labapi.browser.default_browser is None
+
+def test_browser_detection_runtime_failure_warns(mock_installed_browsers):
+    """Test runtime probe failures fall back to manual auth without crashing."""
+    mock_installed_browsers["browsers"].side_effect = OSError("registry unavailable")
+
+    with patch("os.getenv", return_value=""), pytest.warns(
+        RuntimeWarning, match="Automatic browser detection failed"
+    ):
+        browser = import_browser_module()
+
+    assert browser.default_browser is None
 
 
 def test_browser_detection_explicit_terminal_override(mock_installed_browsers):
     """Test terminal override from LA_AUTH_BROWSER."""
     with patch("os.getenv", return_value="terminal"):
-        if "labapi.browser" in sys.modules:
-            del sys.modules["labapi.browser"]
-        import labapi.browser
-
-        assert labapi.browser.default_browser == "terminal"
+        browser = import_browser_module()
+        assert browser.default_browser == "terminal"

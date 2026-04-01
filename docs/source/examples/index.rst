@@ -27,18 +27,18 @@ Prerequisites Matrix
      - Expected working directory
      - Auth style
    * - ``json_sync``
-     - ``labapi[builtin-auth]``
-     - ``selenium``, ``installed-browsers``
+     - ``labapi[dotenv,builtin-auth]``
+     - none
      - Repository root (for ``uv run python examples/json_sync/json_sync.py ...``)
      - Interactive browser auth via ``Client.default_authenticate()``
    * - ``folder_download``
-     - ``labapi[builtin-auth]``
-     - ``selenium``, ``installed-browsers``
+     - ``labapi[dotenv,builtin-auth]``
+     - none
      - Repository root (for ``uv run python examples/folder_download/folder_download.py ...``)
      - Interactive browser auth via ``Client.default_authenticate()``
    * - ``csv_table``
-     - ``labapi[builtin-auth]``
-     - ``selenium``, ``installed-browsers``, ``beautifulsoup4``
+     - ``labapi[dotenv,builtin-auth]``
+     - ``beautifulsoup4``
      - Repository root (for ``uv run --with beautifulsoup4 python examples/csv_table/csv_table.py ...``)
      - Interactive browser auth via ``Client.default_authenticate()``
 
@@ -73,7 +73,7 @@ Prerequisites
 ~~~~~~~~~~~~~
 
 - **LabArchives API credentials** in a ``.env`` file (``ACCESS_KEYID``, ``ACCESS_PWD``).
-- **Python 3.12+** with ``labapi`` installed.
+- **Python 3.12+** with ``labapi[dotenv,builtin-auth]`` installed.
 - **beautifulsoup4** (required for the CSV Table example).
 
 Running the Examples

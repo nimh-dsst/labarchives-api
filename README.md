@@ -22,7 +22,15 @@ uv add labapi
 pip install labapi
 ```
 
-If you want `Client()` to automatically load credentials from a local `.env` file, install the optional `dotenv` extra:
+For the local interactive path used throughout the quick start and examples, install both the `.env` loader and browser-auth extras:
+
+```bash
+uv add "labapi[dotenv,builtin-auth]"
+# or
+pip install 'labapi[dotenv,builtin-auth]'
+```
+
+If you only want `Client()` to automatically load credentials from a local `.env` file, install the `dotenv` extra:
 
 ```bash
 pip install 'labapi[dotenv]'

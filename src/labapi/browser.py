@@ -10,6 +10,8 @@ back to terminal URL output.
 The detected browser is exposed via the `default_browser` module-level variable.
 """
 
+import warnings
+
 try:
     from os import getenv
 
@@ -54,4 +56,11 @@ try:
                         default_browser = choice
                         break
 except ImportError:
+    default_browser = None
+except Exception as exc:
+    warnings.warn(
+        f"Automatic browser detection failed: {exc}. Falling back to terminal/manual auth.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
     default_browser = None

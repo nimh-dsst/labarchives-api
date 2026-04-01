@@ -146,6 +146,14 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
         return self._path
 
+    def _invalidate_path(self) -> None:
+        """Clear cached paths for this node and any loaded descendants."""
+        self._has_path = False
+
+        if isinstance(self, AbstractTreeContainer):
+            for child in self._children:
+                child._invalidate_path()
+
     @abstractmethod
     def is_dir(self) -> bool:
         """Method to determine if the node is a directory.
@@ -287,6 +295,7 @@ class AbstractTreeNode(AbstractBaseTreeNode):
         )
 
         self._name = value
+        self._invalidate_path()
 
     @abstractmethod
     def copy_to(self, destination: AbstractTreeContainer) -> Self:
@@ -327,7 +336,7 @@ class AbstractTreeNode(AbstractBaseTreeNode):
         self.parent._children.append(self)  # pyright: ignore[reportPrivateUsage]
         # This adds current node to new parent in-place
 
-        self._has_path = False
+        self._invalidate_path()
         return self
 
     def delete(self) -> Self:
