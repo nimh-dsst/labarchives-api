@@ -17,7 +17,7 @@ from operator import itemgetter
 from os import getenv
 from socketserver import TCPServer
 from types import TracebackType
-from typing import Any, Generator, Self, Iterator, Mapping, Sequence, override
+from typing import Any, Self, Iterator, Mapping, Sequence, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cryptography.hazmat.primitives.hashes import SHA512
@@ -40,6 +40,12 @@ _AUTH_ERROR_CODES: frozenset[int] = frozenset(
         4520,  # invalid signature
         4533,  # session timed out
     }
+)
+
+_DEFAULT_AUTH_CALLBACK_HOST = "localhost"
+_DEFAULT_AUTH_CALLBACK_PORT = 8089
+_DEFAULT_AUTH_CALLBACK_URL = (
+    f"http://{_DEFAULT_AUTH_CALLBACK_HOST}:{_DEFAULT_AUTH_CALLBACK_PORT}/"
 )
 
 try:
@@ -479,7 +485,7 @@ class Client:
         and a local HTTP server to capture the authentication code.
 
         This method opens a browser window, directs the user to the LabArchives
-        authentication page, and then listens on `http://localhost:8089/` for
+        authentication page, and then listens on `http://127.0.0.1:8089/` for
         the redirect containing the authorization code. If no compatible browser
         is detected, it falls back to printing the authentication URL to the terminal,
         requiring the user to manually open it.
@@ -493,7 +499,7 @@ class Client:
         :raises RuntimeError: If authentication fails.
         """
         self._ensure_open()
-        auth_url = self.generate_auth_url("http://localhost:8089/")
+        auth_url = self.generate_auth_url(_DEFAULT_AUTH_CALLBACK_URL)
 
         driver = None
         options = None
@@ -555,7 +561,7 @@ class Client:
         """
         Launches a local HTTP server to capture the authentication response from LabArchives.
 
-        This server listens on `http://localhost:8089/` for the redirect from
+        This server listens on `http://127.0.0.1:8089/` for the redirect from
         LabArchives containing the authorization code and user email after
         successful authentication.
 
@@ -590,7 +596,10 @@ class Client:
             def log_message(self, format: str, *args: Any) -> None:
                 pass
 
-        with TCPServer(("127.0.0.1", 8089), AuthRequestHandler) as httpd:
+        with TCPServer(
+            (_DEFAULT_AUTH_CALLBACK_HOST, _DEFAULT_AUTH_CALLBACK_PORT),
+            AuthRequestHandler,
+        ) as httpd:
             httpd.handle_request()
 
         if "error" in auth_info:

@@ -101,7 +101,7 @@ class NotebookLogger:
             print(f"Using existing authentication for: {user.email}")
             return user
 
-        auth_url = self.client.generate_auth_url("http://localhost:8089/")
+        auth_url = self.client.generate_auth_url("http://127.0.0.1:8089/")
         self._display_auth_prompt(auth_url)
 
         print("Waiting for authentication...")
