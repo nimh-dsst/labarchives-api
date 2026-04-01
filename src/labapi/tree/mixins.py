@@ -588,7 +588,7 @@ class AbstractTreeContainer(
                 return True
 
         return False
-    
+
     def _enumerate_nodes(
         self,
         *,

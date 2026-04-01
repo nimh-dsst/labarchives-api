@@ -16,6 +16,8 @@ from labapi import (
     TextEntry,
     User,
 )
+
+
 def populate_notebook(user: User, notebook_name: str) -> None:
     """Populate a notebook with a nested structure and various entry types."""
     notebooks = user.notebooks

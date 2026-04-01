@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
 from io import BufferedIOBase
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import pytest
