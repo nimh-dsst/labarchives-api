@@ -1,4 +1,4 @@
-name: Unit Tests
+name: Type Check
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     branches: ["main"]
 
 jobs:
-  unit-tests:
-    name: Unit tests (Python ${{ matrix.python-version }})
+  typecheck:
+    name: Pyright (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -31,5 +31,5 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-groups
 
-      - name: Run unit tests with pytest
-        run: uv run pytest
+      - name: Run pyright
+        run: uv run pyright

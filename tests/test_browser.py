@@ -90,16 +90,19 @@ def test_browser_detection_fallback_list(
 def test_browser_detection_terminal_fallback(
     browser_module, mock_installed_browsers, monkeypatch
 ):
-    """Test no-browser sentinel when no compatible browser is found."""
+    """Test terminal fallback when no compatible browser is found."""
     monkeypatch.delenv("LA_AUTH_BROWSER", raising=False)
     mock_installed_browsers.what_is_the_default_browser.return_value = None
     mock_installed_browsers.browsers.return_value = []
 
-    assert browser_module.detect_default_browser() is None
+    with pytest.warns(
+        RuntimeWarning, match="Automatic browser detection failed: No compatible browser"
+    ):
+        assert browser_module.detect_default_browser() == "terminal"
 
 
 def test_browser_detection_import_error(browser_module, monkeypatch):
-    """Test no-browser sentinel when installed_browsers cannot be imported."""
+    """Test terminal fallback when installed_browsers cannot be imported."""
     monkeypatch.delenv("LA_AUTH_BROWSER", raising=False)
 
     with (
@@ -109,7 +112,7 @@ def test_browser_detection_import_error(browser_module, monkeypatch):
             match="Automatic browser detection requires the optional 'builtin-auth' dependencies",
         ),
     ):
-        assert browser_module.detect_default_browser() is None
+        assert browser_module.detect_default_browser() == "terminal"
 
 
 def test_browser_detection_warns_for_invalid_env_value_and_falls_back(
@@ -126,7 +129,7 @@ def test_browser_detection_warns_for_invalid_env_value_and_falls_back(
 def test_browser_detection_warns_when_nonterminal_env_requires_optional_deps(
     browser_module, monkeypatch
 ):
-    """Test non-terminal LA_AUTH_BROWSER values warn when builtin-auth is absent."""
+    """Test non-terminal LA_AUTH_BROWSER values fall back to terminal when builtin-auth is absent."""
     monkeypatch.setenv("LA_AUTH_BROWSER", "chrome")
 
     with (
@@ -136,7 +139,7 @@ def test_browser_detection_warns_when_nonterminal_env_requires_optional_deps(
             match="Automatic browser detection requires the optional 'builtin-auth' dependencies",
         ),
     ):
-        assert browser_module.detect_default_browser() is None
+        assert browser_module.detect_default_browser() == "terminal"
 
 
 def test_browser_detection_warns_and_autodetects_when_preferred_browser_missing(
@@ -157,12 +160,12 @@ def test_browser_detection_warns_and_autodetects_when_preferred_browser_missing(
 def test_browser_detection_runtime_failure_warns(
     browser_module, mock_installed_browsers, monkeypatch
 ):
-    """Test runtime probe failures fall back to manual auth without crashing."""
+    """Test runtime probe failures fall back to terminal auth without crashing."""
     monkeypatch.delenv("LA_AUTH_BROWSER", raising=False)
     mock_installed_browsers.browsers.side_effect = OSError("registry unavailable")
 
     with pytest.warns(RuntimeWarning, match="Automatic browser detection failed"):
-        assert browser_module.detect_default_browser() is None
+        assert browser_module.detect_default_browser() == "terminal"
 
 
 def test_browser_detection_explicit_terminal_override(browser_module, monkeypatch):
