@@ -39,6 +39,26 @@ ACCESS_KEYID=your_access_key_id
 ACCESS_PWD=your_access_password
 ```
 
+Or set environment variables directly in your shell:
+
+```bash
+export API_URL=https://api.labarchives.com
+export ACCESS_KEYID=your_access_key_id
+export ACCESS_PWD=your_access_password
+```
+
+```powershell
+$env:API_URL="https://api.labarchives.com"
+$env:ACCESS_KEYID="your_access_key_id"
+$env:ACCESS_PWD="your_access_password"
+```
+
+```cmd
+set API_URL=https://api.labarchives.com
+set ACCESS_KEYID=your_access_key_id
+set ACCESS_PWD=your_access_password
+```
+
 ## First Success Tutorial
 
 If you want a single copy/paste path from install to a visible result in LabArchives, start with the [First Success Tutorial](docs/source/quick_start/tutorial.rst).

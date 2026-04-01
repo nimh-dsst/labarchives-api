@@ -35,11 +35,31 @@ You will need your API URL, Access Key ID, and Access Password. There are severa
 
       Set the environment variables before running your script.
 
-      .. code-block:: bash
+      .. tab-set::
 
-         export API_URL="https://api.labarchives.com"
-         export ACCESS_KEYID="your_access_key"
-         export ACCESS_PWD="your_access_password"
+         .. tab-item:: Bash
+
+            .. code-block:: bash
+
+               export API_URL="https://api.labarchives.com"
+               export ACCESS_KEYID="your_access_key"
+               export ACCESS_PWD="your_access_password"
+
+         .. tab-item:: PowerShell
+
+            .. code-block:: powershell
+
+               $env:API_URL="https://api.labarchives.com"
+               $env:ACCESS_KEYID="your_access_key"
+               $env:ACCESS_PWD="your_access_password"
+
+         .. tab-item:: Command Prompt
+
+            .. code-block:: bat
+
+               set API_URL=https://api.labarchives.com
+               set ACCESS_KEYID=your_access_key
+               set ACCESS_PWD=your_access_password
 
       And in Python:
 

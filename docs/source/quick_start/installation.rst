@@ -47,6 +47,34 @@ from a local ``.env`` file, install the ``dotenv`` optional dependency group:
 
   pip install 'labapi[dotenv]'
 
+Or set those variables directly in your current shell session:
+
+.. tab-set::
+
+  .. tab-item:: Bash
+
+    .. code-block:: bash
+
+      export API_URL="https://api.labarchives.com"
+      export ACCESS_KEYID="your_access_key"
+      export ACCESS_PWD="your_access_password"
+
+  .. tab-item:: PowerShell
+
+    .. code-block:: powershell
+
+      $env:API_URL="https://api.labarchives.com"
+      $env:ACCESS_KEYID="your_access_key"
+      $env:ACCESS_PWD="your_access_password"
+
+  .. tab-item:: Command Prompt
+
+    .. code-block:: bat
+
+      set API_URL=https://api.labarchives.com
+      set ACCESS_KEYID=your_access_key
+      set ACCESS_PWD=your_access_password
+
 
 .. _optional-deps:
 
@@ -105,7 +133,6 @@ Optional Dependencies
       .. code-block:: bash
         
         pip install 'labapi[dotenv]'
-
 
 
 
