@@ -412,6 +412,24 @@ class TestClientUnit:
             client.default_authenticate()
 
         generate_auth_url.assert_called_once_with("http://127.0.0.1:8089/")
+        collect_auth_response.assert_called_once_with(port=8089)
+
+    def test_default_authenticate_accepts_custom_callback_port(self, monkeypatch):
+        """Test interactive auth uses a caller-provided callback port."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        generate_auth_url = Mock(return_value="https://auth.test/url")
+        collect_auth_response = Mock(return_value=Mock(spec=User))
+        monkeypatch.setenv("LA_AUTH_BROWSER", "terminal")
+
+        with (
+            patch.object(client, "generate_auth_url", generate_auth_url),
+            patch.object(client, "collect_auth_response", collect_auth_response),
+            patch("labapi.client.default_browser", "terminal"),
+        ):
+            client.default_authenticate(port=9001)
+
+        generate_auth_url.assert_called_once_with("http://127.0.0.1:9001/")
+        collect_auth_response.assert_called_once_with(port=9001)
 
     def test_collect_auth_response_binds_loopback_callback_listener(self):
         """Test auth callback capture binds the expected loopback listener."""
@@ -439,6 +457,33 @@ class TestClientUnit:
                 client.collect_auth_response()
 
         assert bind_info["server_address"] == ("127.0.0.1", 8089)
+
+    def test_collect_auth_response_accepts_custom_callback_port(self):
+        """Test auth callback capture can bind a caller-provided port."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        bind_info: dict[str, tuple[str, int]] = {}
+
+        class StopServer(Exception):
+            """Sentinel exception to stop before request handling."""
+
+        class FakeTCPServer:
+            def __init__(self, server_address, _handler_cls):
+                bind_info["server_address"] = server_address
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                return False
+
+            def handle_request(self):
+                raise StopServer()
+
+        with patch("labapi.client.TCPServer", FakeTCPServer):
+            with pytest.raises(StopServer):
+                client.collect_auth_response(port=9001)
+
+        assert bind_info["server_address"] == ("127.0.0.1", 9001)
 
     def test_stream_api_get_yields_chunks_and_returns_response(self):
         """Test stream_api_get yields streamed chunks and returns the response."""

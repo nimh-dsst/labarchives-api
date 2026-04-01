@@ -69,7 +69,7 @@ If you want a single copy/paste path from install to a visible result in LabArch
 
 The client supports two patterns:
 
-- **Interactive/local development:** `default_authenticate()` opens the LabArchives flow and captures the callback on `localhost`.
+- **Interactive/local development:** `default_authenticate()` opens the LabArchives flow and captures the callback on `127.0.0.1` (default port `8089`).
 - **Service/headless automation (CI, schedulers, backend jobs):** your app owns the redirect endpoint and then calls `login(email, auth_code)` with the callback values.
 - **External App authentication (manual fallback):** use the email + password token from the LabArchives UI with `login(email, auth_code)`; this token expires after one hour.
 

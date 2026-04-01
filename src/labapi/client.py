@@ -42,11 +42,12 @@ _AUTH_ERROR_CODES: frozenset[int] = frozenset(
     }
 )
 
-_DEFAULT_AUTH_CALLBACK_HOST = "localhost"
+_DEFAULT_AUTH_CALLBACK_HOST = "127.0.0.1"
 _DEFAULT_AUTH_CALLBACK_PORT = 8089
-_DEFAULT_AUTH_CALLBACK_URL = (
-    f"http://{_DEFAULT_AUTH_CALLBACK_HOST}:{_DEFAULT_AUTH_CALLBACK_PORT}/"
-)
+
+
+def _auth_callback_url(port: int = _DEFAULT_AUTH_CALLBACK_PORT) -> str:
+    return f"http://{_DEFAULT_AUTH_CALLBACK_HOST}:{port}/"
 
 try:
     from dotenv import load_dotenv
@@ -479,27 +480,30 @@ class Client:
 
         return fromstring(self.raw_api_post(api_method_uri, body, **kwargs).content)
 
-    def default_authenticate(self) -> User:
+    def default_authenticate(
+        self, *, port: int = _DEFAULT_AUTH_CALLBACK_PORT
+    ) -> User:
         """
         Authenticates a user using a default browser (Chrome, Firefox, or Edge)
         and a local HTTP server to capture the authentication code.
 
         This method opens a browser window, directs the user to the LabArchives
-        authentication page, and then listens on `http://127.0.0.1:8089/` for
-        the redirect containing the authorization code. If no compatible browser
-        is detected, it falls back to printing the authentication URL to the terminal,
-        requiring the user to manually open it.
+        authentication page, and then listens on ``http://127.0.0.1:<port>/``
+        for the redirect containing the authorization code. If no compatible
+        browser is detected, it falls back to printing the authentication URL to
+        the terminal, requiring the user to manually open it.
 
         .. note::
            This method requires the ``selenium`` package for automatic browser control.
            Install it with: ``pip install selenium``
 
+        :param port: The local callback port to listen on. Defaults to ``8089``.
         :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
         :raises ImportError: If selenium is not installed.
         :raises RuntimeError: If authentication fails.
         """
         self._ensure_open()
-        auth_url = self.generate_auth_url(_DEFAULT_AUTH_CALLBACK_URL)
+        auth_url = self.generate_auth_url(_auth_callback_url(port))
 
         driver = None
         options = None
@@ -546,7 +550,7 @@ class Client:
                     "Please complete the authentication in the opened browser window..."
                 )
 
-            return self.collect_auth_response()
+            return self.collect_auth_response(port=port)
         except ImportError as e:
             raise ImportError(
                 "Selenium is required for automatic browser-based authentication. "
@@ -557,14 +561,17 @@ class Client:
             if driver is not None:
                 driver.quit()
 
-    def collect_auth_response(self) -> User:
+    def collect_auth_response(
+        self, *, port: int = _DEFAULT_AUTH_CALLBACK_PORT
+    ) -> User:
         """
         Launches a local HTTP server to capture the authentication response from LabArchives.
 
-        This server listens on `http://127.0.0.1:8089/` for the redirect from
-        LabArchives containing the authorization code and user email after
+        This server listens on ``http://127.0.0.1:<port>/`` for the redirect
+        from LabArchives containing the authorization code and user email after
         successful authentication.
 
+        :param port: The local callback port to listen on. Defaults to ``8089``.
         :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
         :raises KeyError: If the authentication code or email is not received.
         """
@@ -597,7 +604,7 @@ class Client:
                 pass
 
         with TCPServer(
-            (_DEFAULT_AUTH_CALLBACK_HOST, _DEFAULT_AUTH_CALLBACK_PORT),
+            (_DEFAULT_AUTH_CALLBACK_HOST, port),
             AuthRequestHandler,
         ) as httpd:
             httpd.handle_request()
