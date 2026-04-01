@@ -48,13 +48,21 @@ class Attachment:
         :param file: The file object to create an attachment from. Must have a `name` attribute.
         :returns: A new Attachment object wrapping a clone of the file.
         """
+        if not file.seekable():
+            raise ValueError("Attachment.from_file requires a seekable file object")
+
         remote_filename = basename(file.name)
         mime_type = guess_type(file.name)[0] or "application/octet-stream"
+        original_position = file.tell()
 
         # Create a spooled temporary file as the new backing buffer.
         # It stays in memory until it reaches 4MB, then rolls over to disk.
         backing = tempfile.SpooledTemporaryFile(max_size=4 * 1024 * 1024, mode="w+b")
-        shutil.copyfileobj(file, backing)
+        try:
+            file.seek(0)
+            shutil.copyfileobj(file, backing)
+        finally:
+            file.seek(original_position)
         backing.seek(0)
 
         return Attachment(

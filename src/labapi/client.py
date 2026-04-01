@@ -27,10 +27,10 @@ from requests import Response, Session
 from requests import codes as status_codes
 from requests.adapters import HTTPAdapter
 
-from .browser import default_browser
 from .exceptions import ApiError, AuthenticationError
 from .user import User
 from .util import NotebookInit, extract_etree, to_bool
+from .util.browser import detect_default_browser
 
 # Error codes that indicate an authentication/credential failure.
 _AUTH_ERROR_CODES: frozenset[int] = frozenset(
@@ -48,6 +48,7 @@ _DEFAULT_AUTH_CALLBACK_PORT = 8089
 
 def _auth_callback_url(port: int = _DEFAULT_AUTH_CALLBACK_PORT) -> str:
     return f"http://{_DEFAULT_AUTH_CALLBACK_HOST}:{port}/"
+
 
 try:
     from dotenv import load_dotenv
@@ -191,7 +192,10 @@ class Client:
 
         parsed_base_url = urlsplit(base_url)
         normalized_base_url = parsed_base_url.geturl()
-        if parsed_base_url.scheme not in {"http", "https"} or not parsed_base_url.netloc:
+        if (
+            parsed_base_url.scheme not in {"http", "https"}
+            or not parsed_base_url.netloc
+        ):
             raise AuthenticationError(
                 "Invalid API_URL/base_url: expected a full HTTP(S) URL such as "
                 "'https://api.labarchives.com'."
@@ -480,9 +484,7 @@ class Client:
 
         return fromstring(self.raw_api_post(api_method_uri, body, **kwargs).content)
 
-    def default_authenticate(
-        self, *, port: int = _DEFAULT_AUTH_CALLBACK_PORT
-    ) -> User:
+    def default_authenticate(self, *, port: int = _DEFAULT_AUTH_CALLBACK_PORT) -> User:
         """
         Authenticates a user using a default browser (Chrome, Firefox, or Edge)
         and a local HTTP server to capture the authentication code.
@@ -508,7 +510,7 @@ class Client:
         driver = None
         options = None
         try:
-            match default_browser:
+            match detect_default_browser():
                 case "chrome":
                     import selenium.webdriver as webdriver
 
@@ -530,19 +532,6 @@ class Client:
                 case "terminal":
                     print("Open authentication URL in your browser:")
                     print(auth_url)
-                case None:
-                    if not getenv("LA_AUTH_BROWSER", "").strip():
-                        warnings.warn(
-                            "Automatic browser detection requires the 'builtin-auth' extra: "
-                            "pip install 'labapi[builtin-auth]'\n"
-                            "Falling back to terminal-based authentication.",
-                            stacklevel=2,
-                        )
-                    print(
-                        "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
-                    )
-                    print("Open authentication URL in your browser:")
-                    print(auth_url)
 
             if driver is not None:
                 driver.get(auth_url)
@@ -561,9 +550,7 @@ class Client:
             if driver is not None:
                 driver.quit()
 
-    def collect_auth_response(
-        self, *, port: int = _DEFAULT_AUTH_CALLBACK_PORT
-    ) -> User:
+    def collect_auth_response(self, *, port: int = _DEFAULT_AUTH_CALLBACK_PORT) -> User:
         """
         Launches a local HTTP server to capture the authentication response from LabArchives.
 

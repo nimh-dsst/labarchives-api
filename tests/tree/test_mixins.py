@@ -171,7 +171,10 @@ class TestTreeMixinsIntegration:
             "/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
         ).as_dir()
         original_path = str(descendant.path)
-        assert original_path == "/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
+        assert (
+            original_path
+            == "/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
+        )
 
         client.api_response = "<success/>"
         source_dir.move_to(destination)
@@ -186,7 +189,9 @@ class TestTreeMixinsIntegration:
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["parent_tree_id"] == destination.tree_id
 
-    def test_move_to_self_raises_without_api_call(self, client, notebook_tree: Notebook):
+    def test_move_to_self_raises_without_api_call(
+        self, client, notebook_tree: Notebook
+    ):
         """Test move_to rejects moving a directory into itself locally."""
         folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
 
@@ -284,7 +289,10 @@ class TestTreeMixinsIntegration:
         duplicate_pairs = [
             (name, node.id) for name, node in items if name == "Test Page 1"
         ]
-        assert duplicate_pairs == [("Test Page 1", "page-1"), ("Test Page 1", "page-duplicate")]
+        assert duplicate_pairs == [
+            ("Test Page 1", "page-1"),
+            ("Test Page 1", "page-duplicate"),
+        ]
 
     def test_children_returns_snapshot(self, client, notebook_tree: Notebook):
         """Test children returns an immutable snapshot instead of a live list."""
@@ -363,6 +371,45 @@ class TestTreeMixinsIntegration:
         pages = notebook_tree.enumerate_pages(depth=2)
         assert "Test Page 1" in pages
         assert "Test Folder A/Dir1 Test Page A" in pages
+
+        nodes = notebook_tree.enumerate_nodes(depth=2)
+        assert any(
+            path == "Test Folder A" and node.id == "dir-1" for path, node in nodes
+        )
+        assert any(
+            path == "Test Folder A/Dir1 Test Page A" and node.id == "page-1-1"
+            for path, node in nodes
+        )
+
+    def test_enumeration_handles_same_name_page_and_directory(
+        self, notebook_tree: Notebook
+    ):
+        """Test directory/page filtering does not misclassify duplicate names."""
+        _ = notebook_tree.children
+
+        shared_dir = NotebookDirectory(
+            "shared-dir",
+            "Shared Name",
+            notebook_tree,
+            notebook_tree,
+            notebook_tree.user,
+        )
+        shared_page = NotebookPage(
+            "shared-page",
+            "Shared Name",
+            notebook_tree,
+            notebook_tree,
+            notebook_tree.user,
+        )
+        notebook_tree._children.extend(  # pyright: ignore[reportPrivateUsage]
+            [shared_dir, shared_page]
+        )
+
+        dirs = notebook_tree.enumerate_dirs()
+        pages = notebook_tree.enumerate_pages()
+
+        assert dirs.count("Shared Name") == 1
+        assert pages.count("Shared Name") == 1
 
     def test_enumeration_warns_on_timeout(self, notebook_tree: Notebook, monkeypatch):
         """Test enumerate_* emits warnings when traversal times out."""
@@ -564,9 +611,7 @@ class TestTreeMixinsIntegration:
         </tree-tools>
         """
 
-        new_page = folder_a.create(
-            NotebookPage, "/Test Folder A/Absolute String Page"
-        )
+        new_page = folder_a.create(NotebookPage, "/Test Folder A/Absolute String Page")
 
         assert isinstance(new_page, NotebookPage)
         assert new_page.name == "Absolute String Page"

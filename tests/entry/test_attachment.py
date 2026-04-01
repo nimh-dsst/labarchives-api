@@ -6,6 +6,8 @@ import tempfile
 from io import BytesIO
 from pathlib import Path
 
+import pytest
+
 from labapi.entry.attachment import Attachment
 
 
@@ -54,6 +56,26 @@ def test_attachment_from_file_buffered_reader():
         Path(temp_file_path).unlink(missing_ok=True)
 
 
+def test_attachment_from_file_preserves_cursor_and_copies_full_file():
+    """Test cloning from a partially-read file preserves cursor and content."""
+    with tempfile.NamedTemporaryFile(
+        mode="w+b", suffix=".txt", delete=False
+    ) as temp_file:
+        temp_file.write(b"0123456789")
+        temp_file_path = temp_file.name
+
+    try:
+        with open(temp_file_path, "r+b") as file:
+            file.seek(4)
+
+            attachment = Attachment.from_file(file)
+
+            assert file.tell() == 4
+            assert attachment.read() == b"0123456789"
+    finally:
+        Path(temp_file_path).unlink(missing_ok=True)
+
+
 def test_attachment_from_file_unknown_mimetype():
     """Test creating Attachment from a file with unknown MIME type."""
     # Create a file with unknown extension
@@ -71,6 +93,23 @@ def test_attachment_from_file_unknown_mimetype():
             assert attachment.caption == "API-uploaded application/octet-stream file."
     finally:
         Path(temp_file_path).unlink(missing_ok=True)
+
+
+def test_attachment_from_file_requires_seekable_file():
+    """Test cloning rejects non-seekable file-like objects."""
+
+    class NonSeekableBytesIO(BytesIO):
+        def __init__(self, data: bytes, name: str):
+            super().__init__(data)
+            self.name = name
+
+        def seekable(self) -> bool:
+            return False
+
+    file = NonSeekableBytesIO(b"Test content", "payload.bin")
+
+    with pytest.raises(ValueError, match="seekable"):
+        Attachment.from_file(file)
 
 
 def test_attachment_initialization():

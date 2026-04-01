@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 from datetime import datetime
+from html import escape
 from io import BytesIO
 from json import dumps
 from typing import TYPE_CHECKING, Any, Type, TypeVar, overload, override
@@ -75,7 +76,6 @@ class Entries(Sequence["Entry[Any]"]):
     def __len__(self):
         return len(self._entries)
 
-
     # TODO delete entries
 
     def create_json_entry(
@@ -100,6 +100,7 @@ class Entries(Sequence["Entry[Any]"]):
 
         name = filename or f"uploaded_data_{datetime.now().timestamp():.0f}.json"
         display_caption = caption or name
+        preview_json = escape(dumps(data, indent=4))
 
         file_entry = self.create(
             AttachmentEntry,
@@ -114,10 +115,10 @@ class Entries(Sequence["Entry[Any]"]):
         text_entry = self.create(
             TextEntry,
             f"""
-<p>Reference Attachment: {display_caption}</p>
-<p>Entry ID: {file_entry.id}</p>
+<p>Reference Attachment: {escape(display_caption)}</p>
+<p>Entry ID: {escape(file_entry.id)}</p>
 <pre>
-{dumps(data, indent=4)}
+{preview_json}
 </pre>
 """,
         )
@@ -155,16 +156,15 @@ class Entries(Sequence["Entry[Any]"]):
         :raises RuntimeError: If the API call to create the entry fails.
         """
         if issubclass(cls, AttachmentEntry):
-          
             if not isinstance(data, Attachment):
                 raise TypeError(
                     f"{cls.__name__} requires Attachment data, got "
                     f"{type(data).__name__}"
                 )
-                
+
             if data._backing.seekable():  # pyright: ignore[reportPrivateUsage]
-              data._backing.seek(0)  # pyright: ignore[reportPrivateUsage]
-            
+                data._backing.seek(0)  # pyright: ignore[reportPrivateUsage]
+
             upload_kwargs = {
                 "filename": data.filename,
                 "caption": data.caption,
@@ -172,10 +172,10 @@ class Entries(Sequence["Entry[Any]"]):
                 "pid": self._page.id,
                 "change_description": "File uploaded via API",
             }
-            
+
             if client_ip is not None:
                 upload_kwargs["client_ip"] = client_ip
-            
+
             entry_tree = self._user.api_post(
                 "entries/add_attachment",
                 data._backing,  # pyright: ignore[reportPrivateUsage, reportArgumentType]

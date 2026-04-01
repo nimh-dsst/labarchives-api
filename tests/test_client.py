@@ -391,16 +391,14 @@ class TestClientUnit:
     def test_default_authenticate_warns_when_no_browser_detected(
         self, capsys, monkeypatch
     ):
-        """Test warning path when no compatible browser is detected."""
+        """Test terminal fallback output when no compatible browser is detected."""
         client = Client("https://api.test.com", "test_akid", "test_password")
         client.collect_auth_response = Mock(return_value=Mock(spec=User))
         monkeypatch.delenv("LA_AUTH_BROWSER", raising=False)
 
-        with patch("labapi.client.default_browser", None):
-            with pytest.warns(
-                UserWarning,
-                match="Automatic browser detection requires the 'builtin-auth' extra",
-            ):
+        with patch("labapi.client.detect_default_browser", return_value=None):
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
                 client.default_authenticate()
 
         captured = capsys.readouterr()
@@ -415,7 +413,20 @@ class TestClientUnit:
         client.collect_auth_response = Mock(return_value=Mock(spec=User))
         monkeypatch.setenv("LA_AUTH_BROWSER", "terminal")
 
-        with patch("labapi.client.default_browser", None):
+        with patch("labapi.client.detect_default_browser", return_value=None):
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                client.default_authenticate()
+
+    def test_default_authenticate_does_not_warn_when_nonterminal_env_is_explicit(
+        self, monkeypatch
+    ):
+        """Test client fallback warning is reserved for unset LA_AUTH_BROWSER."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client.collect_auth_response = Mock(return_value=Mock(spec=User))
+        monkeypatch.setenv("LA_AUTH_BROWSER", "chrome")
+
+        with patch("labapi.client.detect_default_browser", return_value=None):
             with warnings.catch_warnings():
                 warnings.simplefilter("error")
                 client.default_authenticate()
@@ -430,7 +441,7 @@ class TestClientUnit:
         with (
             patch.object(client, "generate_auth_url", generate_auth_url),
             patch.object(client, "collect_auth_response", collect_auth_response),
-            patch("labapi.client.default_browser", "terminal"),
+            patch("labapi.client.detect_default_browser", return_value="terminal"),
         ):
             client.default_authenticate()
 
@@ -447,7 +458,7 @@ class TestClientUnit:
         with (
             patch.object(client, "generate_auth_url", generate_auth_url),
             patch.object(client, "collect_auth_response", collect_auth_response),
-            patch("labapi.client.default_browser", "terminal"),
+            patch("labapi.client.detect_default_browser", return_value="terminal"),
         ):
             client.default_authenticate(port=9001)
 
@@ -549,7 +560,9 @@ class TestClientUnit:
         client.session.post = Mock(return_value=response)
 
         with pytest.raises(ApiError, match="API request failed with status code 500"):
-            client.stream_api_post("attachments/upload", {"entry_data": "test"}, eid="1")
+            client.stream_api_post(
+                "attachments/upload", {"entry_data": "test"}, eid="1"
+            )
 
         response.iter_content.assert_not_called()
         response.close.assert_called_once()
@@ -607,7 +620,9 @@ class TestClientUnit:
 
     def test_client_initialization_rejects_non_http_scheme(self):
         """Test Client initialization rejects unsupported base URL schemes."""
-        with pytest.raises(AuthenticationError, match="expected a full HTTP\\(S\\) URL"):
+        with pytest.raises(
+            AuthenticationError, match="expected a full HTTP\\(S\\) URL"
+        ):
             Client("ftp://api.test.com", "test_akid", "test_password")
 
     def test_client_initialization_rejects_malformed_base_url(self):

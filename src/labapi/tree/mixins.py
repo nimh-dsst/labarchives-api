@@ -22,7 +22,12 @@ from collections.abc import (
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Literal, Self, Type, TypeVar, cast, overload, override
 
-from labapi.exceptions import ExtractionError, NodeExistsError, TraversalError, TreeChildParseError
+from labapi.exceptions import (
+    ExtractionError,
+    NodeExistsError,
+    TraversalError,
+    TreeChildParseError,
+)
 from labapi.util import (
     IdIndex,
     IdOrNameIndex,
@@ -210,7 +215,9 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
                     curr = curr[segment]
                 except KeyError as exc:
                     resolved_parent = (
-                        "/" if len(parsed_segments) == 1 else f"/{'/'.join(parsed_segments[:-1])}"
+                        "/"
+                        if len(parsed_segments) == 1
+                        else f"/{'/'.join(parsed_segments[:-1])}"
                     )
                     available_children = sorted(node.name for node in curr.children)
                     raise TraversalError(
@@ -225,7 +232,9 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
                     ) from exc
             else:
                 resolved_parent = (
-                    "/" if len(parsed_segments) == 1 else f"/{'/'.join(parsed_segments[:-1])}"
+                    "/"
+                    if len(parsed_segments) == 1
+                    else f"/{'/'.join(parsed_segments[:-1])}"
                 )
                 raise TraversalError(
                     (
@@ -539,9 +548,7 @@ class AbstractTreeContainer(
                 for node in self.children:
                     if node.id == val:
                         return node
-                raise KeyError(
-                    f'Node with id "{val}" not found in "{self.path}"'
-                )
+                raise KeyError(f'Node with id "{val}" not found in "{self.path}"')
             case slice(start=Index.Name, stop=val):
                 return [node for node in self.children if node.name == val]
             case str():
@@ -585,8 +592,6 @@ class AbstractTreeContainer(
         *,
         depth: int = 1,
         timeout: timedelta = timedelta(seconds=5),
-        _timeout: float | None = None,
-        _current_depth: int = 0,
     ) -> Sequence[str]:
         """Enumerates all children (directories and pages) up to a specified depth.
 
@@ -598,7 +603,38 @@ class AbstractTreeContainer(
         :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
         :returns: A sequence of relative path strings for all descendants.
         """
-        current: MutableSequence[str] = []
+        return [
+            path for path, _node in self.enumerate_nodes(depth=depth, timeout=timeout)
+        ]
+
+    def enumerate_nodes(
+        self,
+        *,
+        depth: int = 1,
+        timeout: timedelta = timedelta(seconds=5),
+    ) -> Sequence[tuple[str, AbstractTreeNode]]:
+        """Enumerate descendant paths paired with their concrete node objects.
+
+        Returns relative path strings from the current container for all descendant
+        nodes, including both directories and pages, paired with the exact in-memory
+        node instance each path came from.
+
+        :param depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
+        :returns: A sequence of ``(relative_path, node)`` pairs for all descendants.
+        """
+        return self._enumerate_nodes(depth=depth, timeout=timeout)
+
+    def _enumerate_nodes(
+        self,
+        *,
+        depth: int = 1,
+        timeout: timedelta = timedelta(seconds=5),
+        _timeout: float | None = None,
+        _current_depth: int = 0,
+    ) -> Sequence[tuple[str, AbstractTreeNode]]:
+        """Enumerate descendant paths paired with the node they resolved from."""
+        current: MutableSequence[tuple[str, AbstractTreeNode]] = []
 
         if _current_depth >= depth:
             return current
@@ -619,14 +655,14 @@ class AbstractTreeContainer(
                 )
                 break
 
-            current.append(name)
+            current.append((name, child))
 
             try:
                 container = child.as_dir()
                 current.extend(
                     [
-                        f"{name}/{child_path}"
-                        for child_path in container.enumerate_all(
+                        (f"{name}/{child_path}", descendant)
+                        for child_path, descendant in container._enumerate_nodes(
                             _current_depth=_current_depth + 1,
                             depth=depth,
                             _timeout=_timeout,
@@ -653,8 +689,8 @@ class AbstractTreeContainer(
         :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
         :returns: A sequence of relative path strings for all descendant directories.
         """
-        all_names = self.enumerate_all(depth=depth, timeout=timeout)
-        return [name for name in all_names if self.traverse(name).is_dir()]
+        all_nodes = self.enumerate_nodes(depth=depth, timeout=timeout)
+        return [path for path, node in all_nodes if node.is_dir()]
 
     def enumerate_pages(
         self,
@@ -671,8 +707,8 @@ class AbstractTreeContainer(
         :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
         :returns: A sequence of relative path strings for all descendant pages.
         """
-        all_names = self.enumerate_all(depth=depth, timeout=timeout)
-        return [name for name in all_names if not self.traverse(name).is_dir()]
+        all_nodes = self.enumerate_nodes(depth=depth, timeout=timeout)
+        return [path for path, node in all_nodes if not node.is_dir()]
 
     def create(
         self,

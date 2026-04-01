@@ -129,7 +129,7 @@ class TestEntriesUnit:
             entries.create(TextEntry, attachment)  # pyright: ignore[reportArgumentType]
 
         mock_user.api_post.assert_not_called()
-        
+
     def test_entries_iter_snapshot_stable_after_mutation(self):
         """Entries iteration should remain stable after later mutations."""
         mock_user = Mock(spec=User)
@@ -384,7 +384,9 @@ class TestEntriesIntegration:
         )
 
         assert file_entry.caption == "Metrics Snapshot"
-        assert text_entry.content.startswith("\n<p>Reference Attachment: Metrics Snapshot</p>")
+        assert text_entry.content.startswith(
+            "\n<p>Reference Attachment: Metrics Snapshot</p>"
+        )
         assert "json_attachment_eid" in text_entry.content
 
         attachment_call = client.api_log
@@ -395,3 +397,59 @@ class TestEntriesIntegration:
         text_call = client.api_log
         assert text_call[0] == "entries/add_entry"
         assert "Metrics Snapshot" in text_call[1]["entry_data"]
+
+    def test_entries_create_json_entry_escapes_html_in_preview(
+        self, client, user: User, mock_page
+    ):
+        """Test JSON preview HTML escapes caption and JSON payload values."""
+        entries = Entries([], user, mock_page)
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>json_attachment_eid</eid>
+            </entry>
+        </entries>
+        """
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>json_text_eid</eid>
+            </entry>
+        </entries>
+        """
+
+        caption = '<script>alert("x")</script> & metrics'
+        data = {
+            "headline": "<b>danger</b>",
+            "closing": "</pre>",
+        }
+
+        file_entry, text_entry = entries.create_json_entry(
+            data,
+            filename="metrics.json",
+            caption=caption,
+        )
+
+        assert file_entry.caption == caption
+        assert (
+            "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; metrics"
+            in text_entry.content
+        )
+        assert "&lt;b&gt;danger&lt;/b&gt;" in text_entry.content
+        assert "&lt;/pre&gt;" in text_entry.content
+        assert text_entry.content.count("</pre>") == 1
+
+        attachment_call = client.api_log
+        assert attachment_call[0] == "entries/add_attachment"
+        assert attachment_call[1]["caption"] == caption
+
+        text_call = client.api_log
+        assert text_call[0] == "entries/add_entry"
+        assert "<script>alert(" not in text_call[1]["entry_data"]
+        assert (
+            "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; metrics"
+            in text_call[1]["entry_data"]
+        )

@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.12"
 
 [[package]]
@@ -643,7 +643,6 @@ dependencies = [
     { name = "cryptography" },
     { name = "lxml" },
     { name = "requests" },
-    { name = "types-lxml" },
 ]
 
 [package.optional-dependencies]
@@ -666,6 +665,7 @@ dev = [
     { name = "sphinx-breeze-theme" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-design" },
+    { name = "types-lxml" },
 ]
 
 [package.metadata]
@@ -676,7 +676,6 @@ requires-dist = [
     { name = "python-dotenv", marker = "extra == 'dotenv'", specifier = ">=1.2.1" },
     { name = "requests", specifier = ">=2.32.5" },
     { name = "selenium", marker = "extra == 'builtin-auth'", specifier = ">=4.39.0" },
-    { name = "types-lxml", specifier = ">=2026.1.1" },
 ]
 provides-extras = ["builtin-auth", "dotenv"]
 
@@ -691,6 +690,7 @@ dev = [
     { name = "sphinx-breeze-theme", specifier = ">=0.13.1" },
     { name = "sphinx-copybutton", specifier = ">=0.5.2" },
     { name = "sphinx-design", specifier = ">=0.7.0" },
+    { name = "types-lxml", specifier = ">=2026.1.1" },
 ]
 
 [[package]]
