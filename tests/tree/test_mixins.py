@@ -7,11 +7,16 @@ from datetime import timedelta
 import pytest
 
 from labapi import Index, Notebook, NotebookDirectory, NotebookPage
-from labapi.exceptions import NodeExistsError, TraversalError, TreeChildParseError
+from labapi.exceptions import (
+    NodeExistsError,
+    PathError,
+    TraversalError,
+    TreeChildParseError,
+)
 from labapi.tree.mixins import (
     AbstractTreeContainer,
 )
-from labapi.util import InsertBehavior
+from labapi.util import InsertBehavior, NotebookPath
 
 
 class TestTreeMixinsIntegration:
@@ -501,6 +506,113 @@ class TestTreeMixinsIntegration:
         """Test create rejects empty paths."""
         with pytest.raises(ValueError, match="Path cannot be empty"):
             notebook_tree.create(NotebookPage, "")
+
+    def test_create_absolute_string_within_container(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test create accepts absolute strings that stay inside the container."""
+        folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>absolute-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_page = folder_a.create(
+            NotebookPage, "/Test Folder A/Absolute String Page"
+        )
+
+        assert isinstance(new_page, NotebookPage)
+        assert new_page.name == "Absolute String Page"
+        assert new_page.parent is folder_a
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Absolute String Page"
+
+    def test_create_absolute_string_outside_container_raises_without_api_call(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test create rejects absolute strings that point outside the container."""
+        folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
+
+        with pytest.raises(PathError, match="outside of"):
+            folder_a.create(NotebookPage, "/Test Folder B/Outside Page")
+
+        assert client._api_logs == []  # pyright: ignore[reportPrivateUsage]
+
+    def test_create_absolute_notebook_path_within_container(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test create still accepts absolute NotebookPath inputs."""
+        folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>absolute-dir-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_dir = folder_a.create(
+            NotebookDirectory, NotebookPath("/Test Folder A/Absolute String Dir")
+        )
+
+        assert isinstance(new_dir, NotebookDirectory)
+        assert new_dir.name == "Absolute String Dir"
+        assert new_dir.parent is folder_a
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Absolute String Dir"
+
+    def test_dir_accepts_absolute_string_within_container(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test dir inherits absolute string handling from create."""
+        folder_b = notebook_tree[Index.Id : "dir-2"].as_dir()
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>absolute-wrapper-dir-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_dir = folder_b.dir("/Test Folder B/Absolute Wrapper Dir")
+
+        assert isinstance(new_dir, NotebookDirectory)
+        assert new_dir.name == "Absolute Wrapper Dir"
+        assert new_dir.parent is folder_b
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Absolute Wrapper Dir"
+
+    def test_page_accepts_absolute_string_within_container(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test page inherits absolute string handling from create."""
+        folder_b = notebook_tree[Index.Id : "dir-2"].as_dir()
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>absolute-wrapper-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_page = folder_b.page("/Test Folder B/Absolute Wrapper Page")
+
+        assert isinstance(new_page, NotebookPage)
+        assert new_page.name == "Absolute Wrapper Page"
+        assert new_page.parent is folder_b
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Absolute Wrapper Page"
 
     def test_create_nested_without_parents_raises(self, notebook_tree: Notebook):
         """Test create rejects nested paths when parents=False."""

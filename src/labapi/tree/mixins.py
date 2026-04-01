@@ -685,10 +685,12 @@ class AbstractTreeContainer(
         :returns: The newly created (or existing) node of type `cls`.
         :raises RuntimeError: If `if_exists` is `InsertBehavior.Raise` and the node already exists.
         """
-        if not isinstance(name, str) and name.is_absolute():
-            path = name.relative_to(self)
+        normalized_name = NotebookPath(name) if isinstance(name, str) else name
+
+        if normalized_name.is_absolute():
+            path = normalized_name.relative_to(self)
         else:
-            path = (self.path / name).relative_to(self)
+            path = normalized_name.resolve(self.path).relative_to(self)
 
         if len(path) == 0:
             raise ValueError("Path cannot be empty")
