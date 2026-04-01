@@ -5,6 +5,7 @@ from __future__ import annotations
 from io import BytesIO
 from unittest.mock import Mock
 
+from labapi.client import StreamingResponse
 from labapi.entry.attachment import Attachment
 from labapi.entry.entries.attachment import AttachmentEntry
 from labapi.user import User
@@ -42,13 +43,8 @@ class TestAttachmentEntryIntegration:
             "Content-Disposition": 'attachment; filename="test.txt"',
         }
 
-        def mock_stream():
-            yield b"Test "
-            yield b"file "
-            yield b"content"
-            return mock_response
-
-        client.stream_api_get = Mock(return_value=mock_stream())
+        mock_response.iter_content.return_value = [b"Test ", b"file ", b"content"]
+        client.stream_api_get = Mock(return_value=StreamingResponse(mock_response))
 
         # Get attachment
         attachment = entry.get_attachment(use_tempfile=False)
@@ -78,11 +74,8 @@ class TestAttachmentEntryIntegration:
             "Content-Disposition": 'attachment; filename="document.pdf"',
         }
 
-        def mock_stream():
-            yield b"PDF content"
-            return mock_response
-
-        client.stream_api_get = Mock(return_value=mock_stream())
+        mock_response.iter_content.return_value = [b"PDF content"]
+        client.stream_api_get = Mock(return_value=StreamingResponse(mock_response))
 
         # Access content property
         attachment = entry.content
@@ -121,8 +114,34 @@ class TestAttachmentEntryIntegration:
         assert api_call[1]["caption"] == "New caption"
         assert api_call[1]["eid"] == "eid_att"
 
+    def test_attachment_entry_content_setter_rewinds_seekable_stream(
+        self, client, user: User
+    ):
+        """Test AttachmentEntry.content rewinds seekable uploads before API calls."""
+        entry = AttachmentEntry("eid_att", "Old caption", user)
+
+        backing = BytesIO(b"New file content")
+        new_attachment = Attachment(
+            backing=backing,
+            mime_type="text/plain",
+            filename="new_file.txt",
+            caption="New caption",
+        )
+        new_attachment.read(4)
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entry>
+            <success>true</success>
+        </entry>
+        """
+
+        entry.content = new_attachment
+
+        assert backing.tell() == 0
+        _ = client.api_log
+
     def test_attachment_entry_get_attachment_caching(self, client, user: User):
-        """Test AttachmentEntry.get_attachment caches the result."""
+        """Test AttachmentEntry.get_attachment reuses download cache without sharing handles."""
         entry = AttachmentEntry("eid_att", "Caption", user)
 
         # Mock stream_api_get
@@ -132,11 +151,8 @@ class TestAttachmentEntryIntegration:
             "Content-Disposition": 'attachment; filename="test.txt"',
         }
 
-        def mock_stream():
-            yield b"Content"
-            return mock_response
-
-        client.stream_api_get = Mock(return_value=mock_stream())
+        mock_response.iter_content.return_value = [b"Content"]
+        client.stream_api_get = Mock(return_value=StreamingResponse(mock_response))
 
         # First call
         attachment1 = entry.get_attachment()
@@ -146,5 +162,12 @@ class TestAttachmentEntryIntegration:
         attachment2 = entry.get_attachment()
         assert client.stream_api_get.call_count == 1  # Not called again
 
-        # Should be same object
-        assert attachment1 is attachment2
+        assert attachment1 is not attachment2
+
+        attachment1.read(1)
+        assert attachment2.read() == b"Content"
+
+        attachment1.close()
+        attachment3 = entry.get_attachment()
+        assert client.stream_api_get.call_count == 1
+        assert attachment3.read() == b"Content"

@@ -1,17 +1,5 @@
 #!/usr/bin/env python3
-"""
-CSV Table Upload/Download
-
-Upload CSV files as formatted HTML tables in LabArchives,
-and download HTML tables back as CSV files.
-
-Usage:
-    # Upload CSV as HTML table
-    python csv_table.py upload data.csv "Results/Table 1" --notebook "My Notebook"
-
-    # Download HTML table as CSV
-    python csv_table.py download "Results/Table 1" output.csv --notebook "My Notebook"
-"""
+"""Upload and download LabArchives HTML table entries as CSV."""
 
 import argparse
 import csv
@@ -20,18 +8,24 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup
 
-from labapi import Client, InsertBehavior
-from labapi.entry import TextEntry
-from labapi.tree.mixins import AbstractTreeContainer
-from labapi.tree.page import NotebookPage
-from labapi.user import User
+from labapi import (
+    Client,
+    InsertBehavior,
+    AbstractTreeContainer,
+    NotebookPage,
+    TextEntry,
+    TraversalError,
+    User,
+)
 
 
 def get_or_create_page(container: AbstractTreeContainer, path: str) -> NotebookPage:
     """Return an existing page at ``path`` or create it with missing parents."""
     try:
         node = container.traverse(path)
-    except (KeyError, RuntimeError):
+    except TraversalError as err:
+        if err.available_children is None:
+            raise
         return container.create(
             NotebookPage,
             path,
@@ -46,15 +40,13 @@ def get_or_create_page(container: AbstractTreeContainer, path: str) -> NotebookP
 
 
 def csv_to_html_table(csv_file: Path, has_header: bool = True) -> str:
-    """
-    Convert a CSV file to an HTML table.
+    """Convert a CSV file to an HTML table.
 
     :param csv_file: Path to the CSV file
     :param has_header: Whether the first row is a header
     :returns: HTML string containing the table
     """
-
-    with open(csv_file, "r", encoding="utf-8") as f:
+    with csv_file.open("r", encoding="utf-8") as f:
         reader = csv.reader(f)
         rows = list(reader)
 
@@ -89,13 +81,11 @@ def csv_to_html_table(csv_file: Path, has_header: bool = True) -> str:
 
 
 def html_table_to_csv(html: str, output_file: Path) -> bool:
-    """
-    Extract HTML tables from HTML content and save as CSV.
+    """Extract HTML tables from HTML content and save as CSV.
 
     :param html: HTML content containing tables
     :param output_file: Path to save the CSV file
     """
-
     soup = BeautifulSoup(html, "html.parser")
     tables = soup.find_all("table")
 
@@ -134,7 +124,7 @@ def html_table_to_csv(html: str, output_file: Path) -> bool:
                 rows.append(cells)
 
     # Write to CSV
-    with open(output_file, "w", newline="", encoding="utf-8") as f:
+    with output_file.open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerows(rows)
 
@@ -149,7 +139,6 @@ def upload_csv_as_table(
     has_header: bool = True,
 ) -> None:
     """Upload a CSV file as an HTML table to a LabArchives page."""
-
     if not csv_file.exists():
         print(f"Error: CSV file '{csv_file}' does not exist")
         sys.exit(1)
@@ -159,7 +148,7 @@ def upload_csv_as_table(
         notebook = notebooks[notebook_name]
         print(f"Ensuring page path exists: {page_path}")
         page = get_or_create_page(notebook, page_path)
-    except Exception as e:
+    except (KeyError, TraversalError, TypeError, ValueError) as e:
         print(f"Error: Could not access or create path '{page_path}': {e}")
         sys.exit(1)
 
@@ -183,16 +172,22 @@ def download_table_as_csv(
     entry_index: int = -1,
 ) -> None:
     """Download an HTML table from a LabArchives page as a CSV file."""
-
     notebooks = user.notebooks
     try:
         notebook = notebooks[notebook_name]
-        page = notebook.traverse(page_path).as_page()
     except KeyError as e:
-        print(
-            f"Error: Could not find notebook '{notebook_name}' or page '{page_path}': {e}"
-        )
+        print(f"Error: Could not find notebook '{notebook_name}': {e}")
         print(f"Available notebooks: {list(notebooks.keys())}")
+        sys.exit(1)
+    try:
+        page = notebook.traverse(page_path).as_page()
+    except TraversalError as e:
+        print(
+            f"Error: Could not find page '{page_path}' in notebook '{notebook_name}': {e}"
+        )
+        sys.exit(1)
+    except TypeError:
+        print(f"Error: '{page_path}' refers to a directory, but a page is required")
         sys.exit(1)
 
     entries = page.entries
@@ -238,6 +233,7 @@ def download_table_as_csv(
 
 
 def main() -> None:
+    """Run the CSV table example CLI."""
     parser = argparse.ArgumentParser(
         description="Upload CSV files as HTML tables or download HTML tables as CSV"
     )
@@ -268,37 +264,35 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    # Initialize client and authenticate
     print("Connecting to LabArchives...")
     try:
-        client = Client()  # Loads credentials from .env
-        print("Authenticating...")
-        user = client.default_authenticate()  # Opens browser for OAuth
-        print("✓ Authenticated successfully")
+        with Client() as client:
+            print("Authenticating...")
+            user = client.default_authenticate()
+            print("✓ Authenticated successfully")
+
+            if args.action == "upload":
+                csv_file = Path(args.file)
+                page_path = args.target
+                upload_csv_as_table(
+                    user,
+                    args.notebook,
+                    csv_file,
+                    page_path,
+                    has_header=not args.no_header,
+                )
+            else:  # download
+                page_path = args.file
+                output_file = Path(args.target)
+                download_table_as_csv(
+                    user, args.notebook, page_path, output_file, args.entry_index
+                )
     except Exception as e:
         print(f"Authentication error: {e}")
         print("\nMake sure you have a .env file with your credentials:")
         print("  ACCESS_KEYID=your_access_key_id")
         print("  ACCESS_PWD=your_password")
         sys.exit(1)
-
-    # Perform requested action
-    if args.action == "upload":
-        csv_file = Path(args.file)
-        page_path = args.target
-        upload_csv_as_table(
-            user,
-            args.notebook,
-            csv_file,
-            page_path,
-            has_header=not args.no_header,
-        )
-    else:  # download
-        page_path = args.file
-        output_file = Path(args.target)
-        download_table_as_csv(
-            user, args.notebook, page_path, output_file, args.entry_index
-        )
 
 
 if __name__ == "__main__":

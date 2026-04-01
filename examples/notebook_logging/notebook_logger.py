@@ -1,26 +1,15 @@
-"""
-Jupyter Notebook Logger
-
-Logs Jupyter notebook runs (cell info, outputs, matplotlib figures) to LabArchives.
-
-LabArchives path structure:
-    {notebook}/Notebook Log/{email}/{iso8601_timestamp}/
-        {timestamp} (page)
-            |- Tags       (text entry)
-            |- Cell Info  (text entry)
-            |- Result     (plain text entry)
-            |- Figure N   (AttachmentEntry: PNG)
-            \\- File N     (AttachmentEntry: arbitrary type)
-"""
+"""Log Jupyter notebook runs, outputs, and artifacts to LabArchives."""
 
 import html
 import os
 from datetime import datetime
 from io import BytesIO
 from mimetypes import guess_type
+from secrets import token_urlsafe
 from typing import Any
 
 from labapi import (
+    Attachment,
     AttachmentEntry,
     Client,
     InsertBehavior,
@@ -28,9 +17,8 @@ from labapi import (
     NotebookPage,
     PlainTextEntry,
     TextEntry,
+    User,
 )
-from labapi.entry import Attachment
-from labapi.user import User
 
 try:
     from IPython import get_ipython
@@ -47,8 +35,7 @@ class NotebookLogger:
         client: Client | None = None,
         user: User | None = None,
     ) -> None:
-        """
-        Initialize the logger with Jupyter-friendly auth.
+        """Initialize the logger with Jupyter-friendly auth.
 
         Displays a clickable auth link in the notebook cell output, then waits
         for the user to authenticate in their browser.
@@ -101,12 +88,20 @@ class NotebookLogger:
             print(f"Using existing authentication for: {user.email}")
             return user
 
-        auth_url = self.client.generate_auth_url("http://localhost:8089/")
-        self._display_auth_prompt(auth_url)
+        port = 8089
+        callback_path = f"/auth/notebook-logger/{token_urlsafe(12)}/"
+        auth_url = self.client.generate_auth_url(
+            f"http://127.0.0.1:{port}{callback_path}"
+        )
 
-        print("Waiting for authentication...")
-        # Note: This is a blocking call that waits for the redirect on port 8089
-        authenticated_user = self.client.collect_auth_response()
+        with self.client.collect_auth_response(
+            port=port,
+            callback_path=callback_path,
+        ) as auth_response_collector:
+            self._display_auth_prompt(auth_url)
+            print("Waiting for authentication...")
+            authenticated_user = auth_response_collector.wait()
+
         print(f"Authenticated as: {authenticated_user.email}")
         return authenticated_user
 
@@ -220,20 +215,32 @@ class NotebookLogger:
 
         return unique_paths
 
-    def _resolve_notebook(self):
-        """Look up the target notebook by name."""
+    def log(
+        self,
+        tags: list[str],
+        cell_info: dict[str, Any],
+        result: str,
+        figures: list[bytes],
+        files: list[str] | None = None,
+    ) -> None:
+        """Save a notebook run to LabArchives.
+
+        :param tags: List of string tags for this run.
+        :param cell_info: Dict with 'execution_count' and 'recent_cells'.
+        :param result: String repr of the last cell output.
+        :param figures: List of PNG bytes, one per matplotlib figure.
+        :param files: Optional list of file paths to attach.
+        """
+        file_paths = self._collect_file_paths(files)
         notebooks = self.user.notebooks
         try:
-            return notebooks[self.notebook_name]
+            notebook = notebooks[self.notebook_name]
         except KeyError:
             available = ", ".join(notebooks.keys())
             raise RuntimeError(
                 f"Notebook '{self.notebook_name}' not found. Available: {available}"
             ) from None
 
-    def _create_log_page(self) -> tuple[NotebookPage, str]:
-        """Create and return the destination page for this run."""
-        notebook = self._resolve_notebook()
         print("Navigating to logging directory...")
 
         notebook_log_dir = notebook.create(
@@ -245,34 +252,29 @@ class NotebookLogger:
 
         timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
         page = user_dir.create(NotebookPage, timestamp)
-        return page, timestamp
-
-    @staticmethod
-    def _build_tags_html(tags: list[str]) -> str:
-        """Render tags as styled HTML badges."""
+        entries = page.entries
         tags_html = "".join(
             f'<span style="background: #eee; padding: 2px 5px; margin: 2px; border-radius: 3px;">{html.escape(tag)}</span>'
             for tag in tags
         )
-        return f"<p><strong>Tags:</strong> {tags_html}</p>"
-
-    @staticmethod
-    def _build_cell_info_html(cell_info: dict[str, Any]) -> str:
-        """Render captured cell metadata as HTML."""
-        recent = cell_info.get("recent_cells", [])
+        recent_cells = cell_info.get("recent_cells", [])
         exec_count = cell_info.get("execution_count")
         cells_html = "".join(
             f"<pre style='background:#f5f5f5;padding:6px;margin:4px 0;'>{html.escape(src)}</pre>"
-            for src in recent
-        )
-        return (
-            f"<p><strong>Cell Info</strong> "
-            f"(execution count: {exec_count})</p>{cells_html}"
+            for src in recent_cells
         )
 
-    @staticmethod
-    def _write_figure_attachments(entries: Any, figures: list[bytes]) -> None:
-        """Write captured matplotlib figures as PNG attachments."""
+        print(
+            f"Logging to: {self.notebook_name}/Notebook Log/{self.user.email}/{timestamp}"
+        )
+
+        entries.create(TextEntry, f"<p><strong>Tags:</strong> {tags_html}</p>")
+        entries.create(
+            TextEntry,
+            f"<p><strong>Cell Info</strong> (execution count: {exec_count})</p>{cells_html}",
+        )
+        entries.create(PlainTextEntry, result)
+
         for i, fig_bytes in enumerate(figures, 1):
             attachment = Attachment(
                 BytesIO(fig_bytes),
@@ -282,9 +284,6 @@ class NotebookLogger:
             )
             entries.create(AttachmentEntry, attachment)
 
-    @staticmethod
-    def _write_file_attachments(entries: Any, file_paths: list[str]) -> None:
-        """Write tracked files as attachments."""
         for path in file_paths:
             if not os.path.isfile(path):
                 print(f"Warning: Tracked file '{path}' is not a valid file.")
@@ -301,37 +300,6 @@ class NotebookLogger:
                     f"Attached file: {filename}",
                 )
                 entries.create(AttachmentEntry, attachment)
-
-    def log(
-        self,
-        tags: list[str],
-        cell_info: dict[str, Any],
-        result: str,
-        figures: list[bytes],
-        files: list[str] | None = None,
-    ) -> None:
-        """
-        Save a notebook run to LabArchives.
-
-        :param tags: List of string tags for this run.
-        :param cell_info: Dict with 'execution_count' and 'recent_cells'.
-        :param result: String repr of the last cell output.
-        :param figures: List of PNG bytes, one per matplotlib figure.
-        :param files: Optional list of file paths to attach.
-        """
-        file_paths = self._collect_file_paths(files)
-        page, timestamp = self._create_log_page()
-        entries = page.entries
-
-        print(
-            f"Logging to: {self.notebook_name}/Notebook Log/{self.user.email}/{timestamp}"
-        )
-
-        entries.create(TextEntry, self._build_tags_html(tags))
-        entries.create(TextEntry, self._build_cell_info_html(cell_info))
-        entries.create(PlainTextEntry, result)
-        self._write_figure_attachments(entries, figures)
-        self._write_file_attachments(entries, file_paths)
 
         print("Log complete!")
 

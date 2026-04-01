@@ -18,10 +18,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v5
+      uses: astral-sh/setup-uv@v7
       with:
         enable-cache: true
         version: "latest"
@@ -30,7 +30,7 @@ jobs:
       run: uv python install 3.13
 
     - name: Install dependencies
-      run: uv sync --all-extras --dev
+      run: uv sync --all-groups
 
     - name: Run tests with pytest
       env:
@@ -38,6 +38,6 @@ jobs:
         ACCESS_KEYID: ${{ secrets.AKID }}
         ACCESS_PWD: ${{ secrets.AKPASS }}
         AUTH_KEY: ${{ github.event.inputs.la_key }}
-        AUTH_EMAIL: ${{ github.events.inputs.la_email }}
+        AUTH_EMAIL: ${{ github.event.inputs.la_email }}
         NOTEBOOK: ${{ secrets.NOTEBOOK }}
-      run: uv run pytest test_integration.py
+      run: uv run pytest tests/test_integration.py

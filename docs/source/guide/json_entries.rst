@@ -3,57 +3,61 @@
 JSON Entries
 ============
 
-``labapi`` provides a high-level system for working with JSON data as entries in LabArchives. This system is designed to store structured 
-JSON data in a way that is both programmatically accessible and human-readable within the LabArchives interface.
+``labapi`` provides a high-level way to store JSON data so it is both
+machine-readable and easy to inspect in the LabArchives UI.
 
-Machines vs Humans
-------------------
-
-When you create a "JSON entry" using ``labapi``, you are actually creating two separate but related entries:
-
-1.  **A File Attachment**: The raw JSON data is saved as a ``.json`` file and uploaded as a standard file attachment. 
-    This ensures that the original, unmodified data is preserved and can be easily downloaded and parsed by other applications.
-2.  **A Text Entry**: A second entry is created that contains a "pretty-printed" version of the JSON data. 
-    This provides a nicely formatted, human-readable preview of the data directly within the LabArchives notebook, making it easy to 
-    inspect the data without needing to download the file.
-
-Creating a JSON Entry
----------------------
-
-To create a JSON entry, use the :meth:`~labapi.entry.collection.Entries.create_json_entry` method on a
-page's :class:`~labapi.entry.collection.Entries` collection (``page.entries``).
-
-This method takes your :class:`~labapi.util.types.JsonData` object and handles the process of creating both the file 
-attachment and the text preview.
-
-Example JSON Entry Creation
+How JSON Entries Are Stored
 ---------------------------
+
+When you create a JSON entry with ``labapi``, the library creates two related
+records:
+
+- A JSON attachment that preserves the original structured data exactly.
+- A rich-text preview entry that shows a formatted, human-readable version in
+  the notebook page.
+
+This pairing makes it easy to keep a reliable machine format without giving up
+on readable notebook content.
+
+Create a JSON Entry
+-------------------
+
+Use :meth:`~labapi.entry.collection.Entries.create_json_entry` on
+``page.entries``:
 
 .. code-block:: python
 
-    from labapi import Client
-    from labapi.util import JsonData
+   from labapi import JsonData
 
-    ...
+   page = user.notebooks["My Notebook"].traverse("My Json Data/Page 1")
 
-    page = user.notebooks["My Notebook"].traverse('My Json Data/Page 1')
+   my_data: JsonData = {
+       "name": "Experiment 1",
+       "date": "2024-01-01",
+       "readings": [
+           {"time": "10:00", "value": 1.23},
+           {"time": "11:00", "value": 4.56},
+       ],
+       "completed": True,
+   }
 
-    # Create some JSON data
-    my_data: JsonData = {
-        "name": "Experiment 1",
-        "date": "2024-01-01",
-        "readings": [
-            {"time": "10:00", "value": 1.23},
-            {"time": "11:00", "value": 4.56},
-        ],
-        "completed": True,
-    }
+   attachment_entry, text_entry = page.entries.create_json_entry(my_data)
 
-    # Create the JSON entry
-    attachment_entry, text_entry = page.entries.create_json_entry(my_data)
+   print(f"Created attachment entry (ID: {attachment_entry.id})")
+   print(f"Created text preview (ID: {text_entry.id})")
 
-    print(f"Created attachment entry (ID: {attachment_entry.id})")
-    print(f"Created text preview (ID: {text_entry.id})")
+What You Get Back
+-----------------
 
-In this example, ``my_data`` will be saved as a ``.json`` file, and a formatted version will be visible as a text entry in your notebook. 
-:meth:`~labapi.entry.collection.Entries.create_json_entry` returns both of the created entry objects.
+:meth:`~labapi.entry.collection.Entries.create_json_entry` returns both created
+entry objects:
+
+- ``attachment_entry`` for the uploaded ``.json`` attachment.
+- ``text_entry`` for the pretty-printed preview shown on the page.
+
+Related Pages
+-------------
+
+- :ref:`entries` for the surrounding entry model.
+- :doc:`/examples/json_sync` for a complete JSON sync workflow.
+- :ref:`limitations` for current capability boundaries.

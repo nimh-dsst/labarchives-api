@@ -29,7 +29,6 @@ dependencies = [
     "cryptography>=46.0.3",
     "lxml>=6.0.2",
     "requests>=2.32.5",
-    "types-lxml>=2026.1.1",
 
 ]
 
@@ -39,7 +38,6 @@ builtin-auth = [
     "installed-browsers>=0.1.5"
 ]
 dotenv = [
-    "labapi",
     "python-dotenv>=1.2.1",
 ]
 
@@ -47,7 +45,9 @@ dotenv = [
 dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
+    "pyright>=1.1.406",
     "ruff>=0.14.11",
+    "types-lxml>=2026.1.1",
     "pre-commit>=4.5.1",
     "sphinx>=9.1.0",
     "sphinx-breeze-theme>=0.13.1",

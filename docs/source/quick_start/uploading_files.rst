@@ -3,73 +3,74 @@
 Uploading Files
 ===============
 
-Uploading file attachments is a bit different than other entry types. Uploading a file involves two main steps:
+Uploading attachments is a two-step workflow: create an
+:class:`~labapi.entry.attachment.Attachment`, then create an attachment entry on
+the target page. The examples below assume you already have a ``page`` object.
 
-1. Creating an :class:`~labapi.entry.attachment.Attachment` object from your file.
-2. Creating a new entry on a page with the attachment.
+Create an Attachment
+--------------------
 
-Creating an Attachment
-----------------------
-
-The :class:`~labapi.entry.attachment.Attachment` class represents a file to be uploaded. You can create an attachment from a 
-file-like object (e.g., a file opened in binary mode).
+Build an :class:`~labapi.entry.attachment.Attachment` from a binary file handle:
 
 .. code-block:: python
 
-    from labapi import Attachment
+   from labapi import Attachment
 
-    with open("my_file.txt", "rb+") as f:
-        attachment = Attachment.from_file(f)
+   with open("my_file.txt", "rb") as f:
+       attachment = Attachment.from_file(f)
 
 .. note::
-    Currently, the file must be opened in a read-writable mode (e.g., "rb+").
-    This is a limitation of the current implementation and will be addressed in a future update.
+   :meth:`~labapi.entry.attachment.Attachment.from_file` requires a seekable
+   binary file object. Standard file handles opened with ``"rb"`` or
+   ``"rb+"`` work well.
 
-The :meth:`~labapi.entry.attachment.Attachment.from_file` method automatically guesses the MIME type from the file's name. If the MIME type cannot be determined, it 
-defaults to ``application/octet-stream``.
+If the MIME type cannot be determined from the filename, ``labapi`` falls back
+to ``application/octet-stream``.
 
-Creating an Entry with the Attachment
--------------------------------------
+Upload the Attachment
+---------------------
 
-Once you have an :class:`~labapi.entry.attachment.Attachment` object, you can create a new entry on a :class:`~labapi.tree.page.NotebookPage`.
+Create an :class:`~labapi.entry.entries.attachment.AttachmentEntry` on the
+target page:
 
 .. code-block:: python
 
-    # Assuming you have a NotebookPage object called 'my_page'
-    from labapi import AttachmentEntry
-    attachment_entry = my_page.entries.create(AttachmentEntry, attachment)
+   from labapi import AttachmentEntry
 
-This will upload the file to LabArchives and create a new attachment entry on the page.
+   attachment_entry = page.entries.create(AttachmentEntry, attachment)
 
-How Uploaded Files Are Displayed
----------------------------------
+How Uploaded Files Appear
+-------------------------
 
 LabArchives displays uploaded files differently depending on their type:
 
-* **Images** (PNG, JPG, GIF, etc.) - Displayed inline like figures with the caption shown below the image
-* **PDFs** - Displayed with a preview thumbnail and download link
-* **Other files** (CSV, TXT, ZIP, etc.) - Displayed as download links with file icon and caption
+- Images are shown inline with their caption beneath the image.
+- PDFs are shown with a preview thumbnail and download link.
+- Other file types are shown as downloadable links with an icon and caption.
 
-Custom Captions for Images
----------------------------
+Set a Custom Caption
+--------------------
 
-When uploading images or other files, you may want to provide a custom caption instead of the default.
-You can do this by creating an :class:`~labapi.entry.attachment.Attachment` object manually with your desired caption.
+If you want a specific caption, construct the
+:class:`~labapi.entry.attachment.Attachment` manually:
 
 .. code-block:: python
 
-    from labapi import Attachment, AttachmentEntry
+   from labapi import Attachment, AttachmentEntry
 
-    # Upload an image with a custom caption
-    with open("experiment_results.png", "rb") as f:
-        attachment = Attachment(
-            backing=f,
-            mime_type="image/png",
-            filename="experiment_results.png",
-            caption="Figure 1: Temperature vs. reaction rate at different pH levels"
-        )
+   with open("experiment_results.png", "rb") as f:
+       attachment = Attachment(
+           backing=f,
+           mime_type="image/png",
+           filename="experiment_results.png",
+           caption="Figure 1: Temperature vs. reaction rate at different pH levels",
+       )
 
-        # Create the entry on the page
-        figure_entry = my_page.entries.create(AttachmentEntry, attachment)
+       figure_entry = page.entries.create(AttachmentEntry, attachment)
 
-This will display the image inline on the page with your custom caption beneath it, making it easy to reference figures in your lab notebook.
+Related Pages
+-------------
+
+- :ref:`creating_pages` for the broader page-and-entry creation workflow.
+- :ref:`entries` for attachment entry behavior and update semantics.
+- :ref:`limitations` for current capability boundaries.

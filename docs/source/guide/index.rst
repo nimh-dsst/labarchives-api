@@ -3,17 +3,36 @@
 User Guide
 ==========
 
-The User Guide covers implementation details and workflows beyond basic operations, 
-including custom authentication, specialized entry types, and direct API access.
+The guide explains the behavior behind the quick-start examples and highlights
+the caveats that matter in real integrations. Start with the core usage pages,
+then move into the design notes if you are extending or contributing to
+``labapi``.
 
 .. toctree::
-  :maxdepth: 2
+   :maxdepth: 1
+   :caption: Core Usage
 
-  auth
-  entries
-  json_entries
-  api_calls
-  index_access
-  paths
-  clearing_cache
-  contributing
+   limitations
+   auth
+   entries
+   json_entries
+   api_calls
+   index_access
+   paths
+   exceptions
+   clearing_cache
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Design and Contribution Notes
+
+   architecture
+   integration_design
+   contributing
+
+Related Pages
+-------------
+
+- :ref:`quick_start` for onboarding and common write operations.
+- :ref:`examples` for runnable end-to-end workflows.
+- :ref:`faq` for troubleshooting local authentication and certificates.

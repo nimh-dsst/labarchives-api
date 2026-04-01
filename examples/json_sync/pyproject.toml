@@ -2,7 +2,7 @@
 name = "example-json-sync"
 version = "0.1.0"
 dependencies = [
-    "labapi",
+    "labapi[dotenv,builtin-auth]",
 ]
 
 [tool.uv.sources]

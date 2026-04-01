@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from datetime import datetime
+from html import escape
 from io import BytesIO
 from json import dumps
-from typing import TYPE_CHECKING, Any, Type, TypeVar, overload, override
+from typing import TYPE_CHECKING, Any, SupportsIndex, Type, TypeVar, overload, override
 
 from labapi.util import extract_etree
 
@@ -25,11 +26,11 @@ class Entries(Sequence["Entry[Any]"]):
     """A collection of entries on a LabArchives page.
 
     This class provides a sequence-like interface for managing entries within
-    a page, including methods for creating new entries of various types.
+    a page, including a generic method for creating new entries by class.
     """
 
     def __init__(self, entries: Sequence[Entry[Any]], user: User, page: NotebookPage):
-        """Initializes an Entries collection.
+        """Initialize an entries collection.
 
         :param entries: A sequence of :class:`~labapi.entry.Entry` objects.
         :param user: The authenticated user.
@@ -41,7 +42,11 @@ class Entries(Sequence["Entry[Any]"]):
         self._entries: list[Entry[Any]] = list(entries)
 
     @overload
-    def __getitem__(self, index: int) -> Entry[Any]:
+    def __getitem__(self, index: SupportsIndex) -> Entry[Any]:
+        pass
+
+    @overload
+    def __getitem__(self, index: str) -> Entry[Any]:
         pass
 
     @overload
@@ -49,32 +54,57 @@ class Entries(Sequence["Entry[Any]"]):
         pass
 
     @override
-    def __getitem__(self, index: int | slice) -> Entry[Any] | Sequence[Entry[Any]]:
+    def __getitem__(
+        self, index: SupportsIndex | str | slice[Any, Any, Any]
+    ) -> Entry[Any] | Sequence[Entry[Any]]:
+        """Look up entries by index, slice, or entry identifier."""
+        if isinstance(index, str):
+            for entry in self._entries:
+                if entry.id == index:
+                    return entry
+            raise KeyError(f"Entry with id '{index}' not found")
         return self._entries[index]
 
     @override
-    def __iter__(self):
-        return iter(self._entries)
+    def __iter__(self) -> Iterator[Entry[Any]]:
+        """Iterate over a snapshot of this page's entries."""
+        return iter(tuple(self._entries))
+
+    @override
+    def __reversed__(self) -> Iterator[Entry[Any]]:
+        """Iterate over a snapshot of this page's entries in reverse order."""
+        return reversed(tuple(self._entries))
 
     @override
     def __len__(self):
+        """Return the number of entries in this collection."""
         return len(self._entries)
 
     # TODO delete entries
 
-    def create_json_entry(self, data: JsonData) -> tuple[AttachmentEntry, TextEntry]:
-        """Creates a JSON data entry consisting of an attachment and a reference text entry.
+    def create_json_entry(
+        self,
+        data: JsonData,
+        *,
+        filename: str | None = None,
+        caption: str | None = None,
+    ) -> tuple[AttachmentEntry, TextEntry]:
+        """Create a JSON attachment plus a companion reference text entry.
 
         This method uploads JSON data as an attachment file and creates a
         companion text entry that references the attachment and displays
         a formatted preview of the JSON data.
 
         :param data: The JSON-serializable data to upload.
+        :param filename: Optional stable filename for the uploaded JSON attachment.
+        :param caption: Optional label/caption for the generated attachment and reference entry.
         :returns: A tuple containing the attachment entry and the text entry.
         """
         # TODO treat this as one entry in the code
 
-        name = f"uploaded_data_{datetime.now().timestamp():.0f}.json"
+        name = filename or f"uploaded_data_{datetime.now().timestamp():.0f}.json"
+        display_caption = caption or name
+        preview_json = escape(dumps(data, indent=4))
 
         file_entry = self.create(
             AttachmentEntry,
@@ -82,17 +112,17 @@ class Entries(Sequence["Entry[Any]"]):
                 BytesIO(dumps(data).encode()),
                 "application/json",
                 name,
-                "Uploaded JSON file",
+                display_caption,
             ),
         )
 
         text_entry = self.create(
             TextEntry,
             f"""
-<p>Reference Attachment: {name}</p>
-<p>Entry ID: {file_entry.id}</p>
+<p>Reference Attachment: {escape(display_caption)}</p>
+<p>Entry ID: {escape(file_entry.id)}</p>
 <pre>
-{dumps(data, indent=4)}
+{preview_json}
 </pre>
 """,
         )
@@ -100,14 +130,20 @@ class Entries(Sequence["Entry[Any]"]):
 
     @overload
     def create(
-        self, cls: Type[AttachmentEntry], data: Attachment
+        self,
+        cls: Type[AttachmentEntry],
+        data: Attachment,
+        *,
+        client_ip: str | None = None,
     ) -> AttachmentEntry: ...
 
     @overload
-    def create(self, cls: Type[E], data: str) -> E: ...
+    def create(self, cls: Type[E], data: str, *, client_ip: str | None = None) -> E: ...
 
-    def create(self, cls: Type[E], data: str | Attachment) -> E:
-        """Creates a new entry on the page.
+    def create(
+        self, cls: Type[E], data: str | Attachment, *, client_ip: str | None = None
+    ) -> E:
+        """Create a new entry on the page.
 
         This method supports creating any entry type by passing the entry class directly,
         similar to :meth:`~labapi.tree.mixins.AbstractTreeContainer.create`. The created
@@ -119,27 +155,45 @@ class Entries(Sequence["Entry[Any]"]):
         :param data: The content of the entry. For text-based entries, this should be a string.
                     For :class:`~labapi.entry.entries.AttachmentEntry`, this should be an
                     :class:`~labapi.entry.Attachment` object.
+        :param client_ip: Optional end-user IP to pass through on attachment uploads.
         :returns: The newly created entry object of the specified type.
         :raises RuntimeError: If the API call to create the entry fails.
         """
         if issubclass(cls, AttachmentEntry):
-            assert isinstance(data, Attachment)
+            if not isinstance(data, Attachment):
+                raise TypeError(
+                    f"{cls.__name__} requires Attachment data, got "
+                    f"{type(data).__name__}"
+                )
+
+            if data._backing.seekable():  # pyright: ignore[reportPrivateUsage]
+                data._backing.seek(0)  # pyright: ignore[reportPrivateUsage]
+
+            upload_kwargs = {
+                "filename": data.filename,
+                "caption": data.caption,
+                "nbid": self._page.root.id,
+                "pid": self._page.id,
+                "change_description": "File uploaded via API",
+            }
+
+            if client_ip is not None:
+                upload_kwargs["client_ip"] = client_ip
+
             entry_tree = self._user.api_post(
                 "entries/add_attachment",
                 data._backing,  # pyright: ignore[reportPrivateUsage, reportArgumentType]
-                filename=data.filename,
-                caption=data.caption,
-                nbid=self._page.root.id,
-                pid=self._page.id,
-                change_description="File uploaded via API",
+                **upload_kwargs,
             )
-            # TODO client_ip should be the end user ip (allow this to be set?)
 
             eid = extract_etree(entry_tree, {"entry": {"eid": str}})["eid"]
             entry = cls(eid, data.caption, self._user)
 
         else:
-            assert isinstance(data, str)
+            if not isinstance(data, str):
+                raise TypeError(
+                    f"{cls.__name__} requires str data, got {type(data).__name__}"
+                )
             entry_tree = self._user.api_post(
                 "entries/add_entry",
                 {"entry_data": data},

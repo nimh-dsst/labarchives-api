@@ -1,126 +1,113 @@
 .. _creating_pages:
 
-Creating Content
-================
+Creating Pages and Entries
+==========================
+
+This page covers the basic write operations you will use most often: creating
+directories and pages, then adding entries to a page. The examples assume you
+already have a ``notebook`` object from :ref:`first_calls`.
+
+Notebook Structure
+------------------
 
 LabArchives organizes content hierarchically:
 
-- **Notebooks** contain **directories** and **pages**
-- **Directories** can contain other directories and pages, and are similar to folders on a computer.
-- **Pages** contain **entries**, which are organized top-down, similar to a word document.
+- **Notebooks** contain directories and pages.
+- **Directories** contain other directories and pages.
+- **Pages** contain entries arranged from top to bottom.
 
-Creating Directories and Pages
-------------------------------
+Create Directories and Pages
+----------------------------
 
-Use the :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` method to add new
+Use :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` to add new
 :class:`NotebookDirectories <labapi.tree.directory.NotebookDirectory>` or
-:class:`NotebookPages <labapi.tree.page.NotebookPage>` to your notebook. This method is
-available on any :class:`~labapi.tree.notebook.Notebook` or
-:class:`~labapi.tree.directory.NotebookDirectory`.
+:class:`NotebookPages <labapi.tree.page.NotebookPage>`.
 
 .. code-block:: python
 
-    from labapi import NotebookDirectory, NotebookPage
+   from labapi import NotebookDirectory, NotebookPage
 
-    # Create a directory in the notebook root
-    my_folder = notebook.create(NotebookDirectory, "Experiments")
+   my_folder = notebook.create(NotebookDirectory, "Experiments")
+   experiment_page = my_folder.create(NotebookPage, "Experiment 1")
+   subfolder = my_folder.create(NotebookDirectory, "2024 Results")
 
-    # Create a page inside the new directory
-    experiment_page = my_folder.create(NotebookPage, "Experiment 1")
+.. note::
+   Tree mutation methods update local cached objects immediately. The created
+   node is ready to use right away.
 
-    # Create nested directories
-    subfolder = my_folder.create(NotebookDirectory, "2024 Results")
+Handle Existing Nodes
+~~~~~~~~~~~~~~~~~~~~~
 
-Handling Existing Nodes
-~~~~~~~~~~~~~~~~~~~~~~~
-
-By default, :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` will raise a :class:`RuntimeError` if a node with the same name and type already 
-exists. You can control this behavior using the ``if_exists`` parameter:
-
-.. code-block:: python
-
-    from labapi import InsertBehavior
-
-    # Raise error if exists (default)
-    page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Raise)
-
-    # Create another node with the same name/type
-    page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Ignore)
-
-    # Return the existing node if it matches both name and type
-    page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Retain)
-
-    # Delete the existing node(s) and create a new one
-    page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Replace)
-
-Creating Entries
-----------------
-
-:class:`~labapi.entry.collection.Entries` are the content blocks within pages. Use the
-:meth:`~labapi.entry.collection.Entries.create` method to add one:
+By default, ``create()`` raises :class:`~labapi.NodeExistsError` if a node with
+the same name and type already exists. Use ``if_exists`` to choose a different
+behavior:
 
 .. code-block:: python
 
-    from labapi import Attachment, AttachmentEntry, HeaderEntry, PlainTextEntry, TextEntry
+   from labapi import InsertBehavior, NotebookPage
 
-    # Add a header
-    page.entries.create(HeaderEntry, "Experiment Results")
+   page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Raise)
+   page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Ignore)
+   page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Retain)
+   page = notebook.create(NotebookPage, "Existing Page", if_exists=InsertBehavior.Replace)
 
-    # Add rich text (HTML)
-    page.entries.create(TextEntry, "<p>This is <b>bold</b> text.</p>")
+Create Entries
+--------------
 
-    # Add plain text
-    page.entries.create(PlainTextEntry, "Simple unformatted text")
+Use :meth:`~labapi.entry.collection.Entries.create` to add content blocks to a
+page:
 
-    # Add an attachment
-    with open("results.csv", "rb+") as f:
-        attachment = Attachment(f, "text/csv", "results.csv", "Experiment data")
-        page.entries.create(AttachmentEntry, attachment)
+.. code-block:: python
+
+   from labapi import Attachment, AttachmentEntry, HeaderEntry, PlainTextEntry, TextEntry
+
+   page.entries.create(HeaderEntry, "Experiment Results")
+   page.entries.create(TextEntry, "<p>This is <b>bold</b> text.</p>")
+   page.entries.create(PlainTextEntry, "Simple unformatted text")
+
+   with open("results.csv", "rb") as f:
+       attachment = Attachment(f, "text/csv", "results.csv", "Experiment data")
+       page.entries.create(AttachmentEntry, attachment)
 
 Entry Types
 ~~~~~~~~~~~
 
-The following entry types are supported. For more detailed information, see the :doc:`/guide/entries` guide.
-
 .. list-table::
    :header-rows: 1
-   :widths: 30 20 60
+   :widths: 30 20 50
 
    * - Entry Class
      - Data Type
      - Description
    * - :class:`~labapi.entry.entries.text.HeaderEntry`
      - ``str``
-     - Section headers and titles
+     - Section headers and titles.
    * - :class:`~labapi.entry.entries.text.TextEntry`
      - ``str``
-     - Rich text with HTML formatting
+     - Rich text with HTML formatting.
    * - :class:`~labapi.entry.entries.text.PlainTextEntry`
      - ``str``
-     - Unformatted plain text
+     - Unformatted plain text.
    * - :class:`~labapi.entry.entries.attachment.AttachmentEntry`
      - ``Attachment``
-     - File uploads (images, documents, data files, etc.) 
+     - File uploads such as images, documents, and data files.
 
-Reading Entries
----------------
+Inspect What You Created
+------------------------
 
-Access the entries on a page through the ``entries`` property, which behaves like a standard Python list:
+Access entries through the page's ``entries`` collection:
 
 .. code-block:: python
 
-    # Iterate through all entries
-    for entry in page.entries:
-        print(f"Type: {entry.content_type}")
-        print(f"Content: {entry.content}")
+   for entry in page.entries:
+       print(f"Type: {entry.content_type}")
+       print(f"Content: {entry.content}")
 
-    # Access by index
-    first_entry = page.entries[0]
-    
-    # Check entry types
-    from labapi import TextEntry, AttachmentEntry
+   first_entry = page.entries[0]
 
-    if isinstance(first_entry, TextEntry):
-        print("This is a text-based entry")
-    elif isinstance(first_entry, AttachmentEntry):
-        print(f"This is a file: {first_entry.content.filename}")
+Related Pages
+-------------
+
+- :ref:`navigating` for getting to the right page first.
+- :ref:`entries` for deeper entry-class behavior and editing semantics.
+- :ref:`uploading_files` for attachment-specific details.

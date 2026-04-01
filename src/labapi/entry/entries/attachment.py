@@ -28,7 +28,7 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
     """
 
     def __init__(self, eid: str, caption: str, user: User):
-        """Initializes an AttachmentEntry object.
+        """Initialize an attachment entry.
 
         :param eid: The unique ID of the entry.
         :param caption: The caption associated with the attachment.
@@ -40,7 +40,7 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
         self._mime_type = None
 
     def get_attachment(self, use_tempfile: bool = False) -> Attachment:
-        """Retrieves the attachment data.
+        """Return the attachment payload as an independent stream copy.
 
         The attachment data is fetched from the LabArchives API and cached.
         Subsequent calls will return the cached data.
@@ -50,48 +50,53 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
                              Defaults to False.
         :returns: An :class:`~labapi.entry.attachment.Attachment` object containing the file data and metadata.
         """
-        # BUG: currently the implementation means that the backing buffer can be used while a reference is maintained
-        #      to it
-        # TODO: we should probably return a new temporary copy every time it's asked for, tbh?
         if self._filedata is None or self._filedata.closed:
-            attachment = self._user.client.stream_api_get(
+            output = TemporaryFile() if use_tempfile else BytesIO()
+
+            with self._user.client.stream_api_get(
                 "entries/entry_attachment", uid=self._user.id, eid=self.id
+            ) as attachment_stream:
+                for chunk in attachment_stream:
+                    output.write(chunk)
+
+            msg = Message()
+            msg["Content-Type"] = (
+                attachment_stream.headers.get("Content-Type")
+                or "application/octet-stream"
             )
+            msg["Content-Disposition"] = attachment_stream.headers.get(
+                "Content-Disposition"
+            )
+            filename = msg.get_filename()
+            mime_type = msg.get_content_type()
 
-            if use_tempfile:
-                output = TemporaryFile()
-            else:
-                output = BytesIO()
-
-            try:
-                while True:
-                    output.write(next(attachment))
-            except StopIteration as stopit:
-                response = stopit.value
-
-                msg = Message()
-                msg["Content-Type"] = (
-                    response.headers.get("Content-Type") or "application/octet-stream"
-                )
-                msg["Content-Disposition"] = response.headers.get("Content-Disposition")
-                filename = msg.get_filename()
-                mime_type = msg.get_content_type()
-
-                if filename is None:
-                    raise ApiError(
-                        "Could not determine filename from API response headers"
-                    )
+            if filename is None:
+                raise ApiError("Could not determine filename from API response headers")
 
             output.seek(0)
 
             self._filedata = Attachment(output, mime_type, filename, self._data)
 
-        return self._filedata
+        assert self._filedata is not None
+        output = TemporaryFile() if use_tempfile else BytesIO()
+
+        # Return an independent copy so each caller gets isolated read/seek/close state
+        # while still sharing a single downloaded backing attachment in the cache.
+        self._filedata.seek(0)
+        output.write(self._filedata.read())
+        output.seek(0)
+
+        return Attachment(
+            output,
+            self._filedata.mime_type,
+            self._filedata.filename,
+            self._filedata.caption,
+        )
 
     @property
     @override
     def content(self) -> Attachment:
-        """The attachment content as an :class:`~labapi.entry.attachment.Attachment` object.
+        """Return the attachment content.
 
         This property retrieves the attachment data, caching it for subsequent access.
 
@@ -102,7 +107,7 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
     @content.setter
     @override
     def content(self, value: Attachment):
-        """Sets the attachment content.
+        """Set the attachment content.
 
         This operation updates the attachment in LabArchives via an API call
         and invalidates any previously cached attachment data.
@@ -112,6 +117,8 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
         # NOTE: this implicitly invalidates all previous Attachments
         # NOTE: if every time content is called we give a new copy anyways that's fine
         #       (see get_attachment())
+        if value._backing.seekable():  # pyright: ignore[reportPrivateUsage]
+            value._backing.seek(0)  # pyright: ignore[reportPrivateUsage]
 
         self._user.api_post(
             "entries/update_attachment",
@@ -130,7 +137,7 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
 
     @property
     def caption(self) -> str:
-        """The caption associated with the attachment.
+        """Return the attachment caption.
 
         :returns: The caption string.
         """

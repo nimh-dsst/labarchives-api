@@ -26,14 +26,13 @@ class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):
 
     @override
     def copy_to(self, destination: AbstractTreeContainer) -> NotebookDirectory:
-        """Copies this directory and its contents to a specified destination container.
+        """Copy this directory and its contents into ``destination``.
 
         This operation recursively copies all child directories and pages.
 
         :param destination: The target container to copy the directory to.
         :returns: A new instance of the copied directory in the destination.
         """
-
         if self.is_parent_of(destination) or self is destination:
             raise ValueError(
                 "Cannot copy a directory into itself or one of its descendants"
@@ -51,7 +50,7 @@ class NotebookDirectory(AbstractTreeContainer, AbstractTreeNode):
     @property
     @override
     def id(self) -> str:
-        """The unique ID of the directory.
+        """Return the directory identifier.
 
         :returns: The directory's ID.
         """

@@ -9,34 +9,39 @@ LabArchives is a cloud-based Electronic Lab Notebook (ELN) for research data man
 
 ## Getting Started
 
-These instructions will help you set up the project on your local machine for development and testing.
-
-### Prerequisites
+### Install
 
 - **Python 3.12+**
 - **[uv](https://github.com/astral-sh/uv)** (recommended) or `pip`
 
-### Installation
-
-Clone the repository and install the dependencies:
+Choose the install profile that matches how you plan to use `labapi`:
 
 ```bash
-git clone https://github.com/nimh-dsst/labarchives-api.git
-cd labarchives-api
-uv sync
-```
+# Recommended for local interactive use and the quick start/examples
+uv add "labapi[dotenv,builtin-auth]"
+# or
+pip install 'labapi[dotenv,builtin-auth]'
 
-Or install it as a library:
-
-```bash
+# Minimal install
 uv add labapi
 # or
 pip install labapi
+
+# Minimal install + .env loading
+uv add "labapi[dotenv]"
+# or
+pip install 'labapi[dotenv]'
 ```
+
+The extras do this:
+
+- `dotenv` lets `Client()` load `API_URL`, `ACCESS_KEYID`, and `ACCESS_PWD` from a local `.env` file.
+- `builtin-auth` lets `default_authenticate()` auto-detect and open a local browser. Without it, you can still use terminal/manual auth or your own callback flow.
 
 ### Configuration
 
-Create a `.env` file in your project root with your LabArchives API credentials:
+Create a `.env` file in your project root with your LabArchives API credentials.
+`.env` files are only auto-loaded when `python-dotenv` is installed (for example via `labapi[dotenv]`):
 
 ```env
 API_URL=https://api.labarchives.com
@@ -44,21 +49,60 @@ ACCESS_KEYID=your_access_key_id
 ACCESS_PWD=your_access_password
 ```
 
+Or set environment variables directly in your shell:
+
+```bash
+export API_URL=https://api.labarchives.com
+export ACCESS_KEYID=your_access_key_id
+export ACCESS_PWD=your_access_password
+```
+
+```powershell
+$env:API_URL="https://api.labarchives.com"
+$env:ACCESS_KEYID="your_access_key_id"
+$env:ACCESS_PWD="your_access_password"
+```
+
+```cmd
+set API_URL=https://api.labarchives.com
+set ACCESS_KEYID=your_access_key_id
+set ACCESS_PWD=your_access_password
+```
+
+## First Success Tutorial
+
+If you want a single copy/paste path from install to a visible result in LabArchives, start with the [First Success Tutorial](docs/source/quick_start/tutorial.rst).
+
 ## Usage
 
 ### Authentication
 
-The client can authenticate via an interactive browser session (recommended for local use) or using pre-existing credentials.
+The client supports two patterns:
+
+- **Interactive/local development:** `default_authenticate()` opens the LabArchives flow and captures the callback on `127.0.0.1` (default port `8089`).
+- **Service/headless automation (CI, schedulers, backend jobs):** your app owns the redirect endpoint and then calls `login(email, auth_code)` with the callback values.
+- **External App authentication (manual fallback):** use the email + password token from the LabArchives UI with `login(email, auth_code)`; this token expires after one hour.
 
 ```python
 from labapi import Client
 
-# Initialize the client (loads credentials from .env)
-client = Client()
-
-# Authenticate via browser (interactive)
-user = client.default_authenticate()
+# Local interactive usage
+with Client() as client:
+    user = client.default_authenticate()
 ```
+
+```python
+from labapi import Client
+
+# Service/headless usage
+with Client() as client:
+    auth_url = client.generate_auth_url(callback_url)
+    # redirect the user to auth_url
+    # read email + auth_code from your callback handler
+    user = client.login(email, auth_code)
+```
+
+For detailed service-oriented patterns (server callbacks, CI/scripted workflows, and token-handling guidance), see `docs/source/guide/auth.rst`.
 
 ### Navigating Notebooks
 
@@ -85,18 +129,28 @@ page = notebook.traverse("Experiments/2026/Results")
 Create and manage different types of entries on a page:
 
 ```python
-from labapi import TextEntry, HeaderEntry
+from labapi import TextEntry, HeaderEntry, PlainTextEntry
 
-# Create a text entry
-page.entries.create(TextEntry, "<p>Initial observation: The reaction turned blue.</p>")
+# Rich-text content
+page.entries.create(TextEntry, "<p><strong>Observation:</strong> The reaction turned blue.</p>")
 
-# Create a heading
-page.entries.create(HeaderEntry, "<h1>Final Conclusions</h1>")
+# Section label
+page.entries.create(HeaderEntry, "Final Conclusions")
+
+# Literal text
+page.entries.create(PlainTextEntry, "<p>Keep this literal, including angle brackets.</p>")
 
 # Create a JSON entry (uploads as attachment + preview text)
 data = {"yield": 0.85, "purity": "99%"}
 page.entries.create_json_entry(data)
 ```
+
+## Documentation
+
+- Quick Start: [docs/source/quick_start/index.rst](docs/source/quick_start/index.rst)
+- User Guide: [docs/source/guide/index.rst](docs/source/guide/index.rst)
+- FAQ: [docs/source/faq.rst](docs/source/faq.rst)
+- Examples: [docs/source/examples/index.rst](docs/source/examples/index.rst)
 
 ## Running the tests
 
@@ -120,6 +174,14 @@ uv run pytest --cov=labapi
 
 ## Contributing
 
+If you want to contribute to `labapi` itself, clone the repository and install the development dependencies:
+
+```bash
+git clone https://github.com/nimh-dsst/labarchives-api.git
+cd labarchives-api
+uv sync
+```
+
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
 ## Versioning
@@ -129,4 +191,3 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 ## License
 
 This project is licensed under the CC0 1.0 Universal License - see the [LICENSE](LICENSE) file for details (or `pyproject.toml`).
-

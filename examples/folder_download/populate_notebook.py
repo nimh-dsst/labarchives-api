@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
-"""
-Populate Notebook with Test Data
-
-Create a nested folder structure and pages with various entry types
-in LabArchives, which can then be downloaded with folder_download.py.
-
-Usage:
-    python populate_notebook.py --notebook "My Notebook"
-"""
+"""Populate a LabArchives notebook with sample folder-download data."""
 
 import argparse
 import sys
 from io import BytesIO
 
 from labapi import (
+    Attachment,
     AttachmentEntry,
     Client,
     HeaderEntry,
@@ -21,22 +14,12 @@ from labapi import (
     NotebookPage,
     PlainTextEntry,
     TextEntry,
+    User,
 )
-from labapi.entry import Attachment
-from labapi.user import User
 
 
-def populate_notebook(notebook_name: str) -> None:
+def populate_notebook(user: User, notebook_name: str) -> None:
     """Populate a notebook with a nested structure and various entry types."""
-
-    print("Connecting to LabArchives...")
-    try:
-        client = Client()
-        user: User = client.default_authenticate()
-    except Exception as e:
-        print(f"Error authenticating: {e}")
-        sys.exit(1)
-
     notebooks = user.notebooks
     try:
         notebook = notebooks[notebook_name]
@@ -94,6 +77,7 @@ def populate_notebook(notebook_name: str) -> None:
 
 
 def main() -> None:
+    """Run the sample notebook population CLI."""
     parser = argparse.ArgumentParser(
         description="Populate a LabArchives notebook with test data"
     )
@@ -102,7 +86,16 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    populate_notebook(args.notebook)
+    print("Connecting to LabArchives...")
+    try:
+        with Client() as client:
+            print("Authenticating...")
+            user = client.default_authenticate()
+            print("✓ Authenticated successfully")
+            populate_notebook(user, args.notebook)
+    except Exception as e:
+        print(f"Error authenticating: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -24,7 +24,7 @@ class PlainTextEntry(Entry[str], part_type="plain text entry"):
     """
 
     def __init__(self, eid: str, data: str, user: User):
-        """Initializes a BaseTextEntry object.
+        """Initialize a plain-text entry.
 
         :param eid: The unique ID of the entry.
         :param data: The text content of the entry.
@@ -35,7 +35,7 @@ class PlainTextEntry(Entry[str], part_type="plain text entry"):
     @property
     @override
     def content(self) -> str:
-        """The text content of the entry.
+        """Return the entry text.
 
         :returns: The content of the entry as a string.
         """
@@ -44,7 +44,7 @@ class PlainTextEntry(Entry[str], part_type="plain text entry"):
     @content.setter
     @override
     def content(self, value: str) -> None:
-        """Sets the text content of the entry.
+        """Set the entry text.
 
         This operation updates the entry's content in LabArchives via an API call.
 

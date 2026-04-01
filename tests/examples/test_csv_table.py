@@ -1,0 +1,145 @@
+"""Tests for the csv_table example script."""
+
+from __future__ import annotations
+
+import importlib.util
+import sys
+from pathlib import Path
+from types import ModuleType
+
+import pytest
+
+from labapi import InsertBehavior, NotebookPage, TraversalError
+
+
+def load_csv_table_module():
+    """Load the example script as a module for direct unit testing."""
+    script_path = (
+        Path(__file__).resolve().parents[2] / "examples" / "csv_table" / "csv_table.py"
+    )
+    spec = importlib.util.spec_from_file_location("csv_table_example", script_path)
+    assert spec is not None
+    assert spec.loader is not None
+
+    fake_bs4 = ModuleType("bs4")
+    setattr(fake_bs4, "BeautifulSoup", object)
+    previous_bs4 = sys.modules.get("bs4")
+    sys.modules["bs4"] = fake_bs4
+    try:
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    finally:
+        if previous_bs4 is None:
+            sys.modules.pop("bs4", None)
+        else:
+            sys.modules["bs4"] = previous_bs4
+
+    return module
+
+
+csv_table = load_csv_table_module()
+
+
+class RecordingContainer:
+    """Minimal container double for get_or_create_page tests."""
+
+    def __init__(self, traverse_result=None, traverse_error: Exception | None = None):
+        self.traverse_result = traverse_result
+        self.traverse_error = traverse_error
+        self.create_calls: list[
+            tuple[type[NotebookPage], str, bool, InsertBehavior]
+        ] = []
+
+    def traverse(self, _path: str):
+        if self.traverse_error is not None:
+            raise self.traverse_error
+        return self.traverse_result
+
+    def create(
+        self,
+        cls: type[NotebookPage],
+        path: str,
+        *,
+        parents: bool,
+        if_exists: InsertBehavior,
+    ):
+        self.create_calls.append((cls, path, parents, if_exists))
+        return "created-page"
+
+
+class DirectoryNode:
+    """Minimal non-page node for testing download error handling."""
+
+    def as_page(self):
+        raise TypeError("Node is not a page")
+
+
+class NotebookDouble:
+    """Minimal notebook double for traversal-based example tests."""
+
+    def __init__(self, traverse_result=None, traverse_error: Exception | None = None):
+        self.traverse_result = traverse_result
+        self.traverse_error = traverse_error
+
+    def traverse(self, _path: str):
+        if self.traverse_error is not None:
+            raise self.traverse_error
+        return self.traverse_result
+
+
+class UserDouble:
+    """Minimal user double exposing the notebooks mapping."""
+
+    def __init__(self, notebook):
+        self.notebooks = {"My Notebook": notebook}
+
+
+def test_get_or_create_page_creates_on_missing_segment():
+    """Test get_or_create_page creates the page when traversal reports a missing child."""
+    container = RecordingContainer(
+        traverse_error=TraversalError(
+            "missing child",
+            path="/Results/Page",
+            segment="Page",
+            parent="/Results",
+            available_children=["Existing Page"],
+        )
+    )
+
+    result = csv_table.get_or_create_page(container, "Results/Page")
+
+    assert result == "created-page"
+    assert container.create_calls == [
+        (NotebookPage, "Results/Page", True, InsertBehavior.Retain)
+    ]
+
+
+def test_get_or_create_page_does_not_create_on_non_directory_error():
+    """Test get_or_create_page preserves traversal errors when an intermediate segment is not a directory."""
+    container = RecordingContainer(
+        traverse_error=TraversalError(
+            "not a directory",
+            path="/Results/Page/Child",
+            segment="Child",
+            parent="/Results/Page",
+        )
+    )
+
+    with pytest.raises(TraversalError, match="not a directory"):
+        csv_table.get_or_create_page(container, "Results/Page/Child")
+
+    assert container.create_calls == []
+
+
+def test_download_table_as_csv_exits_on_directory_path(capsys):
+    """Test the download helper exits cleanly when the path resolves to a directory."""
+    notebook = NotebookDouble(traverse_result=DirectoryNode())
+    user = UserDouble(notebook)
+
+    with pytest.raises(SystemExit):
+        csv_table.download_table_as_csv(
+            user, "My Notebook", "Results", Path("table-output.csv")
+        )
+
+    captured = capsys.readouterr()
+    assert "refers to a directory, but a page is required" in captured.out

@@ -37,7 +37,7 @@ class User:
         notebooks: Sequence[NotebookInit],
         client: Client,
     ):
-        """Initializes a new User session.
+        """Initialize a user session.
 
         :param uid: The unique ID of the user.
         :param email: The email address of the user.
@@ -76,7 +76,7 @@ class User:
         return self._client
 
     def api_get(self, api_method_uri: str | Sequence[str], **kwargs: Any):
-        """Makes a GET request to the LabArchives API on behalf of the authenticated user.
+        """Send a GET request on behalf of this user.
 
         This method automatically appends the user's ID to the API call.
 
@@ -94,7 +94,7 @@ class User:
         body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ):
-        """Makes a POST request to the LabArchives API on behalf of the authenticated user.
+        """Send a POST request on behalf of this user.
 
         This method automatically appends the user's ID to the API call.
 
@@ -108,7 +108,7 @@ class User:
         return self._client.api_post(api_method_uri, body, **kwargs, uid=self._id)
 
     def get_max_upload_size(self) -> int:
-        """Retrieves the maximum allowed file upload size for the user from the LabArchives API.
+        """Return the maximum upload size for this user in bytes.
 
         The unit of the returned value is bytes.
 

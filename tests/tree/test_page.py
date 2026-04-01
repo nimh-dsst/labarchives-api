@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from io import BytesIO
 from unittest.mock import Mock
 
+import pytest
+
 from labapi import Index, Notebook, NotebookPage
-from labapi.entry import Entries
+from labapi.entry import Attachment, Entries, UnknownEntry
 from labapi.user import User
 
 
@@ -31,6 +34,156 @@ class TestNotebookPageUnit:
         assert page.parent is mock_parent
         assert page.root is mock_root
         assert page.is_dir() is False
+
+    def test_copy_to_copies_attachment_and_closes_attachment(self):
+        """Test NotebookPage.copy_to uploads attachments and closes local handles."""
+        source_page = Mock(spec=NotebookPage)
+        source_page.name = "Source Page"
+        source_page.id = "source-page-id"
+
+        attachment = Attachment(
+            BytesIO(b"attachment payload"),
+            "application/octet-stream",
+            "example.bin",
+            "attachment caption",
+        )
+
+        attachment_entry = Mock()
+        attachment_entry.id = "entry-attachment-1"
+        attachment_entry.content_type = "Attachment"
+        attachment_entry.content = attachment
+
+        source_page.entries = [attachment_entry]
+
+        new_page_entries = Mock()
+        new_page = Mock(spec=NotebookPage)
+        new_page.id = "new-page-id"
+        new_page.entries = new_page_entries
+
+        destination = Mock()
+        destination.create.return_value = new_page
+
+        NotebookPage.copy_to(source_page, destination)
+
+        destination.create.assert_called_once()
+        new_page_entries.create.assert_called_once_with(
+            attachment_entry.__class__, attachment
+        )
+        assert attachment.closed is True
+
+    def test_copy_to_warns_and_continues_when_attachment_copy_fails(self):
+        """Test NotebookPage.copy_to warns and skips entries that fail to copy."""
+        source_page = Mock(spec=NotebookPage)
+        source_page.name = "Source Page"
+        source_page.id = "source-page-id"
+
+        attachment = Attachment(
+            BytesIO(b"attachment payload"),
+            "application/octet-stream",
+            "example.bin",
+            "attachment caption",
+        )
+
+        attachment_entry = Mock()
+        attachment_entry.id = "entry-attachment-1"
+        attachment_entry.content_type = "Attachment"
+        attachment_entry.content = attachment
+        source_page.entries = [attachment_entry]
+
+        new_page_entries = Mock()
+        new_page_entries.create.side_effect = RuntimeError("upload failed")
+
+        new_page = Mock(spec=NotebookPage)
+        new_page.id = "new-page-id"
+        new_page.entries = new_page_entries
+
+        destination = Mock()
+        destination.create.return_value = new_page
+
+        with pytest.warns(RuntimeWarning, match="This entry was skipped"):
+            NotebookPage.copy_to(source_page, destination)
+
+        new_page_entries.create.assert_called_once_with(
+            attachment_entry.__class__, attachment
+        )
+        assert attachment.closed is True
+
+    def test_copy_to_warns_and_continues_when_entry_create_raises(self):
+        """Test NotebookPage.copy_to catches per-entry create failures and continues."""
+        source_page = Mock(spec=NotebookPage)
+        source_page.name = "Source Page"
+        source_page.id = "source-page-id"
+
+        failing_entry = Mock()
+        failing_entry.id = "entry-text-1"
+        failing_entry.content_type = "Text"
+        failing_entry.content = "<p>bad</p>"
+
+        succeeding_entry = Mock()
+        succeeding_entry.id = "entry-text-2"
+        succeeding_entry.content_type = "Text"
+        succeeding_entry.content = "<p>ok</p>"
+        source_page.entries = [failing_entry, succeeding_entry]
+
+        new_page_entries = Mock()
+        new_page_entries.create.side_effect = [ValueError("create failed"), None]
+
+        new_page = Mock(spec=NotebookPage)
+        new_page.id = "new-page-id"
+        new_page.entries = new_page_entries
+
+        destination = Mock()
+        destination.create.return_value = new_page
+
+        with pytest.warns(RuntimeWarning, match="This entry was skipped"):
+            NotebookPage.copy_to(source_page, destination)
+
+        assert new_page_entries.create.call_count == 2
+        assert new_page_entries.create.call_args_list[0].args == (
+            failing_entry.__class__,
+            failing_entry.content,
+        )
+        assert new_page_entries.create.call_args_list[1].args == (
+            succeeding_entry.__class__,
+            succeeding_entry.content,
+        )
+
+    def test_copy_to_warns_and_continues_when_attachment_fetch_fails(self):
+        """Test NotebookPage.copy_to warns and continues when reading attachment content fails."""
+        source_page = Mock(spec=NotebookPage)
+        source_page.name = "Source Page"
+        source_page.id = "source-page-id"
+
+        class FailingAttachmentEntry:
+            id = "entry-attachment-1"
+            content_type = "Attachment"
+
+            @property
+            def content(self):
+                raise RuntimeError("download failed")
+
+        failing_entry = FailingAttachmentEntry()
+
+        succeeding_entry = Mock()
+        succeeding_entry.id = "entry-text-2"
+        succeeding_entry.content_type = "Text"
+        succeeding_entry.content = "<p>ok</p>"
+        source_page.entries = [failing_entry, succeeding_entry]
+
+        new_page_entries = Mock()
+        new_page = Mock(spec=NotebookPage)
+        new_page.id = "new-page-id"
+        new_page.entries = new_page_entries
+
+        destination = Mock()
+        destination.create.return_value = new_page
+
+        with pytest.warns(RuntimeWarning, match="This entry was skipped"):
+            NotebookPage.copy_to(source_page, destination)
+
+        new_page_entries.create.assert_called_once_with(
+            succeeding_entry.__class__, succeeding_entry.content
+        )
 
 
 class TestNotebookPageIntegration:
@@ -108,6 +261,66 @@ class TestNotebookPageIntegration:
         entries2 = page.entries
 
         assert entries1 is entries2
+        client.clear_log()
+
+    def test_page_entries_wrap_known_unimplemented_type(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test NotebookPage.entries preserves recognized-but-unimplemented entries."""
+        page = notebook_tree[Index.Id : "page-1"]
+
+        assert isinstance(page, NotebookPage)
+        client.clear_log()
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <entry>
+                <eid>entry_unknown_known</eid>
+                <part-type>sketch entry</part-type>
+                <attach-file-name></attach-file-name>
+                <attach-content-type></attach-content-type>
+                <entry-data><![CDATA[sketch payload]]></entry-data>
+            </entry>
+        </entries>
+        """
+
+        with pytest.warns(UserWarning, match="Wrapping as UnknownEntry"):
+            entries = page.entries
+
+        assert len(entries) == 1
+        assert isinstance(entries[0], UnknownEntry)
+        assert entries[0].content_type == "sketch entry"
+        assert entries[0].content == "sketch payload"
+        client.api_log
+        client.clear_log()
+
+    def test_page_entries_wrap_unknown_type(self, client, notebook_tree: Notebook):
+        """Test NotebookPage.entries preserves truly unknown entries."""
+        page = notebook_tree[Index.Id : "page-1"]
+
+        assert isinstance(page, NotebookPage)
+        client.clear_log()
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <entry>
+                <eid>entry_unknown_new</eid>
+                <part-type>future entry</part-type>
+                <attach-file-name></attach-file-name>
+                <attach-content-type></attach-content-type>
+                <entry-data><![CDATA[future payload]]></entry-data>
+            </entry>
+        </entries>
+        """
+
+        with pytest.warns(RuntimeWarning, match="Wrapping as UnknownEntry"):
+            entries = page.entries
+
+        assert len(entries) == 1
+        assert isinstance(entries[0], UnknownEntry)
+        assert entries[0].content_type == "future entry"
+        assert entries[0].content == "future payload"
+        client.api_log
         client.clear_log()
 
     def test_page_refresh(self, client, notebook_tree: Notebook):

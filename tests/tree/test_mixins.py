@@ -2,14 +2,34 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+from typing import Any, cast
+
 import pytest
 
 from labapi import Index, Notebook, NotebookDirectory, NotebookPage
-from labapi.exceptions import NodeExistsError, TraversalError
+from labapi.exceptions import (
+    NodeExistsError,
+    PathError,
+    TraversalError,
+    TreeChildParseError,
+)
 from labapi.tree.mixins import (
     AbstractTreeContainer,
 )
-from labapi.util import InsertBehavior
+from labapi.util import InsertBehavior, NotebookPath
+
+
+def expect_dir(node: object) -> NotebookDirectory:
+    """Narrow a dynamically-returned tree node to NotebookDirectory."""
+    assert isinstance(node, NotebookDirectory)
+    return node
+
+
+def expect_page(node: object) -> NotebookPage:
+    """Narrow a dynamically-returned tree node to NotebookPage."""
+    assert isinstance(node, NotebookPage)
+    return node
 
 
 class TestTreeMixinsIntegration:
@@ -39,18 +59,35 @@ class TestTreeMixinsIntegration:
 
     def test_traverse_not_found(self, notebook_tree: Notebook):
         """Test traversing to a non-existent path."""
-        with pytest.raises(KeyError):
+        with pytest.raises(
+            TraversalError,
+            match='Unable to traverse "/NonExistent" at segment "NonExistent"',
+        ) as err:
             notebook_tree.traverse("NonExistent")
+        assert err.value.path == "/NonExistent"
+        assert err.value.segment == "NonExistent"
+        assert err.value.parent == "/"
+        assert err.value.available_children == [
+            "Test Folder A",
+            "Test Folder B",
+            "Test Page 1",
+        ]
 
     def test_traverse_not_a_directory(self, notebook_tree: Notebook):
         """Test traversing through a non-directory node."""
-        with pytest.raises(TraversalError, match="is not a directory"):
+        with pytest.raises(
+            TraversalError,
+            match='Unable to traverse "/Test Page 1/Something" at segment "Something"',
+        ) as err:
             notebook_tree.traverse("Test Page 1/Something")
+        assert err.value.path == "/Test Page 1/Something"
+        assert err.value.segment == "Something"
+        assert err.value.available_children is None
 
     def test_getitem_invalid_key_type_raises(self, notebook_tree: Notebook):
         """Test __getitem__ raises TypeError for unsupported key types."""
         with pytest.raises(TypeError, match="Invalid key type"):
-            notebook_tree[123]  # pyright: ignore[reportArgumentType]
+            notebook_tree[cast(Any, 123)]
 
     def test_is_parent_of(self, notebook_tree: Notebook, notebooks):
         """Test ancestor checks for nodes in the same and different roots."""
@@ -90,7 +127,7 @@ class TestTreeMixinsIntegration:
 
     def test_name_setter(self, client, notebook_tree: Notebook):
         """Test updating a node's name."""
-        page = notebook_tree[Index.Id : "page-1"]
+        page = expect_page(notebook_tree[Index.Id : "page-1"])
         client.api_response = "<success/>"
 
         page.name = "New Name"
@@ -100,10 +137,29 @@ class TestTreeMixinsIntegration:
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["display_text"] == "New Name"
 
+    def test_directory_rename_invalidates_descendant_path_cache(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test renaming a directory clears cached descendant paths."""
+        folder_a = expect_dir(notebook_tree[Index.Id : "dir-1"])
+        page_a = expect_page(notebook_tree.traverse("/Test Folder A/Dir1 Test Page A"))
+        original_path = str(page_a.path)
+        assert original_path == "/Test Folder A/Dir1 Test Page A"
+
+        client.api_response = "<success/>"
+        folder_a.name = "Renamed Folder A"
+
+        assert str(page_a.path) == "/Renamed Folder A/Dir1 Test Page A"
+        assert page_a.traverse("..") is folder_a
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/update_node"
+        assert api_call[1]["display_text"] == "Renamed Folder A"
+
     def test_move_to(self, client, notebook_tree: Notebook):
         """Test moving a node to a new container."""
-        page = notebook_tree[Index.Id : "page-1"]
-        folder_a = notebook_tree[Index.Id : "dir-1"]
+        page = expect_page(notebook_tree[Index.Id : "page-1"])
+        folder_a = expect_dir(notebook_tree[Index.Id : "dir-1"])
         old_parent = page.parent
 
         client.api_response = "<success/>"
@@ -117,6 +173,73 @@ class TestTreeMixinsIntegration:
         api_call = client.api_log
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["parent_tree_id"] == folder_a.tree_id
+
+    def test_move_to_invalidates_descendant_path_cache(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test moving a directory clears cached descendant paths."""
+        destination = expect_dir(notebook_tree[Index.Id : "dir-1"])
+        source_dir = expect_dir(notebook_tree[Index.Id : "dir-2"])
+        descendant = expect_dir(
+            notebook_tree.traverse(
+                "/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
+            )
+        )
+        original_path = str(descendant.path)
+        assert (
+            original_path
+            == "/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
+        )
+
+        client.api_response = "<success/>"
+        source_dir.move_to(destination)
+
+        assert (
+            str(descendant.path)
+            == "/Test Folder A/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
+        )
+        assert descendant.traverse("..").name == "Dir2 Subfolder B"
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/update_node"
+        assert api_call[1]["parent_tree_id"] == destination.tree_id
+
+    def test_move_to_self_raises_without_api_call(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test move_to rejects moving a directory into itself locally."""
+        folder_a = expect_dir(notebook_tree[Index.Id : "dir-1"])
+
+        with pytest.raises(ValueError, match="Cannot move a node to itself"):
+            folder_a.move_to(folder_a)
+
+        assert client._api_logs == []  # pyright: ignore[reportPrivateUsage]
+
+    def test_move_to_descendant_raises_without_api_call(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test move_to rejects moving a directory into a descendant locally."""
+        source_dir = expect_dir(notebook_tree[Index.Id : "dir-2"])
+        descendant_dir = expect_dir(source_dir[Index.Id : "dir-2-1"])
+
+        with pytest.raises(
+            ValueError, match="Cannot move a directory into one of its descendants"
+        ):
+            source_dir.move_to(descendant_dir)
+
+        assert client._api_logs == []  # pyright: ignore[reportPrivateUsage]
+
+    def test_move_to_other_notebook_raises_without_api_call(
+        self, client, notebook_tree: Notebook, notebooks
+    ):
+        """Test move_to rejects cross-notebook moves locally."""
+        page = expect_page(notebook_tree[Index.Id : "page-1"])
+        other_notebook = notebooks[Index.Id : "testnb2"]
+
+        with pytest.raises(ValueError, match="Cannot move a node across notebooks"):
+            page.move_to(other_notebook)
+
+        assert client._api_logs == []  # pyright: ignore[reportPrivateUsage]
 
     def test_delete(self, client, notebook_tree: Notebook):
         """Test deleting a node (moving to API Deleted Items)."""
@@ -146,16 +269,45 @@ class TestTreeMixinsIntegration:
 
     def test_mapping_methods(self, notebook_tree: Notebook):
         """Test keys(), values(), and items() on a container."""
-        keys = list(notebook_tree.keys())
+        keys = notebook_tree.keys()
         assert "Test Folder A" in keys
         assert "Test Folder B" in keys
         assert "Test Page 1" in keys
 
-        values = list(notebook_tree.values())
+        values = notebook_tree.values()
         assert any(v.name == "Test Folder A" for v in values)
 
-        items = dict(notebook_tree.items())
-        assert items["Test Folder A"].id == "dir-1"
+        items = notebook_tree.items()
+        assert ("Test Folder A", notebook_tree[Index.Id : "dir-1"]) in items
+
+    def test_duplicate_mapping_methods_preserve_duplicate_names(
+        self, notebook_tree: Notebook
+    ):
+        """Test duplicate_* helpers preserve duplicate-name children."""
+        duplicate_page = NotebookPage(
+            "page-duplicate",
+            "Test Page 1",
+            notebook_tree,
+            notebook_tree,
+            notebook_tree.user,
+        )
+        notebook_tree._children.append(duplicate_page)  # pyright: ignore[reportPrivateUsage]
+
+        keys = notebook_tree.all_keys()
+        assert keys.count("Test Page 1") == 2
+
+        values = notebook_tree.all_values()
+        duplicate_ids = [node.id for node in values if node.name == "Test Page 1"]
+        assert duplicate_ids == ["page-1", "page-duplicate"]
+
+        items = notebook_tree.all_items()
+        duplicate_pairs = [
+            (name, node.id) for name, node in items if name == "Test Page 1"
+        ]
+        assert duplicate_pairs == [
+            ("Test Page 1", "page-1"),
+            ("Test Page 1", "page-duplicate"),
+        ]
 
     def test_children_returns_snapshot(self, client, notebook_tree: Notebook):
         """Test children returns an immutable snapshot instead of a live list."""
@@ -182,6 +334,36 @@ class TestTreeMixinsIntegration:
             child.name == "Snapshot Test Page" for child in notebook_tree.children
         )
 
+    def test_children_parse_failure_has_context(self, client, notebook_tree: Notebook):
+        """Test malformed tree children raise errors with container and node context."""
+        dir_1 = notebook_tree[Index.Id : "dir-1"].as_dir()
+        dir_1._populated = False
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <level-nodes type="array">
+                <level-node>
+                    <is-page type="boolean">false</is-page>
+                    <tree-id>broken-child</tree-id>
+                    <display-text />
+                </level-node>
+            </level-nodes>
+        </tree-tools>
+        """
+
+        with pytest.raises(
+            TreeChildParseError,
+            match=(
+                r"Could not parse tree child at /tree-tools/level-nodes/level-node "
+                r"for parent tree_id='dir-1': display-text cannot be empty"
+            ),
+        ):
+            _ = dir_1.children
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/get_tree_level"
+        assert api_call[1]["parent_tree_id"] == "dir-1"
+
     def test_enumeration(self, notebook_tree: Notebook):
         """Test enumerate_all, enumerate_dirs, and enumerate_pages."""
         # Max depth 1 by default
@@ -204,6 +386,77 @@ class TestTreeMixinsIntegration:
         pages = notebook_tree.enumerate_pages(depth=2)
         assert "Test Page 1" in pages
         assert "Test Folder A/Dir1 Test Page A" in pages
+
+        nodes = notebook_tree.enumerate_nodes(depth=2)
+        assert any(
+            path == "Test Folder A" and node.id == "dir-1" for path, node in nodes
+        )
+        assert any(
+            path == "Test Folder A/Dir1 Test Page A" and node.id == "page-1-1"
+            for path, node in nodes
+        )
+
+    def test_enumeration_handles_same_name_page_and_directory(
+        self, notebook_tree: Notebook
+    ):
+        """Test directory/page filtering does not misclassify duplicate names."""
+        _ = notebook_tree.children
+
+        shared_dir = NotebookDirectory(
+            "shared-dir",
+            "Shared Name",
+            notebook_tree,
+            notebook_tree,
+            notebook_tree.user,
+        )
+        shared_page = NotebookPage(
+            "shared-page",
+            "Shared Name",
+            notebook_tree,
+            notebook_tree,
+            notebook_tree.user,
+        )
+        notebook_tree._children.extend(  # pyright: ignore[reportPrivateUsage]
+            [shared_dir, shared_page]
+        )
+
+        dirs = notebook_tree.enumerate_dirs()
+        pages = notebook_tree.enumerate_pages()
+
+        assert dirs.count("Shared Name") == 1
+        assert pages.count("Shared Name") == 1
+
+    def test_enumeration_warns_on_timeout(self, notebook_tree: Notebook, monkeypatch):
+        """Test enumerate_* emits warnings when traversal times out."""
+        monotonic_values = iter([0.0, 1.0, 1.1, 1.2])
+        monkeypatch.setattr(
+            "labapi.tree.mixins.time.monotonic", lambda: next(monotonic_values)
+        )
+
+        with pytest.warns(RuntimeWarning, match="partial"):
+            all_items = notebook_tree.enumerate_all(timeout=timedelta(seconds=0))
+        assert all_items == []
+
+        monotonic_values = iter([0.0, 1.0, 1.1, 1.2])
+        monkeypatch.setattr(
+            "labapi.tree.mixins.time.monotonic", lambda: next(monotonic_values)
+        )
+        with pytest.warns(RuntimeWarning, match="partial"):
+            dirs = notebook_tree.enumerate_dirs(timeout=timedelta(seconds=0))
+        assert dirs == []
+
+        monotonic_values = iter([0.0, 1.0, 1.1, 1.2])
+        monkeypatch.setattr(
+            "labapi.tree.mixins.time.monotonic", lambda: next(monotonic_values)
+        )
+        with pytest.warns(RuntimeWarning, match="partial"):
+            pages = notebook_tree.enumerate_pages(timeout=timedelta(seconds=0))
+        assert pages == []
+
+    def test_enumeration_raise_on_timeout(self, notebook_tree: Notebook, monkeypatch):
+        """Raise mode is no longer supported in enumeration APIs."""
+        with pytest.raises(TypeError):
+            notebook_tree.enumerate_all(on_truncation="raise")  # pyright: ignore[reportCallIssue]
 
     def test_create_page(self, client, notebook_tree: Notebook):
         """Test creating a new page."""
@@ -247,6 +500,56 @@ class TestTreeMixinsIntegration:
         api_call = client.api_log
         assert api_call[0] == "tree_tools/insert_node"
         assert api_call[1]["display_text"] == "New Folder"
+        assert api_call[1]["is_folder"] == "true"
+
+    def test_create_page_subclass_uses_page_semantics(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test creating a NotebookPage subclass still uses page semantics."""
+
+        class CustomNotebookPage(NotebookPage):
+            pass
+
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>custom-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_page = notebook_tree.create(CustomNotebookPage, "Subclass Page")
+
+        assert isinstance(new_page, CustomNotebookPage)
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Subclass Page"
+        assert api_call[1]["is_folder"] == "false"
+
+    def test_create_directory_subclass_uses_directory_semantics(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test creating a NotebookDirectory subclass still uses directory semantics."""
+
+        class CustomNotebookDirectory(NotebookDirectory):
+            pass
+
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>custom-dir-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_dir = notebook_tree.create(CustomNotebookDirectory, "Subclass Folder")
+
+        assert isinstance(new_dir, CustomNotebookDirectory)
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Subclass Folder"
         assert api_call[1]["is_folder"] == "true"
 
     def test_create_nested_with_parents(self, client, notebook_tree: Notebook):
@@ -309,6 +612,111 @@ class TestTreeMixinsIntegration:
         """Test create rejects empty paths."""
         with pytest.raises(ValueError, match="Path cannot be empty"):
             notebook_tree.create(NotebookPage, "")
+
+    def test_create_absolute_string_within_container(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test create accepts absolute strings that stay inside the container."""
+        folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>absolute-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_page = folder_a.create(NotebookPage, "/Test Folder A/Absolute String Page")
+
+        assert isinstance(new_page, NotebookPage)
+        assert new_page.name == "Absolute String Page"
+        assert new_page.parent is folder_a
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Absolute String Page"
+
+    def test_create_absolute_string_outside_container_raises_without_api_call(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test create rejects absolute strings that point outside the container."""
+        folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
+
+        with pytest.raises(PathError, match="outside of"):
+            folder_a.create(NotebookPage, "/Test Folder B/Outside Page")
+
+        assert client._api_logs == []  # pyright: ignore[reportPrivateUsage]
+
+    def test_create_absolute_notebook_path_within_container(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test create still accepts absolute NotebookPath inputs."""
+        folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>absolute-dir-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_dir = folder_a.create(
+            NotebookDirectory, NotebookPath("/Test Folder A/Absolute String Dir")
+        )
+
+        assert isinstance(new_dir, NotebookDirectory)
+        assert new_dir.name == "Absolute String Dir"
+        assert new_dir.parent is folder_a
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Absolute String Dir"
+
+    def test_dir_accepts_absolute_string_within_container(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test dir inherits absolute string handling from create."""
+        folder_b = notebook_tree[Index.Id : "dir-2"].as_dir()
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>absolute-wrapper-dir-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_dir = folder_b.dir("/Test Folder B/Absolute Wrapper Dir")
+
+        assert isinstance(new_dir, NotebookDirectory)
+        assert new_dir.name == "Absolute Wrapper Dir"
+        assert new_dir.parent is folder_b
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Absolute Wrapper Dir"
+
+    def test_page_accepts_absolute_string_within_container(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test page inherits absolute string handling from create."""
+        folder_b = notebook_tree[Index.Id : "dir-2"].as_dir()
+        client.api_response = """
+        <tree-tools>
+            <node>
+                <tree-id>absolute-wrapper-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
+
+        new_page = folder_b.page("/Test Folder B/Absolute Wrapper Page")
+
+        assert isinstance(new_page, NotebookPage)
+        assert new_page.name == "Absolute Wrapper Page"
+        assert new_page.parent is folder_b
+
+        api_call = client.api_log
+        assert api_call[0] == "tree_tools/insert_node"
+        assert api_call[1]["display_text"] == "Absolute Wrapper Page"
 
     def test_create_nested_without_parents_raises(self, notebook_tree: Notebook):
         """Test create rejects nested paths when parents=False."""

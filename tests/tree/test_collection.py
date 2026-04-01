@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
 from unittest.mock import Mock
 
 import pytest
@@ -80,7 +81,7 @@ class TestNotebooksUnit:
         notebooks = Notebooks(notebooks_init, mock_user)
 
         with pytest.raises(TypeError, match="Invalid key type"):
-            notebooks[123]  # pyright: ignore[reportArgumentType]
+            notebooks[cast(Any, 123)]
 
     def test_notebooks_iter(self):
         """Test Notebooks.__iter__ returns iterator over names."""
@@ -104,10 +105,55 @@ class TestNotebooksUnit:
         ]
         notebooks = Notebooks(notebooks_init, mock_user)
 
-        values = list(notebooks.values())
+        values = notebooks.values()
 
         assert len(values) == 2
         assert all(isinstance(nb, Notebook) for nb in values)
+
+    def test_notebooks_mapping_methods_are_mapping_compatible(self):
+        """Test keys(), items(), and values() return mapping views."""
+        mock_user = Mock(spec=User)
+        notebooks_init = [
+            NotebookInit(id="nb1", name="Shared", is_default=True),
+            NotebookInit(id="nb2", name="Shared", is_default=False),
+            NotebookInit(id="nb3", name="Unique", is_default=False),
+        ]
+        notebooks = Notebooks(notebooks_init, mock_user)
+
+        keys = notebooks.keys()
+        assert set(keys) == {"Shared", "Unique"}
+
+        values = notebooks.values()
+        assert [notebook.id for notebook in values] == ["nb2", "nb3"]
+
+        items = notebooks.items()
+        assert [(name, notebook.id) for name, notebook in items] == [
+            ("Shared", "nb2"),
+            ("Unique", "nb3"),
+        ]
+
+    def test_notebooks_duplicate_mapping_methods_preserve_duplicate_names(self):
+        """Test duplicate_* methods preserve duplicate notebook names."""
+        mock_user = Mock(spec=User)
+        notebooks_init = [
+            NotebookInit(id="nb1", name="Shared", is_default=True),
+            NotebookInit(id="nb2", name="Shared", is_default=False),
+            NotebookInit(id="nb3", name="Unique", is_default=False),
+        ]
+        notebooks = Notebooks(notebooks_init, mock_user)
+
+        keys = notebooks.all_keys()
+        assert keys == ["Shared", "Shared", "Unique"]
+
+        values = notebooks.all_values()
+        assert [notebook.id for notebook in values] == ["nb1", "nb2", "nb3"]
+
+        items = notebooks.all_items()
+        assert [(name, notebook.id) for name, notebook in items] == [
+            ("Shared", "nb1"),
+            ("Shared", "nb2"),
+            ("Unique", "nb3"),
+        ]
 
 
 class TestNotebooksIntegration:
@@ -159,6 +205,26 @@ class TestNotebooksIntegration:
         assert api_call[0] == "notebooks/create_notebook"
         assert api_call[1]["name"] == "New Notebook"
         assert api_call[1]["initial_folders"] == "Empty"
+
+    def test_notebooks_name_index_snapshot_stable_after_mutation(
+        self, client, notebooks: Notebooks
+    ):
+        """Previously returned name-index snapshots should not change after create."""
+        snapshot = notebooks[Index.Name : "Test Notebook 3"]
+
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <notebooks>
+            <nbid>new_nb_id_for_snapshot_test</nbid>
+        </notebooks>
+        """
+        notebooks.create_notebook("Test Notebook 3")
+        client.clear_log()
+
+        assert len(snapshot) == 2
+        assert all(nb.id in {"testnb2", "testnb3"} for nb in snapshot)
+
+        latest = notebooks[Index.Name : "Test Notebook 3"]
+        assert len(latest) == 3
 
     def test_notebooks_create_notebook_duplicate_id_raises(
         self, client, notebooks: Notebooks

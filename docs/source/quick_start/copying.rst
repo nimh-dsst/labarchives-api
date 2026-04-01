@@ -1,194 +1,117 @@
 .. _copying:
 
 Copying Pages and Directories
-==============================
+=============================
 
-The LabArchives API client provides the :meth:`~labapi.tree.mixins.AbstractTreeNode.copy_to` method
-to duplicate pages and directories within your notebooks.
+Use :meth:`~labapi.tree.mixins.AbstractTreeNode.copy_to` to duplicate pages and
+directories within or across notebooks. The examples assume you already have
+the source node and destination container.
 
-Copying a Page
---------------
-
-To copy a page to a different location, use the :meth:`~labapi.tree.page.NotebookPage.copy_to` method:
-
-.. code-block:: python
-
-    # Get the source page
-    source_page = notebook.traverse("Experiments/Trial 1")
-
-    # Get the destination directory
-    destination = notebook.traverse("Archive")
-
-    # Copy the page
-    copied_page = source_page.copy_to(destination)
-
-This creates a new page in the destination directory with the same name and all entries copied over.
-
-Copying Across Notebooks
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can also copy pages between different notebooks:
+Copy a Page
+-----------
 
 .. code-block:: python
 
-    # Get source page from one notebook
-    source_page = notebook1.traverse("Results/Final Results")
+   source_page = notebook.traverse("Experiments/Trial 1")
+   destination = notebook.traverse("Archive")
+   copied_page = source_page.copy_to(destination)
 
-    # Get destination in another notebook
-    destination = notebook2.traverse("Imported Data")
+This creates a new page in the destination directory with the same name and
+entries.
 
-    # Copy to the other notebook
-    copied_page = source_page.copy_to(destination)
-
-Copying a Directory
--------------------
-
-Directories can be copied recursively, including all their contents:
+Copy Across Notebooks
+---------------------
 
 .. code-block:: python
 
-    # Get the directory to copy
-    source_dir = notebook.traverse("2024 Experiments")
+   source_page = notebook1.traverse("Results/Final Results")
+   destination = notebook2.traverse("Imported Data")
+   copied_page = source_page.copy_to(destination)
 
-    # Get the destination
-    destination = notebook.traverse("Archives")
+Copy a Directory
+----------------
 
-    # Copy the entire directory and its contents
-    copied_dir = source_dir.copy_to(destination)
+Directories are copied recursively, including their pages and subdirectories:
 
-This will recursively copy all subdirectories and pages within the source directory.
+.. code-block:: python
+
+   source_dir = notebook.traverse("2024 Experiments")
+   destination = notebook.traverse("Archives")
+   copied_dir = source_dir.copy_to(destination)
 
 Return Value
 ------------
 
-The ``copy_to()`` method returns a reference to the newly created copy:
+``copy_to()`` returns the newly created copy:
 
 .. code-block:: python
 
-    # Copy and immediately work with the new page
-    new_page = source_page.copy_to(destination)
+   new_page = source_page.copy_to(destination)
 
-    # The new page is a separate object
-    print(f"Original: {source_page.id}")
-    print(f"Copy: {new_page.id}")  # Different ID
-
-    # You can add more entries to the copy
-    from labapi import TextEntry
-    new_page.entries.create(TextEntry, "Additional notes added to the copy")
+   print(f"Original: {source_page.id}")
+   print(f"Copy: {new_page.id}")
 
 Important Limitations
 ---------------------
 
-The ``copy_to()`` method has some known limitations you should be aware of:
-
-Attachment File Renaming
-~~~~~~~~~~~~~~~~~~~~~~~~~
+.. warning::
+   LabArchives can rename attachment files during copy operations. The file
+   data is preserved, but the copied filename may differ from the original.
 
 .. warning::
-    **LabArchives may rename attachment files during copy operations.**
-
-    When copying pages that contain attachments (images, PDFs, etc.), LabArchives sometimes
-    modifies the filenames. This is a limitation of the LabArchives API itself, not this client library.
-
-    **Example:**
-
-    - Original attachment: ``experiment_results.png``
-    - After copy: ``experiment_results_copy.png`` or ``experiment_results(1).png``
-
-    The attachment data is preserved, but the filename may change. Be aware of this if your
-    workflow relies on specific attachment filenames.
-
-Supported Entry Types
-~~~~~~~~~~~~~~~~~~~~~
-
-The ``copy_to()`` method currently supports copying these entry types:
-
-* Text entries (rich text)
-* Plain text entries
-* Headers
-* Attachments (images, PDFs, files)
-
-.. warning::
-    **Some entry types may fail to copy.**
-
-    Widget entries and other specialized entry types are not fully supported for copying.
-    Attempting to copy a page with unsupported entry types may result in errors or incomplete copies.
-
-    If you encounter errors when copying pages, it may be due to unsupported entry types.
+   Widget entries and other specialized entry types are not fully supported for
+   copying. Unsupported content can cause errors or incomplete copies.
 
 Best Practices
 --------------
 
-1. **Test on non-critical pages first**: Before copying important data, test the copy operation
-   on less critical pages to ensure it works as expected.
+- Test the copy flow on non-critical content first.
+- Verify the copied entry count and spot-check important attachments.
+- If filenames matter, re-read copied attachments and confirm their names.
+- Prefer descriptive destination names so copied content is easy to identify.
 
-2. **Verify the copy**: After copying, check that all expected content is present in the destination:
-
-   .. code-block:: python
-
-       original_page = notebook.traverse("Source/Page")
-       copied_page = original_page.copy_to(notebook.traverse("Destination"))
-
-       # Verify entry count
-       print(f"Original entries: {len(original_page.entries)}")
-       print(f"Copied entries: {len(copied_page.entries)}")
-
-       # Spot-check content
-       for i, entry in enumerate(copied_page.entries):
-           print(f"Entry {i}: {entry.content_type}")
-
-3. **Handle attachment filename changes**: If your workflow depends on specific filenames,
-   implement logic to handle potential filename changes:
-
-   .. code-block:: python
-
-       # After copying, you may need to check attachment names
-       for entry in copied_page.entries:
-           if entry.content_type == "Attachment":
-               attachment = entry.get_attachment()
-               print(f"Attachment filename: {attachment.filename}")
-               print(f"Caption: {attachment.caption}")
-
-4. **Use descriptive names**: After copying, you may want to rename the copy to distinguish it:
-
-   .. code-block:: python
-
-       copied_page = source_page.copy_to(destination)
-       copied_page.name = f"{source_page.name} (Copy)"
-
-Alternatives to Copying
------------------------
-
-Depending on your use case, you might consider these alternatives:
-
-**Moving instead of copying**: Use :meth:`~labapi.tree.mixins.AbstractTreeNode.move_to` if you
-want to relocate content rather than duplicate it:
+Example verification:
 
 .. code-block:: python
 
-    # Move instead of copy (no duplication)
-    page.move_to(new_location)
+   original_page = notebook.traverse("Source/Page")
+   copied_page = original_page.copy_to(notebook.traverse("Destination"))
 
-**Creating new content**: For simple pages, it might be more reliable to create a new page
-and add entries programmatically rather than using ``copy_to()``:
+   print(f"Original entries: {len(original_page.entries)}")
+   print(f"Copied entries: {len(copied_page.entries)}")
+
+Alternatives
+------------
+
+Move Instead of Copying
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to relocate content instead of duplicating it, use
+:meth:`~labapi.tree.mixins.AbstractTreeNode.move_to`:
 
 .. code-block:: python
 
-    from labapi import NotebookPage
+   page.move_to(new_location)
 
-    # Create a new page manually
-    new_page = destination.create(NotebookPage, "New Page")
+Recreate Content Programmatically
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    # Add entries from scratch or based on original page
-    for entry in original_page.entries:
-        if entry.content_type == "text entry":
-            new_page.entries.create(entry.__class__, entry.content)
+For simple pages, it can be more reliable to create a new page and rebuild the
+content yourself:
 
-This approach gives you more control and avoids potential issues with unsupported entry types.
+.. code-block:: python
 
-See Also
---------
+   from labapi import NotebookPage
 
-* :ref:`delete` - For information on moving pages to the deleted items directory
-* :doc:`navigating` - For details on navigating to source and destination locations
-* :doc:`creating_pages` - For creating new pages instead of copying
+   new_page = destination.create(NotebookPage, "New Page")
+
+   for entry in original_page.entries:
+       if entry.content_type == "text entry":
+           new_page.entries.create(entry.__class__, entry.content)
+
+Related Pages
+-------------
+
+- :ref:`limitations` for the centralized copy and fidelity caveats.
+- :ref:`delete` for move-to-trash behavior.
+- :ref:`navigating` for finding source and destination locations.

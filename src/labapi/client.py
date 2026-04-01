@@ -1,5 +1,4 @@
-"""
-LabArchives API Client.
+"""LabArchives API Client.
 
 This module provides the core client for interacting with the LabArchives API,
 handling authentication, request signing, and various API call methods.
@@ -15,8 +14,11 @@ from http.server import SimpleHTTPRequestHandler
 from io import BufferedIOBase
 from operator import itemgetter
 from os import getenv
+from secrets import token_urlsafe
 from socketserver import TCPServer
-from typing import Any, Generator, Mapping, Sequence, override
+from time import monotonic
+from types import TracebackType
+from typing import Any, Iterator, Mapping, Self, Sequence, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cryptography.hazmat.primitives.hashes import SHA512
@@ -26,10 +28,10 @@ from requests import Response, Session
 from requests import codes as status_codes
 from requests.adapters import HTTPAdapter
 
-from .browser import default_browser
 from .exceptions import ApiError, AuthenticationError
 from .user import User
 from .util import NotebookInit, extract_etree, to_bool
+from .util.browser import detect_default_browser
 
 # Error codes that indicate an authentication/credential failure.
 _AUTH_ERROR_CODES: frozenset[int] = frozenset(
@@ -41,15 +43,72 @@ _AUTH_ERROR_CODES: frozenset[int] = frozenset(
     }
 )
 
-try:
-    from dotenv import load_dotenv
+_DEFAULT_AUTH_CALLBACK_HOST = "127.0.0.1"
+_DEFAULT_AUTH_CALLBACK_PORT = 8089
+_DEFAULT_AUTH_CALLBACK_PATH = "/"
+_DEFAULT_AUTH_CALLBACK_TIMEOUT = 300.0
 
+
+try:
+    from dotenv import load_dotenv  # pyright: ignore[reportMissingImports]
+
+    # Optional behavior: auto-load local `.env` values when `labapi[dotenv]`
+    # (python-dotenv) is installed.
     load_dotenv()
 except ImportError:
     pass
 
 
 context = ssl.create_default_context()
+
+
+class StreamingResponse:
+    """Wrapper for streamed API responses.
+
+    Exposes both the chunk iterator and the underlying HTTP response object so
+    callers can read headers/status without relying on ``StopIteration.value``.
+    """
+
+    def __init__(self, response: Response):
+        """Initialize a streamed response wrapper."""
+        self._response = response
+        self._closed = False
+
+    def __getattr__(self, name: str) -> Any:
+        """Proxy response attributes (e.g., ``headers`` / ``status_code``)."""
+        return getattr(self._response, name)
+
+    def __iter__(self) -> Iterator[bytes]:
+        """Iterate over response bytes in 1MiB chunks."""
+        try:
+            yield from self._response.iter_content(1024 * 1024)
+        finally:
+            self.close()
+
+    @property
+    def response(self) -> Response:
+        """The raw response object backing the stream."""
+        return self._response
+
+    def close(self) -> None:
+        """Close the underlying response and release its connection."""
+        if self._closed:
+            return
+        self._response.close()
+        self._closed = True
+
+    def __enter__(self) -> StreamingResponse:
+        """Enter a context that guarantees connection cleanup on exit."""
+        return self
+
+    def __exit__(
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
+    ) -> None:
+        """Close the stream when leaving a ``with`` block."""
+        self.close()
 
 
 class _313HTTPAdapter(HTTPAdapter):
@@ -65,7 +124,7 @@ class _313HTTPAdapter(HTTPAdapter):
     """
 
     def init_poolmanager(self, *args: Any, **kwargs: Any):
-        """Initializes the connection pool manager with custom SSL context.
+        """Initialize the connection pool manager with a custom SSL context.
 
         This method overrides the default pool manager initialization to inject
         a custom SSL context that disables strict X.509 verification.
@@ -79,9 +138,123 @@ class _313HTTPAdapter(HTTPAdapter):
         super().init_poolmanager(*args, **kwargs, ssl_context=context)  # pyright: ignore[reportUnknownMemberType]
 
 
+class _AuthResponseCollector:
+    """Context manager for binding and waiting on a loopback auth callback."""
+
+    def __init__(
+        self,
+        client: Client,
+        *,
+        port: int = _DEFAULT_AUTH_CALLBACK_PORT,
+        callback_path: str = _DEFAULT_AUTH_CALLBACK_PATH,
+        timeout: float | None = _DEFAULT_AUTH_CALLBACK_TIMEOUT,
+    ):
+        """Initialize a loopback auth callback collector."""
+        self._client = client
+        self._port = port
+        self._callback_path = callback_path
+        self._timeout = timeout
+        self._error: str | None = None
+        self._email: str | None = None
+        self._auth_code: str | None = None
+        self._httpd: TCPServer | None = None
+
+    def __enter__(self) -> Self:
+        """Bind the loopback callback server and return this collector."""
+        collector = self
+        callback_path = self._callback_path
+
+        class AuthRequestHandler(SimpleHTTPRequestHandler):
+            def _write_response(self, status_code: int, message: str) -> None:
+                self.send_response(status_code)
+                self.send_header("Content-type", "text/html")
+                self.end_headers()
+                self.wfile.write(message.encode("utf-8"))
+
+            @override
+            def do_GET(self) -> None:
+                _scheme, _netloc, path, querystring, _fragment = urlsplit(self.path)
+
+                if path != callback_path:
+                    self._write_response(404, "Unexpected authentication callback.")
+                    return
+
+                query = dict(parse_qsl(querystring))
+
+                error = query.get("error")
+                if error is not None:
+                    self._write_response(200, f"Error: {error}")
+                    collector._error = error
+                    return
+
+                auth_code = query.get("auth_code")
+                email = query.get("email")
+                if auth_code is not None and email is not None:
+                    self._write_response(
+                        200,
+                        "Thanks for Authenticating. Close this Window",
+                    )
+                    collector._auth_code = auth_code
+                    collector._email = email
+                    return
+
+                self._write_response(400, "Invalid authentication callback.")
+
+            @override
+            def log_message(self, format: str, *args: Any) -> None:
+                pass
+
+        class LoopbackTCPServer(TCPServer):
+            allow_reuse_address = True
+
+        self._httpd = LoopbackTCPServer(
+            (_DEFAULT_AUTH_CALLBACK_HOST, self._port),
+            AuthRequestHandler,
+        )
+        return self
+
+    def __exit__(
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
+    ) -> None:
+        """Close the loopback callback server."""
+        if self._httpd is not None:
+            self._httpd.server_close()
+            self._httpd = None
+
+    def wait(self) -> User:
+        """Wait for a valid callback, then log in and return the user."""
+        if self._httpd is None:
+            raise RuntimeError(
+                "collect_auth_response() must be used as a context manager before waiting for a callback"
+            )
+
+        deadline = None if self._timeout is None else monotonic() + self._timeout
+
+        while True:
+            if self._error is not None:
+                raise AuthenticationError(f"Authentication failed: {self._error}")
+
+            if self._auth_code is not None and self._email is not None:
+                return self._client.login(self._email, self._auth_code)
+
+            if deadline is not None:
+                remaining = deadline - monotonic()
+                if remaining <= 0:
+                    raise AuthenticationError(
+                        "Timed out waiting for the authentication callback"
+                    )
+                self._httpd.timeout = min(remaining, 0.5)
+            else:
+                self._httpd.timeout = None
+
+            self._httpd.handle_request()
+
+
 class Client:
-    """
-    A client for the LabArchives API.
+    """A client for the LabArchives API.
 
     This class handles the connection to the LabArchives API
     and provides methods for making authenticated API calls.
@@ -96,8 +269,7 @@ class Client:
         *,
         strict_cert: bool = True,
     ):
-        """
-        Initializes a new LabArchives API client.
+        """Initialize a LabArchives API client.
 
         If any parameter is None, the client will attempt to load values from
         a ``.env`` file using ``python-dotenv``. The environment variables used are:
@@ -131,18 +303,62 @@ class Client:
                 "ACCESS_KEYID or ACCESS_PWD environment variables not set, and parameters were not provided."
             )
 
-        self._base_url = urlsplit(base_url).geturl()
+        parsed_base_url = urlsplit(base_url)
+        normalized_base_url = parsed_base_url.geturl()
+        if (
+            parsed_base_url.scheme not in {"http", "https"}
+            or not parsed_base_url.netloc
+        ):
+            raise AuthenticationError(
+                "Invalid API_URL/base_url: expected a full HTTP(S) URL such as "
+                "'https://api.labarchives.com'."
+            )
+
+        self._base_url = normalized_base_url
         self._akid = akid
         self._hmac = HMAC(
             bytes(akpass, "utf8") if isinstance(akpass, str) else akpass, SHA512()
         )
         self.session = Session()
+        self._closed = False
         if not strict_cert:
             self.session.mount("https://", _313HTTPAdapter())
 
-    def generate_auth_url(self, redirect_url: str) -> str:
+    def close(self) -> None:
+        """Close the underlying requests session.
+
+        Once closed, this client should not be used for further API requests.
+        Any :class:`~labapi.user.User` objects derived from this client should
+        also be treated as no longer usable for API calls.
         """
-        Generates a URL for authenticating with the LabArchives API.
+        if not self._closed:
+            self.session.close()
+            self._closed = True
+
+    def __enter__(self) -> Self:
+        """Return this client for use as a context manager."""
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        """Close the client session when leaving a context-manager block."""
+        self.close()
+
+    def __del__(self) -> None:
+        """Best-effort cleanup for the underlying session at object finalization."""
+        try:
+            self.close()
+        except Exception:
+            # __del__ may run during interpreter shutdown where module globals can
+            # already be torn down; ignore cleanup failures in that phase.
+            pass
+
+    def _ensure_open(self) -> None:
+        """Raise if the client has already been closed."""
+        if self._closed:
+            raise RuntimeError("Client session is closed")
+
+    def generate_auth_url(self, redirect_url: str) -> str:
+        """Generate a LabArchives login URL for the given callback.
 
         This URL is used to initiate the authorization code flow,
         redirecting the user to LabArchives to grant permissions.
@@ -154,14 +370,16 @@ class Client:
         return self.construct_url(
             "api_user_login",
             {"redirect_uri": redirect_url},
+            expires_in=timedelta(minutes=5),
             should_prefix_api=False,
             signature_method=redirect_url,
         )
 
     def login(self, user_email: str, auth_code: str) -> User:
-        """
-        Logs in a user using an authentication code. This can be from the standard
-        authentication flow or a one-hour code from the LabArchives website.
+        """Log in a user with an authentication code.
+
+        This code can come from the standard browser flow or from a one-hour
+        code generated in the LabArchives website.
 
         This method exchanges the authorization code for user access information,
         including their user ID and available notebooks.
@@ -199,8 +417,7 @@ class Client:
 
     @staticmethod
     def _handle_request_status(response: Response) -> None:
-        """
-        Handles the HTTP response status, raising an error for unsuccessful requests.
+        """Raise an error for an unsuccessful HTTP response.
 
         Attempts to parse the LabArchives ``<error>`` XML element from the response
         body to surface a specific error code and description.  Falls back to a
@@ -236,9 +453,8 @@ class Client:
 
     def stream_api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any
-    ) -> Generator[bytes, None, Response]:
-        """
-        Makes a GET request to the LabArchives API and returns the response as a byte stream.
+    ) -> StreamingResponse:
+        """Send a GET request and return a streamed response wrapper.
 
         This is useful for downloading large files or when the response content
         needs to be processed incrementally.
@@ -246,28 +462,28 @@ class Client:
         :param api_method_uri: The API method URI (e.g., "get_file_attachment").
                                Can be a string or a sequence of strings representing path segments.
         :param kwargs: Additional query parameters to pass to the API method.
-        :yields: Chunks of bytes from the API response.
-        :returns: The full requests.Response object after the stream has been consumed.
+        :returns: A wrapper with both an iterable byte stream and the full requests.Response.
         :raises RuntimeError: If the API request fails.
         """
-        with self.session.get(
+        self._ensure_open()
+        request = self.session.get(
             self.construct_url(api_method_uri, query=kwargs), stream=True
-        ) as request:
+        )
+        try:
             Client._handle_request_status(request)
+        except Exception:
+            request.close()
+            raise
 
-            for chunk in request.iter_content(1024 * 1024):
-                yield chunk
-
-            return request
+        return StreamingResponse(request)
 
     def stream_api_post(
         self,
         api_method_uri: str | Sequence[str],
         body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
-    ) -> Generator[bytes, None, Response]:
-        """
-        Makes a POST request to the LabArchives API and returns the response as a byte stream.
+    ) -> StreamingResponse:
+        """Send a POST request and return a streamed response wrapper.
 
         This is useful for uploading large files or when the response content
         needs to be processed incrementally.
@@ -276,25 +492,25 @@ class Client:
                                Can be a string or a sequence of strings representing path segments.
         :param body: The request body, which can be a mapping of form data or a file-like object.
         :param kwargs: Additional query parameters to pass to the API method.
-        :yields: Chunks of bytes from the API response.
-        :returns: The full requests.Response object after the stream has been consumed.
+        :returns: A wrapper with both an iterable byte stream and the full requests.Response.
         :raises RuntimeError: If the API request fails.
         """
-        with self.session.post(
+        self._ensure_open()
+        request = self.session.post(
             self.construct_url(api_method_uri, query=kwargs), data=body, stream=True
-        ) as request:
+        )
+        try:
             Client._handle_request_status(request)
+        except Exception:
+            request.close()
+            raise
 
-            for chunk in request.iter_content(1024 * 1024):
-                yield chunk
-
-            return request
+        return StreamingResponse(request)
 
     def raw_api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any
     ) -> Response:
-        """
-        Makes a GET request to the LabArchives API and returns the raw requests.Response object.
+        """Send a GET request and return the raw ``requests.Response``.
 
         This method is suitable for API calls where the full HTTP response,
         including headers and status code, is needed, and the content is not
@@ -306,6 +522,7 @@ class Client:
         :returns: The requests.Response object containing the API response.
         :raises RuntimeError: If the API request fails.
         """
+        self._ensure_open()
         request = self.session.get(self.construct_url(api_method_uri, query=kwargs))
         Client._handle_request_status(request)
 
@@ -317,8 +534,7 @@ class Client:
         body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ) -> Response:
-        """
-        Makes a POST request to the LabArchives API and returns the raw requests.Response object.
+        """Send a POST request and return the raw ``requests.Response``.
 
         This method is suitable for API calls where the full HTTP response,
         including headers and status code, is needed, and the content is not
@@ -331,6 +547,7 @@ class Client:
         :returns: The requests.Response object containing the API response.
         :raises RuntimeError: If the API request fails.
         """
+        self._ensure_open()
         request = self.session.post(
             self.construct_url(api_method_uri, query=kwargs), data=body
         )
@@ -339,8 +556,7 @@ class Client:
         return request
 
     def api_get(self, api_method_uri: str | Sequence[str], **kwargs: Any) -> Element:
-        """
-        Makes a GET request to the LabArchives API and parses the XML response into an lxml Element.
+        """Send a GET request and parse the XML response into an element.
 
         This is the primary method for retrieving structured data from the API.
 
@@ -350,10 +566,7 @@ class Client:
         :returns: An lxml Element representing the root of the XML response.
         :raises RuntimeError: If the API request fails or the response is not valid XML.
         """
-
-        return fromstring(
-            bytes(self.raw_api_get(api_method_uri, **kwargs).text, encoding="utf-8")
-        )
+        return fromstring(self.raw_api_get(api_method_uri, **kwargs).content)
 
     def api_post(
         self,
@@ -361,8 +574,7 @@ class Client:
         body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ) -> Element:
-        """
-        Makes a POST request to the LabArchives API and parses the XML response into an lxml Element.
+        """Send a POST request and parse the XML response into an element.
 
         This is the primary method for sending data to the API and receiving
         structured XML responses.
@@ -374,134 +586,119 @@ class Client:
         :returns: An lxml Element representing the root of the XML response.
         :raises RuntimeError: If the API request fails or the response is not valid XML.
         """
+        return fromstring(self.raw_api_post(api_method_uri, body, **kwargs).content)
 
-        return fromstring(
-            bytes(
-                self.raw_api_post(api_method_uri, body, **kwargs).text, encoding="utf-8"
-            )
-        )
-
-    def default_authenticate(self) -> User:
-        """
-        Authenticates a user using a default browser (Chrome, Firefox, or Edge)
-        and a local HTTP server to capture the authentication code.
+    def default_authenticate(
+        self,
+        *,
+        port: int = _DEFAULT_AUTH_CALLBACK_PORT,
+        timeout: float | None = _DEFAULT_AUTH_CALLBACK_TIMEOUT,
+    ) -> User:
+        """Authenticate a user with the default browser and a loopback callback.
 
         This method opens a browser window, directs the user to the LabArchives
-        authentication page, and then listens on `http://localhost:8089/` for
-        the redirect containing the authorization code. If no compatible browser
-        is detected, it falls back to printing the authentication URL to the terminal,
-        requiring the user to manually open it.
+        authentication page, and then listens on a loopback callback URL on
+        ``127.0.0.1:<port>`` for the redirect containing the authorization code.
+        If no compatible
+        browser is detected, it falls back to printing the authentication URL to
+        the terminal, requiring the user to manually open it.
 
         .. note::
            This method requires the ``selenium`` package for automatic browser control.
            Install it with: ``pip install selenium``
 
+        :param port: The local callback port to listen on. Defaults to ``8089``.
+        :param timeout: Maximum number of seconds to wait for a valid callback.
+                        Defaults to five minutes. Pass ``None`` to wait indefinitely.
         :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
-        :raises ImportError: If selenium is not installed.
-        :raises RuntimeError: If authentication fails.
+        :raises ImportError: If selenium is required but not installed.
+        :raises AuthenticationError: If authentication fails or times out.
         """
-        auth_url = self.generate_auth_url("http://localhost:8089/")
+        self._ensure_open()
+        callback_path = f"/auth/{token_urlsafe(24)}/"
+        auth_url = self.generate_auth_url(
+            f"http://{_DEFAULT_AUTH_CALLBACK_HOST}:{port}{callback_path}"
+        )
 
         driver = None
-        options = None
-        try:
-            match default_browser:
-                case "chrome":
-                    import selenium.webdriver as webdriver
+        with self.collect_auth_response(
+            port=port,
+            callback_path=callback_path,
+            timeout=timeout,
+        ) as auth_response_collector:
+            try:
+                match detect_default_browser():
+                    case "chrome":
+                        import selenium.webdriver as webdriver  # pyright: ignore[reportMissingImports]
 
-                    options = webdriver.ChromeOptions()
-                    driver = webdriver.Chrome(options=options)
-                    print("Opening Chrome for authentication...")
-                case "firefox":
-                    import selenium.webdriver as webdriver
+                        driver = webdriver.Chrome(options=webdriver.ChromeOptions())
+                        print("Opening Chrome for authentication...")
+                    case "firefox":
+                        import selenium.webdriver as webdriver  # pyright: ignore[reportMissingImports]
 
-                    options = webdriver.FirefoxOptions()
-                    driver = webdriver.Firefox(options=options)
-                    print("Opening Firefox for authentication...")
-                case "edge":
-                    import selenium.webdriver as webdriver
+                        driver = webdriver.Firefox(options=webdriver.FirefoxOptions())
+                        print("Opening Firefox for authentication...")
+                    case "edge":
+                        import selenium.webdriver as webdriver  # pyright: ignore[reportMissingImports]
 
-                    options = webdriver.EdgeOptions()
-                    driver = webdriver.Edge(options=options)
-                    print("Opening Edge for authentication...")
-                case "terminal":
-                    print("Open authentication URL in your browser:")
-                    print(auth_url)
-                case _:
+                        driver = webdriver.Edge(options=webdriver.EdgeOptions())
+                        print("Opening Edge for authentication...")
+                    case "terminal":
+                        print("Open authentication URL in your browser:")
+                        print(auth_url)
+                    case _:
+                        print(
+                            "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
+                        )
+                        print("Open authentication URL in your browser:")
+                        print(auth_url)
+
+                if driver is not None:
+                    driver.get(auth_url)
                     print(
-                        "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
+                        "Please complete the authentication in the opened browser window..."
                     )
-                    print("Open authentication URL in your browser:")
-                    print(auth_url)
 
-            if driver is not None:
-                driver.get(auth_url)
-                print(
-                    "Please complete the authentication in the opened browser window..."
-                )
+                return auth_response_collector.wait()
+            except ImportError as e:
+                raise ImportError(
+                    "Selenium is required for automatic browser-based authentication. "
+                    "Install it with: pip install selenium\n"
+                    "Alternatively, use manual authentication with LA_AUTH_BROWSER=terminal."
+                ) from e
+            finally:
+                if driver is not None:
+                    driver.quit()
 
-            return self.collect_auth_response()
-        except ImportError as e:
-            raise ImportError(
-                "Selenium is required for automatic browser-based authentication. "
-                "Install it with: pip install selenium\n"
-                "Alternatively, use manual authentication with LA_AUTH_BROWSER=terminal."
-            ) from e
-        finally:
-            if driver is not None:
-                driver.quit()
+    def collect_auth_response(
+        self,
+        *,
+        port: int = _DEFAULT_AUTH_CALLBACK_PORT,
+        callback_path: str = _DEFAULT_AUTH_CALLBACK_PATH,
+        timeout: float | None = _DEFAULT_AUTH_CALLBACK_TIMEOUT,
+    ) -> _AuthResponseCollector:
+        """Return a context manager for collecting a loopback auth callback.
 
-    def collect_auth_response(self) -> User:
+        The returned collector binds a local HTTP server on enter, waits for a
+        valid callback via :meth:`_AuthResponseCollector.wait`, and closes the
+        server on exit.
+
+        :param port: The local callback port to listen on. Defaults to ``8089``.
+        :param callback_path: The callback path to accept. Defaults to ``/``.
+        :param timeout: Maximum number of seconds to wait for a valid callback.
+                        Defaults to five minutes. Pass ``None`` to wait indefinitely.
+        :returns: An enterable collector with a ``wait()`` method for the authentication callback.
         """
-        Launches a local HTTP server to capture the authentication response from LabArchives.
+        self._ensure_open()
+        if not callback_path.startswith("/"):
+            callback_path = f"/{callback_path}"
 
-        This server listens on `http://localhost:8089/` for the redirect from
-        LabArchives containing the authorization code and user email after
-        successful authentication.
-
-        :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
-        :raises KeyError: If the authentication code or email is not received.
-        """
-
-        auth_info: dict[str, str] = {}
-
-        class AuthRequestHandler(SimpleHTTPRequestHandler):
-            @override
-            def do_GET(self):
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
-
-                _s, _n, _p, querystring, _f = urlsplit(self.path)
-
-                query = dict(parse_qsl(querystring))
-
-                if "error" in query:
-                    self.wfile.write(
-                        bytes(f"Error: {query['error']}", encoding="utf-8")
-                    )
-                    auth_info["error"] = query["error"]
-                else:
-                    self.wfile.write(b"Thanks for Authenticating. Close this Window")
-                    auth_info["auth_code"] = query["auth_code"]
-                    auth_info["email"] = query["email"]
-
-            @override
-            def log_message(self, format: str, *args: Any) -> None:
-                pass
-
-        with TCPServer(("127.0.0.1", 8089), AuthRequestHandler) as httpd:
-            httpd.handle_request()
-
-        if "error" in auth_info:
-            raise AuthenticationError(f"Authentication failed: {auth_info['error']}")
-
-        if "auth_code" not in auth_info or "email" not in auth_info:
-            raise AuthenticationError(
-                "Authentication callback did not include both auth_code and email"
-            )
-
-        return self.login(auth_info["email"], auth_info["auth_code"])
+        return _AuthResponseCollector(
+            self,
+            port=port,
+            callback_path=callback_path,
+            timeout=timeout,
+        )
 
     def construct_url(
         self,
@@ -512,8 +709,7 @@ class Client:
         should_prefix_api: bool = True,
         signature_method: str | None = None,
     ) -> str:
-        """
-        Constructs a fully qualified and signed URL for a LabArchives API method.
+        """Construct a fully qualified and signed URL for an API method.
 
         This method handles the assembly of the base URL, API method path,
         query parameters, and the HMAC-SHA512 signature required by the LabArchives API.
@@ -531,18 +727,30 @@ class Client:
                                  Useful for methods like `api_user_login` where the
                                  actual method name differs from the URI path.
         :returns: The fully constructed and signed URL.
+        :raises ValueError: If ``api_method_uri`` does not contain any non-empty
+                            path segments after normalization.
         """
         if isinstance(api_method_uri, str):
             api_method_uri = api_method_uri.split("/")
 
-        method_parts = tuple(filter(lambda k: len(k.strip()) != 0, api_method_uri))
+        method_parts = tuple(part for part in api_method_uri if part.strip())
+
+        if not method_parts:
+            raise ValueError(
+                "api_method_uri must contain at least one non-empty path segment"
+            )
 
         if should_prefix_api:
             if method_parts[0] != "api":
-                method_parts = ["api", *method_parts]
+                method_parts = ("api", *method_parts)
         else:
             if method_parts[0] == "api":
                 method_parts = method_parts[1:]
+
+        if not method_parts:
+            raise ValueError(
+                "api_method_uri must contain at least one non-empty path segment"
+            )
 
         api_method = method_parts[-1] if signature_method is None else signature_method
 
@@ -561,8 +769,7 @@ class Client:
             return self._sign_url(url, api_method)
 
     def _signature(self, api_method: str, expiry: int) -> str:
-        """
-        Generates the HMAC-SHA512 signature for a LabArchives API request.
+        """Generate the HMAC-SHA512 signature for a LabArchives API request.
 
         This private method is used internally by `_sign_url` to create the
         cryptographic signature based on the Access Key ID, API method, and expiry.
@@ -585,8 +792,7 @@ class Client:
         api_method: str,
         expires_in: timedelta | datetime = timedelta(seconds=60),
     ) -> str:
-        """
-        Signs a given URL with the HMAC-SHA512 signature and adds necessary query parameters.
+        """Sign a URL and append the LabArchives auth query parameters.
 
         This private method appends the Access Key ID, expiration timestamp, and
         the generated signature to the URL's query string.

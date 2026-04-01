@@ -7,13 +7,25 @@ Paths provide a way to navigate, reference, and create nodes in the notebook tre
 slash-separated strings. This is an alternative to chained index access and is especially useful
 when working with deeply nested structures.
 
+.. warning::
+   For duplicate-name and first-match lookup behavior, see
+   :ref:`index_access`. This page focuses on path syntax and traversal rules.
+
 .. code-block:: python
+
+    from labapi import TraversalError
 
     # Index access (chained)
     page = notebook["Experiments"]["2024"]["Results"]
 
     # Path-based (equivalent)
     page = notebook.traverse("Experiments/2024/Results")
+
+    try:
+        notebook.traverse("Experiments/2024/Results/Figure 1")
+    except TraversalError:
+        # An intermediate segment exists but is not a directory
+        ...
 
 Traversing the Tree
 -------------------
@@ -25,6 +37,11 @@ and accepts a slash-separated path string.
 
     folder = notebook.traverse("Experiments")
     page = notebook.traverse("Experiments/2024/Results")
+
+.. note::
+   If duplicate sibling names appear in a path segment, ``traverse()``
+   selects the first match for that segment. For deterministic selection,
+   index from the parent container with ``Index.Id`` (see :ref:`index_access`).
 
 Absolute vs Relative Paths
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,8 +68,10 @@ Use ``..`` to navigate to the parent container.
     grandparent = page.traverse("../..")
 
 .. note::
-   When multiple children share the same name, ``traverse`` returns the first match. Use
-   :ref:`index_access` with ``Index.Name`` to retrieve all matches.
+   To inspect duplicate child names under a container, use explicit indexing
+   on that container (for example, ``container[Index.Name: "Results"]``)
+   to retrieve all matches; then use ``Index.Id`` to select exactly one
+   (see :ref:`index_access`).
 
 .. warning::
    Nodes with the literal name ``".."`` cannot be accessed via ``traverse``, as ``..`` is
@@ -103,10 +122,71 @@ automatically.
     # Create a page at a nested path; intermediate directories are created as needed
     page = notebook.create(NotebookPage, "Experiments/2024/Results", parents=True)
 
-    # Without parents=True, a RuntimeError is raised if an intermediate directory is missing
+    # Without parents=True, a ValueError is raised if an intermediate directory is missing
     page = notebook.create(NotebookPage, "Experiments/2024/Results")  # raises if missing
 
 See :ref:`creating_pages` for details on the ``if_exists`` parameter and other creation options.
+
+Convenience Methods: ``dir()`` and ``page()``
+----------------------------------------------
+
+For common "ensure this path exists" workflows, use the convenience methods
+:meth:`~labapi.tree.mixins.AbstractTreeContainer.dir` and
+:meth:`~labapi.tree.mixins.AbstractTreeContainer.page`.
+
+These methods are shorthand for :meth:`~labapi.tree.mixins.AbstractTreeContainer.create`
+with:
+
+* ``parents=True`` (create missing intermediate directories), and
+* ``if_exists=InsertBehavior.Retain`` (return an existing matching node instead of raising).
+
+.. code-block:: python
+
+    from labapi import NotebookDirectory, NotebookPage, InsertBehavior
+
+    # Equivalent calls:
+    reports_dir = notebook.dir("Experiments/2024/Reports")
+    reports_dir = notebook.create(
+        NotebookDirectory,
+        "Experiments/2024/Reports",
+        parents=True,
+        if_exists=InsertBehavior.Retain,
+    )
+
+    summary_page = notebook.page("Experiments/2024/Summary")
+    summary_page = notebook.create(
+        NotebookPage,
+        "Experiments/2024/Summary",
+        parents=True,
+        if_exists=InsertBehavior.Retain,
+    )
+
+When to Use Them
+~~~~~~~~~~~~~~~~
+
+Use ``dir()`` and ``page()`` when you want concise, idempotent setup code.
+They are especially useful in scripts that may run repeatedly.
+
+.. code-block:: python
+
+    # Safe to run multiple times; existing nodes are returned.
+    notebook.dir("Experiments/2024").page("Results")
+    notebook.page("Experiments/2024/Raw Data")
+
+Because both methods retain existing nodes, calling them again for the same
+path returns the existing directory/page instead of creating a duplicate.
+
+They can also be used for navigation when you expect the path to already
+exist: the same call either returns the existing node or creates it if
+missing.
+
+.. code-block:: python
+
+    # Navigate to an existing directory (or create it if needed)
+    reports = notebook.dir("Experiments/2024/Reports")
+
+    # Navigate to an existing page (or create it if needed)
+    summary = notebook.page("Experiments/2024/Summary")
 
 The NotebookPath Class
 ----------------------
@@ -161,4 +241,10 @@ nodes or strings, combined with ``/``, and converted back to strings. It is used
 
     page_path.is_relative_to(folder)   # True if page is inside folder
     page_path.is_relative_to(notebook) # True (everything is inside the notebook)
+    
+Related Pages
+-------------
 
+* :ref:`index_access` for explicit lookup and duplicate-name behavior.
+* :ref:`creating_pages` for path-based creation examples.
+* :ref:`limitations` for current traversal and enumeration caveats.

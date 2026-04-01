@@ -63,5 +63,3 @@ autodoc_member_order = "bysource"
 
 # Suppress cross-reference warnings for re-exported classes
 suppress_warnings = ["ref.python"]
-
-sphinx_tabs_disable_tab_closing = True

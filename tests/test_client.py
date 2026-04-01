@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+import socket
 from datetime import datetime, timedelta
+from http.client import HTTPConnection
 from os import getenv
-from unittest.mock import MagicMock, Mock
+from threading import Thread
+from time import monotonic, sleep
+from typing import TypedDict
+from unittest.mock import MagicMock, Mock, patch
+from urllib.parse import parse_qsl, urlsplit
 
 import pytest
 from lxml.etree import XMLSyntaxError
@@ -12,6 +18,27 @@ from requests import Response
 
 from labapi import Client, User
 from labapi.exceptions import ApiError, AuthenticationError
+
+
+class ConstructUrlKwargs(TypedDict, total=False):
+    should_prefix_api: bool
+
+
+class FakeLoopbackTCPServer:
+    """Simple test double for a bound auth callback listener."""
+
+    def __init__(self, server_address, _handler_cls):
+        self.server_address = server_address
+        self.timeout: float | None = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return False
+
+    def server_close(self):
+        pass
 
 
 def make_response(
@@ -26,6 +53,36 @@ def make_response(
     response._content = body.encode("utf-8")
     response.encoding = "utf-8"
     return response
+
+
+def reserve_local_port() -> int:
+    """Reserve an ephemeral localhost port for loopback auth tests."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
+
+
+def wait_for_local_listener(port: int, *, timeout: float = 2.0) -> None:
+    """Wait until a local TCP listener is accepting connections."""
+    deadline = monotonic() + timeout
+    while monotonic() < deadline:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            if sock.connect_ex(("127.0.0.1", port)) == 0:
+                return
+        sleep(0.01)
+
+    raise AssertionError("Timed out waiting for the auth callback listener to bind")
+
+
+def local_get(port: int, path: str) -> tuple[int, str]:
+    """Issue a simple loopback GET request for auth callback tests."""
+    connection = HTTPConnection("127.0.0.1", port, timeout=2)
+    try:
+        connection.request("GET", path)
+        response = connection.getresponse()
+        return response.status, response.read().decode("utf-8")
+    finally:
+        connection.close()
 
 
 class TestClientUnit:
@@ -124,6 +181,29 @@ class TestClientUnit:
         assert "/api_user_login" in url
         assert "akid=test_akid" in url
 
+    @pytest.mark.parametrize(
+        ("api_method_uri", "kwargs"),
+        [
+            ("", {}),
+            ("/", {}),
+            (["", "   "], {}),
+            ("api", {"should_prefix_api": False}),
+        ],
+    )
+    def test_client_construct_url_rejects_empty_normalized_paths(
+        self,
+        api_method_uri: str | list[str],
+        kwargs: ConstructUrlKwargs,
+    ):
+        """Test construct_url rejects paths that normalize to no segments."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+
+        with pytest.raises(
+            ValueError,
+            match="api_method_uri must contain at least one non-empty path segment",
+        ):
+            client.construct_url(api_method_uri, {"uid": "123"}, **kwargs)
+
     def test_client_generate_auth_url(self):
         """Test Client.generate_auth_url generates correct authentication URL."""
         client = Client("https://api.test.com", "test_akid", "test_password")
@@ -137,12 +217,118 @@ class TestClientUnit:
         assert "redirect_uri=http%3A%2F%2Flocalhost%3A8089%2F" in auth_url
         assert "akid=test_akid" in auth_url
 
+    def test_client_generate_auth_url_uses_longer_expiry(self):
+        """Test auth URLs use a longer auth-specific expiration window."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        fixed_now = datetime(2026, 4, 1, 12, 0, 0)
+
+        with patch("labapi.client.datetime") as mock_datetime:
+            mock_datetime.now.return_value = fixed_now
+            auth_url = client.generate_auth_url("http://localhost:8089/")
+
+        expires = dict(parse_qsl(urlsplit(auth_url).query))["expires"]
+        assert int(expires) == round(
+            (fixed_now + timedelta(minutes=5)).timestamp() * 1000
+        )
+
+    def test_client_construct_url_defaults_to_sixty_second_expiry(self):
+        """Test ordinary signed URLs still use the default 60 second TTL."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        fixed_now = datetime(2026, 4, 1, 12, 0, 0)
+
+        with patch("labapi.client.datetime") as mock_datetime:
+            mock_datetime.now.return_value = fixed_now
+            signed_url = client.construct_url("users/get_info", {"uid": "123"})
+
+        expires = dict(parse_qsl(urlsplit(signed_url).query))["expires"]
+        assert int(expires) == round(
+            (fixed_now + timedelta(seconds=60)).timestamp() * 1000
+        )
+
+    def test_client_api_get_parses_raw_response_bytes(self):
+        """Test Client.api_get parses response.content rather than re-encoded text."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        response = Response()
+        response.status_code = 200
+        response.encoding = "iso-8859-1"
+        response._content = (
+            b'<?xml version="1.0" encoding="ISO-8859-1"?>'
+            b"<root><value>caf\xe9</value></root>"
+        )
+        client.raw_api_get = Mock(return_value=response)  # pyright: ignore[reportAttributeAccessIssue]
+
+        result = client.api_get("test_endpoint")
+
+        assert result.findtext("./value") == "café"
+
+    def test_client_api_post_parses_raw_response_bytes(self):
+        """Test Client.api_post parses response.content rather than re-encoded text."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        response = Response()
+        response.status_code = 200
+        response.encoding = "iso-8859-1"
+        response._content = (
+            b'<?xml version="1.0" encoding="ISO-8859-1"?>'
+            b"<root><value>caf\xe9</value></root>"
+        )
+        client.raw_api_post = Mock(return_value=response)  # pyright: ignore[reportAttributeAccessIssue]
+
+        result = client.api_post("test_endpoint", {"data": "test"})
+
+        assert result.findtext("./value") == "café"
+
     def test_client_handle_request_status_success(self):
         """Test Client._handle_request_status with successful response."""
         response = Mock(spec=Response)
         response.status_code = 200
 
         Client._handle_request_status(response)
+
+    def test_client_close_closes_session(self):
+        """Test Client.close closes the underlying requests session."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client.session.close = Mock()
+
+        client.close()
+
+        client.session.close.assert_called_once_with()
+
+    def test_client_context_manager_closes_session(self):
+        """Test context-manager exit closes session and marks client unusable."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client.session.close = Mock()
+        client.session.get = Mock()
+
+        with client as managed:
+            assert managed is client
+
+        client.session.close.assert_called_once_with()
+
+        with pytest.raises(RuntimeError, match="Client session is closed"):
+            client.raw_api_get("users/get_info")
+
+        client.session.get.assert_not_called()
+
+    def test_client_del_closes_session(self):
+        """Test Client.__del__ performs best-effort session cleanup."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client.session.close = Mock()
+
+        client.__del__()
+
+        client.session.close.assert_called_once_with()
+
+    def test_client_rejects_requests_after_close(self):
+        """Test closed clients reject further request calls."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        client.session.get = Mock()
+
+        client.close()
+
+        with pytest.raises(RuntimeError, match="Client session is closed"):
+            client.raw_api_get("users/get_info")
+
+        client.session.get.assert_not_called()
 
     def test_client_handle_request_status_failure(self):
         """Test Client._handle_request_status with failed response."""
@@ -257,51 +443,313 @@ class TestClientUnit:
         with pytest.raises(XMLSyntaxError):
             client.api_post("entries/add_entry", {"entry_data": "<p>Hello</p>"})
 
+    def test_default_authenticate_uses_loopback_callback_url(self):
+        """Test interactive auth passes the same loopback callback URL to the collector."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        generate_auth_url = Mock(return_value="https://auth.test/url")
+        auth_response_collector = MagicMock()
+        auth_response_collector.__enter__.return_value = auth_response_collector
+        auth_response_collector.wait.return_value = Mock(spec=User)
+
+        with (
+            patch.object(client, "generate_auth_url", generate_auth_url),
+            patch.object(
+                client,
+                "collect_auth_response",
+                return_value=auth_response_collector,
+            ) as collect_auth_response_factory,
+            patch("labapi.client.token_urlsafe", return_value="test-token"),
+            patch("labapi.client.detect_default_browser", return_value="terminal"),
+        ):
+            result = client.default_authenticate()
+
+        assert result is auth_response_collector.wait.return_value
+        generate_auth_url.assert_called_once_with(
+            "http://127.0.0.1:8089/auth/test-token/"
+        )
+        collect_auth_response_factory.assert_called_once_with(
+            port=8089,
+            callback_path="/auth/test-token/",
+            timeout=300.0,
+        )
+        auth_response_collector.__enter__.assert_called_once_with()
+        auth_response_collector.wait.assert_called_once_with()
+        auth_response_collector.__exit__.assert_called_once()
+
+    def test_default_authenticate_accepts_custom_callback_port(self):
+        """Test interactive auth forwards a caller-provided callback port."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        generate_auth_url = Mock(return_value="https://auth.test/url")
+        auth_response_collector = MagicMock()
+        auth_response_collector.__enter__.return_value = auth_response_collector
+        auth_response_collector.wait.return_value = Mock(spec=User)
+
+        with (
+            patch.object(client, "generate_auth_url", generate_auth_url),
+            patch.object(
+                client,
+                "collect_auth_response",
+                return_value=auth_response_collector,
+            ) as collect_auth_response_factory,
+            patch("labapi.client.token_urlsafe", return_value="test-token"),
+            patch("labapi.client.detect_default_browser", return_value="terminal"),
+        ):
+            result = client.default_authenticate(port=9001, timeout=90.0)
+
+        assert result is auth_response_collector.wait.return_value
+        generate_auth_url.assert_called_once_with(
+            "http://127.0.0.1:9001/auth/test-token/"
+        )
+        collect_auth_response_factory.assert_called_once_with(
+            port=9001,
+            callback_path="/auth/test-token/",
+            timeout=90.0,
+        )
+
+    def test_default_authenticate_warns_when_no_browser_detected(self, capsys):
+        """Test terminal fallback output when no compatible browser is detected."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        generate_auth_url = Mock(return_value="https://auth.test/url")
+        auth_response_collector = MagicMock()
+        auth_response_collector.__enter__.return_value = auth_response_collector
+        auth_response_collector.wait.return_value = Mock(spec=User)
+
+        with (
+            patch.object(client, "generate_auth_url", generate_auth_url),
+            patch.object(
+                client,
+                "collect_auth_response",
+                return_value=auth_response_collector,
+            ),
+            patch("labapi.client.token_urlsafe", return_value="test-token"),
+            patch("labapi.client.detect_default_browser", return_value=None),
+        ):
+            client.default_authenticate()
+
+        captured = capsys.readouterr()
+        assert "WARNING: No compatible browser detected" in captured.out
+        assert "Open authentication URL in your browser:" in captured.out
+        assert "https://auth.test/url" in captured.out
+
+    def test_default_authenticate_does_not_warn_when_terminal_is_explicit(self, capsys):
+        """Test no warning is shown when terminal auth is explicitly configured."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        generate_auth_url = Mock(return_value="https://auth.test/url")
+        auth_response_collector = MagicMock()
+        auth_response_collector.__enter__.return_value = auth_response_collector
+        auth_response_collector.wait.return_value = Mock(spec=User)
+
+        with (
+            patch.object(client, "generate_auth_url", generate_auth_url),
+            patch.object(
+                client,
+                "collect_auth_response",
+                return_value=auth_response_collector,
+            ),
+            patch("labapi.client.token_urlsafe", return_value="test-token"),
+            patch("labapi.client.detect_default_browser", return_value="terminal"),
+        ):
+            client.default_authenticate()
+
+        captured = capsys.readouterr()
+        assert "WARNING: No compatible browser detected" not in captured.out
+        assert "Open authentication URL in your browser:" in captured.out
+        assert "https://auth.test/url" in captured.out
+
+    def test_default_authenticate_binds_listener_before_printing_auth_url(self):
+        """Test terminal fallback is printed only after the callback listener binds."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        generate_auth_url = Mock(return_value="https://auth.test/url")
+        events: list[str] = []
+        auth_response_collector = MagicMock()
+        auth_response_collector.__enter__.side_effect = lambda: (
+            events.append("bind"),
+            auth_response_collector,
+        )[1]
+        auth_response_collector.wait.return_value = Mock(spec=User)
+        auth_response_collector.wait.side_effect = lambda: (
+            events.append("wait"),
+            auth_response_collector.wait.return_value,
+        )[1]
+
+        with (
+            patch.object(client, "generate_auth_url", generate_auth_url),
+            patch.object(
+                client,
+                "collect_auth_response",
+                return_value=auth_response_collector,
+            ),
+            patch("labapi.client.token_urlsafe", return_value="test-token"),
+            patch("labapi.client.detect_default_browser", return_value="terminal"),
+            patch(
+                "builtins.print",
+                side_effect=lambda *args, **kwargs: events.append("print"),
+            ),
+        ):
+            client.default_authenticate()
+
+        assert events.index("bind") < events.index("print")
+        assert events.index("print") < events.index("wait")
+
+    def test_collect_auth_response_binds_loopback_callback_listener(self):
+        """Test auth callback collector binds the expected loopback listener."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        bind_info: dict[str, object] = {}
+
+        class FakeTCPServer:
+            def __init__(self, server_address, _handler_cls):
+                bind_info["server_address"] = server_address
+                self.timeout = None
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                return False
+
+            def server_close(self):
+                bind_info["closed"] = True
+
+        with patch("labapi.client.TCPServer", FakeTCPServer):
+            with client.collect_auth_response() as auth_response_collector:
+                assert hasattr(auth_response_collector, "wait")
+                assert bind_info["server_address"] == ("127.0.0.1", 8089)
+
+        assert bind_info["closed"] is True
+
+    def test_collect_auth_response_accepts_custom_callback_port(self):
+        """Test auth callback collector can bind a caller-provided port."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        bind_info: dict[str, object] = {}
+
+        class FakeTCPServer:
+            def __init__(self, server_address, _handler_cls):
+                bind_info["server_address"] = server_address
+                self.timeout = None
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                return False
+
+            def server_close(self):
+                bind_info["closed"] = True
+
+        with patch("labapi.client.TCPServer", FakeTCPServer):
+            with client.collect_auth_response(port=9001) as auth_response_collector:
+                assert hasattr(auth_response_collector, "wait")
+                assert bind_info["server_address"] == ("127.0.0.1", 9001)
+
+        assert bind_info["closed"] is True
+
+    def test_collect_auth_response_requires_context_manager(self):
+        """Test auth callback collector must be entered before waiting."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+
+        auth_response_collector = client.collect_auth_response()
+
+        with pytest.raises(
+            RuntimeError,
+            match="must be used as a context manager before waiting for a callback",
+        ):
+            auth_response_collector.wait()
+
+    def test_collect_auth_response_ignores_invalid_callbacks_until_valid(self):
+        """Test auth callback collector ignores stray requests until the expected callback arrives."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        login = Mock(return_value=Mock(spec=User))
+        port = reserve_local_port()
+        result: dict[str, User] = {}
+        errors: list[BaseException] = []
+
+        def run_collect_auth_response() -> None:
+            try:
+                with client.collect_auth_response(
+                    port=port,
+                    callback_path="/expected/",
+                    timeout=2.0,
+                ) as auth_response_collector:
+                    result["user"] = auth_response_collector.wait()
+            except BaseException as exc:
+                errors.append(exc)
+
+        with patch.object(client, "login", login):
+            thread = Thread(target=run_collect_auth_response, daemon=True)
+            thread.start()
+            wait_for_local_listener(port)
+
+            status, _ = local_get(port, "/unexpected/?auth_code=bad&email=bad")
+            assert status == 404
+
+            status, _ = local_get(port, "/expected/")
+            assert status == 400
+
+            status, _ = local_get(
+                port,
+                "/expected/?auth_code=good-code&email=user%40example.com",
+            )
+            assert status == 200
+
+            thread.join(timeout=5)
+
+        assert not thread.is_alive()
+        assert not errors
+        assert result["user"] is login.return_value
+        login.assert_called_once_with("user@example.com", "good-code")
+
     def test_stream_api_get_yields_chunks_and_returns_response(self):
         """Test stream_api_get yields streamed chunks and returns the response."""
         client = Client("https://api.test.com", "test_akid", "test_password")
         response = MagicMock(spec=Response)
-        response.__enter__.return_value = response
-        response.__exit__.return_value = None
         response.status_code = 200
+        response.headers = {"Content-Type": "application/octet-stream"}
         response.iter_content.return_value = [b"chunk-1", b"chunk-2"]
         client.session.get = Mock(return_value=response)
 
         stream = client.stream_api_get("attachments/download", eid="123")
-        chunks: list[bytes] = []
-
-        while True:
-            try:
-                chunks.append(next(stream))
-            except StopIteration as stop:
-                returned_response = stop.value
-                break
+        chunks = list(stream)
 
         assert chunks == [b"chunk-1", b"chunk-2"]
-        assert returned_response is response
+        assert stream.response is response
+        assert stream.headers == {"Content-Type": "application/octet-stream"}
 
     def test_stream_api_get_raises_api_error_before_yielding_chunks(self):
         """Test stream_api_get raises before yielding when the response is not OK."""
         client = Client("https://api.test.com", "test_akid", "test_password")
         response = MagicMock(spec=Response)
-        response.__enter__.return_value = response
-        response.__exit__.return_value = None
         response.status_code = 404
         response.url = "https://api.test.com/api/attachments/download"
         response.text = "Not Found"
         client.session.get = Mock(return_value=response)
 
         with pytest.raises(ApiError, match="API request failed with status code 404"):
-            next(client.stream_api_get("attachments/download", eid="123"))
+            client.stream_api_get("attachments/download", eid="123")
 
         response.iter_content.assert_not_called()
+        response.close.assert_called_once()
 
-    def test_stream_api_post_yields_chunks_and_returns_response(self):
-        """Test stream_api_post yields streamed chunks and returns the response."""
+    def test_stream_api_post_raises_api_error_and_closes_response(self):
+        """Test stream_api_post closes failed streamed responses before raising."""
         client = Client("https://api.test.com", "test_akid", "test_password")
         response = MagicMock(spec=Response)
-        response.__enter__.return_value = response
-        response.__exit__.return_value = None
+        response.status_code = 500
+        response.url = "https://api.test.com/api/attachments/upload"
+        response.text = "Internal Server Error"
+        client.session.post = Mock(return_value=response)
+
+        with pytest.raises(ApiError, match="API request failed with status code 500"):
+            client.stream_api_post(
+                "attachments/upload", {"entry_data": "test"}, eid="1"
+            )
+
+        response.iter_content.assert_not_called()
+        response.close.assert_called_once()
+
+    def test_stream_api_post_returns_streaming_response(self):
+        """Test stream_api_post returns an iterable wrapper with the response."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        response = MagicMock(spec=Response)
         response.status_code = 200
         response.iter_content.return_value = [b"chunk-1", b"chunk-2"]
         client.session.post = Mock(return_value=response)
@@ -309,17 +757,38 @@ class TestClientUnit:
         stream = client.stream_api_post(
             "attachments/upload", {"entry_data": "test"}, eid="123"
         )
-        chunks: list[bytes] = []
-
-        while True:
-            try:
-                chunks.append(next(stream))
-            except StopIteration as stop:
-                returned_response = stop.value
-                break
+        chunks = list(stream)
 
         assert chunks == [b"chunk-1", b"chunk-2"]
-        assert returned_response is response
+        assert stream.response is response
+
+    def test_streaming_response_closes_after_iteration(self):
+        """Test StreamingResponse closes the response when iteration completes."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        response = MagicMock(spec=Response)
+        response.status_code = 200
+        response.iter_content.return_value = [b"chunk-1"]
+        client.session.get = Mock(return_value=response)
+
+        stream = client.stream_api_get("attachments/download", eid="123")
+        assert list(stream) == [b"chunk-1"]
+
+        response.close.assert_called_once()
+
+    def test_streaming_response_supports_context_manager(self):
+        """Test StreamingResponse can be used as a context manager."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        response = MagicMock(spec=Response)
+        response.status_code = 200
+        response.iter_content.return_value = [b"chunk-1"]
+        client.session.get = Mock(return_value=response)
+
+        with client.stream_api_get("attachments/download", eid="123") as stream:
+            assert list(stream) == [b"chunk-1"]
+            assert stream.response is response
+
+        # Closing is idempotent even though both iterator and context manager clean up.
+        response.close.assert_called_once()
 
     def test_client_initialization_with_params(self):
         """Test Client initialization stores parameters correctly."""
@@ -327,6 +796,18 @@ class TestClientUnit:
 
         assert client._base_url == "https://custom.api.com"
         assert client._akid == "my_akid"
+
+    def test_client_initialization_rejects_non_http_scheme(self):
+        """Test Client initialization rejects unsupported base URL schemes."""
+        with pytest.raises(
+            AuthenticationError, match="expected a full HTTP\\(S\\) URL"
+        ):
+            Client("ftp://api.test.com", "test_akid", "test_password")
+
+    def test_client_initialization_rejects_malformed_base_url(self):
+        """Test Client initialization rejects malformed base URLs."""
+        with pytest.raises(AuthenticationError, match="API_URL/base_url"):
+            Client("not-a-url", "test_akid", "test_password")
 
     def test_client_initialization_from_env_vars(self, monkeypatch):
         """Test Client initialization reads from environment variables."""

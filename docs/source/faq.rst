@@ -1,134 +1,123 @@
 .. _faq:
 
 Frequently Asked Questions
-===========================
+==========================
 
-This page addresses common questions and configuration options for the LabArchives API client.
+This page collects the operational questions that come up most often when
+configuring authentication and troubleshooting local API access.
 
-Browser Selection for Authentication
--------------------------------------
+How Do I Choose Which Browser ``default_authenticate()`` Opens?
+---------------------------------------------------------------
 
-When using the built-in interactive authentication flow (``client.default_authenticate()``), the
-library needs to open a browser for the user to authenticate. By default, it will auto-detect available
-browsers on your system.
-
-Configuring the Browser
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can specify which browser to use by setting the ``LA_AUTH_BROWSER`` environment variable:
+When you use :meth:`~labapi.client.Client.default_authenticate`, ``labapi``
+tries to open a compatible local browser automatically. Set the
+``LA_AUTH_BROWSER`` environment variable if you want to override that choice.
 
 .. code-block:: bash
 
-    export LA_AUTH_BROWSER=chrome    # Use Chrome
-    export LA_AUTH_BROWSER=firefox   # Use Firefox
-    export LA_AUTH_BROWSER=edge      # Use Edge
-    export LA_AUTH_BROWSER=terminal  # Display URL in terminal (manual copy/paste)
+   export LA_AUTH_BROWSER=chrome
+   export LA_AUTH_BROWSER=firefox
+   export LA_AUTH_BROWSER=edge
+   export LA_AUTH_BROWSER=terminal
 
 Supported values:
 
-* ``chrome`` - Google Chrome
-* ``firefox`` - Mozilla Firefox
-* ``edge`` - Microsoft Edge
-* ``terminal`` - Display the authentication URL in the terminal for manual use
+- ``chrome`` for Google Chrome.
+- ``firefox`` for Mozilla Firefox.
+- ``edge`` for Microsoft Edge.
+- ``terminal`` to print the URL for manual copy/paste.
 
-If ``LA_AUTH_BROWSER`` is not set, the library will attempt to detect and use an available browser automatically.
+If ``LA_AUTH_BROWSER`` is not set, ``labapi`` falls back to automatic browser
+detection.
 
-Example usage:
-
-.. code-block:: python
-
-    import os
-    os.environ['LA_AUTH_BROWSER'] = 'firefox'
-
-    from labapi import Client
-    client = Client()
-    user = client.default_authenticate()
-    # Firefox will be selected for authentication
-
-
-SSL/TLS Certificate Verification
----------------------------------
-
-By default, the LabArchives API client strictly verifies SSL/TLS certificates when making HTTPS
-connections. This is the recommended setting for security.
-
-Disabling Strict Certificate Verification
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In some environments (such as corporate networks with custom CA certificates or development
-environments), you may need to disable strict certificate verification:
+Example:
 
 .. code-block:: python
 
-    from labapi import Client
+   import os
 
-    # Disable strict certificate verification
-    client = Client(
-        base_url="https://api.labarchives.com",
-        akid="your_access_key_id",
-        akpass="your_password",
-        strict_cert=False  # Disables strict X.509 verification
-    )
+   from labapi import Client
+
+   os.environ["LA_AUTH_BROWSER"] = "firefox"
+
+   with Client() as client:
+       user = client.default_authenticate()
+
+How Do I Handle SSL/TLS Certificate Issues?
+-------------------------------------------
+
+By default, :class:`~labapi.client.Client` verifies TLS certificates on every
+HTTPS request. Keep that default whenever possible.
+
+Can I Disable Strict Certificate Verification?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In some environments, such as corporate networks with custom CA certificates
+or local test systems, you may need to disable strict verification temporarily:
+
+.. code-block:: python
+
+   from labapi import Client
+
+   client = Client(
+       base_url="https://api.labarchives.com",
+       akid="your_access_key_id",
+       akpass="your_password",
+       strict_cert=False,
+   )
 
 .. warning::
-    Disabling certificate verification (``strict_cert=False``) can expose you to
-    man-in-the-middle attacks. Only use this option in trusted environments where you
-    understand the security implications.
+   Disabling certificate verification (``strict_cert=False``) can expose you
+   to man-in-the-middle attacks. Only use it in trusted environments where you
+   understand the security tradeoff.
 
-Adding Custom CA Certificates
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How Do I Trust a Custom CA Bundle Instead?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you're working in an environment with custom Certificate Authority (CA) certificates
-(common in corporate networks), you can add your CA certificate to the ``certifi`` certificate
-bundle.
+If your environment uses a private Certificate Authority, prefer adding that
+CA to a trusted bundle instead of turning verification off entirely.
 
-This approach maintains security while allowing connections through your custom CA:
-
-.. code-block:: bash
-
-    # Find the location of the certifi CA bundle
-    python -c "import certifi; print(certifi.where())"
-
-This will output a path like ``/path/to/site-packages/certifi/cacert.pem``.
-
-To add your custom CA certificate:
+Find the active ``certifi`` bundle with:
 
 .. code-block:: bash
 
-    # Append your CA certificate to the certifi bundle
-    cat /path/to/your/custom-ca.crt >> /path/to/site-packages/certifi/cacert.pem
+   python -c "import certifi; print(certifi.where())"
 
-Alternatively, you can set the ``REQUESTS_CA_BUNDLE`` environment variable to point to a
-custom certificate bundle file:
+Then either append your CA certificate to that bundle or point
+``REQUESTS_CA_BUNDLE`` at a custom bundle:
 
 .. code-block:: bash
 
-    export REQUESTS_CA_BUNDLE=/path/to/your/ca-bundle.crt
+   export REQUESTS_CA_BUNDLE=/path/to/your/ca-bundle.crt
 
 .. code-block:: python
 
-    from labapi import Client
+   from labapi import Client
 
-    # The client will automatically use the custom CA bundle from REQUESTS_CA_BUNDLE
-    client = Client()
+   client = Client()
 
-This allows you to maintain strict certificate verification while supporting custom CAs.
+What Should I Check When Authentication Fails?
+----------------------------------------------
 
+When the authentication flow fails or stalls, check these common causes:
 
-Authentication Flow Issues
---------------------------
+1. Verify that ``ACCESS_KEYID`` and ``ACCESS_PWD`` are set correctly.
+2. If the browser does not open, confirm ``LA_AUTH_BROWSER`` or install the
+   ``builtin-auth`` extra.
+3. If you see certificate errors, use the guidance above to trust your CA
+   bundle.
+4. If you use :meth:`~labapi.client.Client.generate_auth_url`, make sure the
+   redirect URL exactly matches the callback URL your app handles.
 
-If you encounter issues during authentication:
+.. code-block:: bash
 
-1. **"Authentication failed" errors**: Ensure your ``ACCESS_KEYID`` and ``ACCESS_PWD`` are correct
-2. **Browser doesn't open**: Check the ``LA_AUTH_BROWSER`` setting or install the ``builtin-auth`` extra:
+   pip install "labapi[builtin-auth]"
 
-   .. code-block:: bash
+Related Pages
+-------------
 
-       pip install labapi[builtin-auth]
-
-3. **SSL certificate errors**: See the certificate verification section above
-4. **Redirect URL mismatch**: The redirect URL in ``generate_auth_url()`` must match the URL where
-   you'll be handling the callback
-
-For more details on authentication, see :ref:`auth`.
+- :ref:`auth` for end-to-end authentication flow details.
+- :ref:`first_calls` for quick-start credential setup and first login examples.
+- :doc:`/guide/api_calls` for low-level request patterns when troubleshooting
+  integrations.
+- :ref:`reference` for class and method signatures.

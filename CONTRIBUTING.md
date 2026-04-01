@@ -3,9 +3,8 @@
 ## Setup
 
 ```bash
-uv sync
-source .venv/bin/activate
-pre-commit install
+uv sync --all-groups
+pre-commit install --hook-type pre-commit --hook-type pre-push
 ```
 
 ## Running Tests
@@ -13,10 +12,10 @@ pre-commit install
 Unit tests run entirely offline using `MockClient`:
 
 ```bash
-pytest
+uv run pytest
 ```
 
-Integration tests require live API credentials in `.env` or the environment:
+Integration tests are opt-in and require live API credentials in `.env` or the environment:
 
 ```bash
 # Required
@@ -24,27 +23,42 @@ ACCESS_KEYID=your_akid
 ACCESS_PWD=your_password
 API_URL=https://api.labarchives.com
 
-# Required for non-interactive login
+# Required for non-interactive login used by tests/test_integration.py
 AUTH_EMAIL=your@email.com
 AUTH_KEY=your_auth_key
+
+# Optional: use the browser callback flow instead
+# AUTH_INTERACTIVE=true
 ```
 
 ```bash
-pytest tests/test_integration.py
+uv run pytest --integration tests/test_integration.py
 ```
 
-Integration tests are skipped automatically when credentials are absent.
+`Client()` only auto-loads `API_URL`, `ACCESS_KEYID`, and `ACCESS_PWD`; `AUTH_EMAIL` and `AUTH_KEY` are test-fixture conventions used by the integration suite.
 
 ## Code Style
 
-Ruff handles linting and formatting. Pre-commit hooks run both on every commit:
+Ruff handles linting and formatting. After installing both hook types:
+
+- `ruff-check` and `ruff-format` run on `pre-commit`
+- `pytest-check` runs `uv run pytest --no-cov` on `pre-push`
+
+Manual equivalents:
 
 ```bash
-ruff check --fix .   # lint
-ruff format .        # format
+uv run ruff check --fix .   # lint
+uv run ruff format .        # format
+uv run pytest --no-cov      # pre-push test gate
 ```
 
 ## Type Annotations
+
+Run type checking locally with:
+
+```bash
+uv run pyright
+```
 
 All new code must be fully type-annotated. Key conventions:
 

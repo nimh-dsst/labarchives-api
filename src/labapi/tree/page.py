@@ -11,7 +11,7 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Any, Literal, cast, override, Self
 
-from labapi.entry import Attachment, Entries, Entry
+from labapi.entry import Attachment, Entries, Entry, UnknownEntry
 from labapi.util import ALL_PART_TYPES, InsertBehavior, extract_etree
 
 from .mixins import AbstractTreeContainer, AbstractTreeNode
@@ -36,7 +36,7 @@ class NotebookPage(AbstractTreeNode):
         parent: AbstractTreeContainer,
         user: User,
     ):
-        """Initializes a NotebookPage object.
+        """Initialize a notebook page.
 
         :param tree_id: The unique ID of the page.
         :param name: The name of the page.
@@ -50,7 +50,7 @@ class NotebookPage(AbstractTreeNode):
     @property
     @override
     def id(self) -> str:
-        """The unique ID of the page.
+        """Return the page identifier.
 
         :returns: The page's ID.
         """
@@ -58,10 +58,15 @@ class NotebookPage(AbstractTreeNode):
 
     @property
     def entries(self) -> Entries:
-        """The collection of entries contained within this page.
+        """Return this page's entries, loading them on first access.
 
         This property lazily loads the entries from the LabArchives API if they
         have not been loaded yet.
+
+        .. note::
+           Slicing on the returned collection provides snapshots.
+           Iterators over the collection are also snapshots and are therefore
+           insulated from later collection mutations.
 
         :returns: An :class:`~labapi.entry.Entries` object managing the page's entries.
         """
@@ -103,16 +108,32 @@ class NotebookPage(AbstractTreeNode):
                     else:
                         warnings.warn(
                             f"Entry type '{part_type}' (ID: {entry_data['eid']}) is recognized but not "
-                            f"implemented in labapi. Skipping this entry.",
+                            f"implemented in labapi. Wrapping as UnknownEntry.",
                             UserWarning,
                             stacklevel=2,
+                        )
+                        entries.append(
+                            UnknownEntry(
+                                cast(str, entry_data["eid"]),
+                                cast(str, entry_data["entry-data"]),
+                                self._user,
+                                part_type=part_type,
+                            )
                         )
                 else:
                     warnings.warn(
                         f"Unknown entry type '{part_type}' (ID: {entry_data['eid']}) encountered. "
-                        f"This entry will be skipped.",
+                        f"Wrapping as UnknownEntry.",
                         RuntimeWarning,
                         stacklevel=2,
+                    )
+                    entries.append(
+                        UnknownEntry(
+                            cast(str, entry_data["eid"]),
+                            cast(str, entry_data["entry-data"]),
+                            self._user,
+                            part_type=part_type,
+                        )
                     )
 
             self._entries = Entries(entries, self._user, self)
@@ -121,7 +142,7 @@ class NotebookPage(AbstractTreeNode):
 
     @override
     def copy_to(self, destination: AbstractTreeContainer) -> NotebookPage:
-        """Copies this page and its entries to a specified destination container.
+        """Copy this page and its entries into ``destination``.
 
         .. warning::
            This method has known limitations:
@@ -132,30 +153,50 @@ class NotebookPage(AbstractTreeNode):
 
         :param destination: The target container to copy the page to.
         :returns: A new instance of the copied page in the destination.
-        :raises AttributeError: If an unsupported entry type is encountered
-        """
-        # TODO: Add specific handling for attachment entries to work around
-        #   LabArchives renaming behavior
 
+        Copy behavior for attachments is explicit:
+
+        - attachment payloads are copied by reading and re-uploading the attachment content,
+        - attachment resources opened during copy are always released,
+        - any per-entry copy failure is reported via warning and that entry is skipped.
+
+        .. note::
+           This method is best-effort and may produce partial copies if one or more
+           entries fail while others succeed.
+
+        :raises RuntimeWarning: Emitted when an individual entry fails to copy.
+        """
         new_page = destination.create(
             NotebookPage, self.name, if_exists=InsertBehavior.Ignore
         )
 
         for entry in self.entries:
-            new_page.entries.create(
-                entry.__class__,
-                entry.content,
-            )
-
-            if isinstance(entry.content, Attachment):
-                # TODO release attachment
-                pass
+            entry_content: Any | None = None
+            try:
+                entry_content = entry.content
+                # Re-upload behavior is intentional: copy_to creates a new entry on the
+                # destination page using the source entry's runtime class and content.
+                # For attachments, Entries.create uploads the payload and returns a
+                # distinct destination attachment entry; it does not mutate the source
+                # entry or preserve source attachment IDs.
+                assert entry_content is not None
+                new_page.entries.create(cast(Any, entry.__class__), entry_content)
+            except Exception as exc:
+                warnings.warn(
+                    f"Failed to copy entry {entry.id!r} ({entry.content_type!r}) from page "
+                    f"{self.id!r} to page {new_page.id!r}: {exc}. This entry was skipped.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+            finally:
+                if isinstance(entry_content, Attachment):
+                    entry_content.close()
 
         return new_page
 
     @override
     def is_dir(self) -> Literal[False]:
-        """Indicates that this node is not a directory.
+        """Return ``False`` because pages are leaf nodes.
 
         :returns: Always False.
         """
@@ -163,7 +204,7 @@ class NotebookPage(AbstractTreeNode):
 
     @override
     def refresh(self) -> Self:
-        """Refreshes the page by clearing its cached entries.
+        """Refresh this page by clearing its cached entries.
 
         This method clears the internal entries cache, forcing the page
         to re-fetch its entries from the LabArchives API on the next access.

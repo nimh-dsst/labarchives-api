@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 from lxml import etree
 
+from labapi.exceptions import ExtractionError
 from labapi.util.extract import (
     EtreeExtractorDict,
     _flatten_dict,
@@ -195,7 +196,10 @@ def test_extract_etree_missing_element_raises():
         "missing": str,
     }
 
-    with pytest.raises(ValueError, match=r"Could not find value for './/missing'"):
+    with pytest.raises(
+        ExtractionError,
+        match=(r"Could not find value for '.+/missing' while parsing element at /root"),
+    ):
         extract_etree(element, format_dict)
 
 
@@ -212,9 +216,40 @@ def test_extract_etree_mapper_fails_raises():
     }
 
     with pytest.raises(
-        ValueError, match=r"Could not map value not_a_bool with to_bool"
+        ExtractionError,
+        match=(
+            r"Could not map value 'not_a_bool' with to_bool for '.+/value' while "
+            r"parsing element at /root"
+        ),
     ):
         extract_etree(element, format_dict)
+
+
+def test_extract_etree_warns_on_duplicate_leaf_names():
+    """Test duplicate leaf extraction warns and last assignment wins."""
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+    <root>
+        <a>
+            <id>first</id>
+        </a>
+        <b>
+            <id>second</id>
+        </b>
+    </root>
+    """
+    element = etree.fromstring(bytes(xml, encoding="utf-8"))
+    format_dict: EtreeExtractorDict = {
+        "a": {"id": str},
+        "b": {"id": str},
+    }
+
+    with pytest.warns(
+        UserWarning,
+        match=r"Duplicate extractor leaf 'id' encountered at '\.//b/id'; overwriting previous value",
+    ):
+        result = extract_etree(element, format_dict)
+
+    assert result == {"id": "second"}
 
 
 def test_extract_etree_deeply_nested():

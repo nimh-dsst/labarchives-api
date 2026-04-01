@@ -8,6 +8,7 @@ provide common functionalities and properties for tree nodes and containers.
 from __future__ import annotations
 
 import time
+import warnings
 from abc import ABC, abstractmethod
 from collections.abc import (
     ItemsView,
@@ -21,7 +22,12 @@ from collections.abc import (
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Literal, Self, Type, TypeVar, cast, overload, override
 
-from labapi.exceptions import NodeExistsError, TraversalError
+from labapi.exceptions import (
+    ExtractionError,
+    NodeExistsError,
+    TraversalError,
+    TreeChildParseError,
+)
 from labapi.util import (
     IdIndex,
     IdOrNameIndex,
@@ -48,7 +54,7 @@ class HasNameMixin:
     """
 
     def __init__(self, name: str):
-        """Initializes the HasNameMixin with a given name.
+        """Initialize the mixin with a node name.
 
         :param name: The name of the tree node.
         """
@@ -57,7 +63,7 @@ class HasNameMixin:
 
     @property
     def name(self) -> str:
-        """The name of the tree node.
+        """Return the tree node name.
 
         :returns: The name of the node.
         """
@@ -86,6 +92,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         parent: AbstractTreeContainer,
         user: User,
     ):
+        """Initialize a tree node with IDs, hierarchy pointers, and user state."""
         super().__init__(name)
         self._root: AbstractTreeContainer = root
         self._parent: AbstractTreeContainer = parent
@@ -96,7 +103,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
     @property
     def root(self) -> AbstractTreeContainer:
-        """The root node of the tree (e.g., the Notebook).
+        """Return the root node of the tree.
 
         :returns: The root tree container.
         """
@@ -104,7 +111,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
     @property
     def parent(self) -> AbstractTreeContainer:
-        """The parent node of this node in the tree.
+        """Return this node's parent container.
 
         :returns: The parent tree container.
         """
@@ -112,7 +119,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
     @property
     def user(self) -> User:
-        """The authenticated user associated with this node.
+        """Return the authenticated user associated with this node.
 
         :returns: The user object.
         """
@@ -121,7 +128,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
     @property
     @abstractmethod
     def id(self) -> str:
-        """The unique identifier of the node.
+        """Return the node identifier.
 
         :returns: The node's ID.
         """
@@ -129,7 +136,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
     @property
     def tree_id(self) -> str:
-        """The unique identifier for this node within the LabArchives tree.
+        """Return the node identifier within the LabArchives tree.
 
         This is often the same as `id` but can be used to distinguish if needed.
 
@@ -139,15 +146,24 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
     @property
     def path(self) -> NotebookPath:
+        """Return the cached absolute path for this node."""
         if not self._has_path:
             self._path = NotebookPath(self)
             self._has_path = True
 
         return self._path
 
+    def _invalidate_path(self) -> None:
+        """Clear cached paths for this node and any loaded descendants."""
+        self._has_path = False
+
+        if isinstance(self, AbstractTreeContainer):
+            for child in self._children:
+                child._invalidate_path()
+
     @abstractmethod
     def is_dir(self) -> bool:
-        """Method to determine if the node is a directory.
+        """Return whether this node is a directory.
 
         :returns: True if the node is a directory, False otherwise.
         """
@@ -155,7 +171,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
     @abstractmethod
     def refresh(self) -> Self:
-        """Refreshes the node's data from the LabArchives API.
+        """Refresh this node's cached data from the LabArchives API.
 
         This method updates the node's properties (such as name, ID, and children)
         by fetching the latest data from the server. This is useful when the
@@ -164,7 +180,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         raise NotImplementedError()
 
     def traverse(self, path: str | NotebookPath) -> AbstractBaseTreeNode:
-        """Traverses the notebook's tree structure to find a node by its path.
+        """Traverse the notebook tree and return the node at ``path``.
 
         String path segments should be separated by '/'. Each segment is treated
         as a name to look up in the current container. Paths starting with '/'
@@ -183,8 +199,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
 
         :param path: The slash-separated path to the desired node (e.g., "My Folder/My Page" or "/Folder/Subfolder/Page").
         :returns: The :class:`AbstractTreeContainer` or :class:`AbstractTreeNode` found at the specified path.
-        :raises RuntimeError: If a segment in the path does not lead to a directory.
-        :raises KeyError: If a node at any segment of the path is not found.
+        :raises TraversalError: If traversal cannot continue through a segment.
         """
         canonical = NotebookPath(path) if isinstance(path, str) else path
         canonical = canonical.resolve(self.path)
@@ -198,14 +213,45 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
             if segment == "..":
                 curr = curr.parent
             elif isinstance(curr, AbstractTreeContainer):
-                curr = curr[segment]
+                try:
+                    curr = curr[segment]
+                except KeyError as exc:
+                    resolved_parent = (
+                        "/"
+                        if len(parsed_segments) == 1
+                        else f"/{'/'.join(parsed_segments[:-1])}"
+                    )
+                    available_children = sorted(node.name for node in curr.children)
+                    raise TraversalError(
+                        (
+                            f'Unable to traverse "{canonical}" at segment "{segment}": '
+                            f'child "{segment}" not found in "{resolved_parent}"'
+                        ),
+                        path=str(canonical),
+                        segment=segment,
+                        parent=resolved_parent,
+                        available_children=available_children,
+                    ) from exc
             else:
-                raise TraversalError(f"{'/'.join(parsed_segments)} is not a directory")
+                resolved_parent = (
+                    "/"
+                    if len(parsed_segments) == 1
+                    else f"/{'/'.join(parsed_segments[:-1])}"
+                )
+                raise TraversalError(
+                    (
+                        f'Unable to traverse "{canonical}" at segment "{segment}": '
+                        f'"{"/".join(parsed_segments)}" is not a directory'
+                    ),
+                    path=str(canonical),
+                    segment=segment,
+                    parent=resolved_parent,
+                )
 
         return curr
 
     def as_dir(self) -> AbstractTreeContainer:
-        """Casts this node to an :class:`AbstractTreeContainer` if it is a directory.
+        """Return this node cast to :class:`AbstractTreeContainer`.
 
         This method provides a convenient way to perform directory-specific
         operations on a node after checking its type, with static type
@@ -220,7 +266,7 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
             raise TypeError("Node is not a directory")
 
     def as_page(self) -> NotebookPage:
-        """Casts this node to a :class:`NotebookPage` if it is a page.
+        """Return this node cast to :class:`NotebookPage`.
 
         This method provides a convenient way to perform page-specific
         operations on a node after checking its type, with static type
@@ -246,7 +292,7 @@ class AbstractTreeNode(AbstractBaseTreeNode):
 
     @HasNameMixin.name.setter
     def name(self, value: str):
-        """Sets the name of the tree node.
+        """Set the tree node name.
 
         This operation updates the node's name in LabArchives via an API call.
 
@@ -260,17 +306,18 @@ class AbstractTreeNode(AbstractBaseTreeNode):
         )
 
         self._name = value
+        self._invalidate_path()
 
     @abstractmethod
     def copy_to(self, destination: AbstractTreeContainer) -> Self:
-        """Method to copy this node to a specified destination container.
+        """Copy this node into ``destination``.
 
         :param destination: The target container to copy the node to.
         :returns: A new instance of the copied node in the destination.
         """
 
     def move_to(self, destination: AbstractTreeContainer) -> Self:
-        """Moves this node to a specified destination container.
+        """Move this node into ``destination``.
 
         This operation updates the node's parent in LabArchives via an API call
         and updates the local tree structure.
@@ -278,6 +325,15 @@ class AbstractTreeNode(AbstractBaseTreeNode):
         :param destination: The target container to move the node to.
         :returns: The instance of the moved node.
         """
+        if destination is self:
+            raise ValueError("Cannot move a node to itself")
+
+        if isinstance(self, AbstractTreeContainer) and self.is_parent_of(destination):
+            raise ValueError("Cannot move a directory into one of its descendants")
+
+        if destination.root is not self.root:
+            raise ValueError("Cannot move a node across notebooks")
+
         self._user.api_get(
             "tree_tools/update_node",
             nbid=self.root.id,
@@ -291,28 +347,18 @@ class AbstractTreeNode(AbstractBaseTreeNode):
         self.parent._children.append(self)  # pyright: ignore[reportPrivateUsage]
         # This adds current node to new parent in-place
 
-        self._has_path = False
+        self._invalidate_path()
         return self
 
     def delete(self) -> Self:
-        """Deletes this node by moving it to a special "API Deleted Items" directory.
+        """Move this node into the special ``API Deleted Items`` directory.
 
         If the "API Deleted Items" directory does not exist, it will be created.
         The node's name will be updated to reflect its deletion time.
 
         :returns: The instance of the deleted node.
         """
-        api_deleted_items = self.root[Index.Name : "API Deleted Items"]
-
-        if len(api_deleted_items) == 0:
-            from .directory import NotebookDirectory
-
-            api_deleted_items = self.root.create(
-                NotebookDirectory, "API Deleted Items", if_exists=InsertBehavior.Retain
-            )
-        else:
-            api_deleted_items = api_deleted_items[0]
-            assert isinstance(api_deleted_items, AbstractTreeContainer)
+        api_deleted_items = self.root.dir("API Deleted Items")
 
         self.name = (
             f"{self.name} - Deleted at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
@@ -344,7 +390,7 @@ class AbstractTreeContainer(
         parent: AbstractTreeContainer,
         user: User,
     ):
-        """Initializes an AbstractTreeContainer.
+        """Initialize a tree container node.
 
         :param tree_id: The unique identifier for this container within the LabArchives tree.
         :param name: The display name of the container.
@@ -358,7 +404,7 @@ class AbstractTreeContainer(
 
     @property
     def children(self) -> Sequence[AbstractTreeNode]:
-        """A snapshot of the direct children nodes within this container.
+        """Return a snapshot of this container's direct children.
 
         :returns: An immutable point-in-time sequence of
             :class:`AbstractTreeNode` objects.
@@ -367,7 +413,7 @@ class AbstractTreeContainer(
         return tuple(self._children)
 
     def _ensure_populated(self) -> None:
-        """Ensures that the children of this container have been loaded from the API.
+        """Load this container's children from the API if needed.
 
         If the children have not been loaded yet, it makes an API call to
         retrieve the tree level and populates the `_children` list.
@@ -384,14 +430,28 @@ class AbstractTreeContainer(
             nodes: list[AbstractTreeNode] = []
 
             for subtree in xml_tree.iterfind(".//level-node"):
-                node = extract_etree(
-                    subtree,
-                    {
-                        "is-page": to_bool,
-                        "tree-id": str,
-                        "display-text": str,
-                    },
-                )  # TODO do we want to handle errors here?
+                subtree_path = subtree.getroottree().getpath(subtree)
+                try:
+                    node = extract_etree(
+                        subtree,
+                        {
+                            "is-page": to_bool,
+                            "tree-id": str,
+                            "display-text": str,
+                        },
+                    )
+                except ExtractionError as err:
+                    raise TreeChildParseError(
+                        "Could not parse tree child at "
+                        f"{subtree_path} for parent tree_id={self.tree_id!r}"
+                    ) from err
+
+                if not node["display-text"].strip():
+                    raise TreeChildParseError(
+                        "Could not parse tree child at "
+                        f"{subtree_path} for parent tree_id={self.tree_id!r}: "
+                        "display-text cannot be empty"
+                    )
 
                 args = (
                     node["tree-id"],
@@ -410,7 +470,7 @@ class AbstractTreeContainer(
             self._populated = True
 
     def __len__(self) -> int:
-        """The number of children in this container.
+        """Return the number of direct children in this container.
 
         :returns: The count of direct child nodes.
         """
@@ -418,7 +478,7 @@ class AbstractTreeContainer(
         return len(self.children)
 
     def __iter__(self) -> Iterator[str]:
-        """An iterator over the names of the children in this container.
+        """Iterate over direct child names in container order.
 
         :returns: An iterator yielding name strings.
         """
@@ -426,30 +486,36 @@ class AbstractTreeContainer(
 
     @override
     def keys(self) -> KeysView[str]:
-        """A view of the names of the children within this container.
-
-        :returns: A keys view of child names.
-        """
+        """Return a mapping-compatible view of child names."""
         self._ensure_populated()
         return KeysView({node.name: node for node in self.children})
 
     @override
     def items(self) -> ItemsView[str, AbstractBaseTreeNode]:
-        """A view of the names and child nodes within this container.
-
-        :returns: An items view of (name, node) pairs.
-        """
+        """Return a mapping-compatible view of ``(name, child)`` pairs."""
         self._ensure_populated()
         return ItemsView({node.name: node for node in self.children})
 
     @override
     def values(self) -> ValuesView[AbstractBaseTreeNode]:
-        """A view of the child nodes within this container.
-
-        :returns: A values view of child nodes.
-        """
+        """Return a mapping-compatible view of child nodes."""
         self._ensure_populated()
         return ValuesView({node.name: node for node in self.children})
+
+    def all_keys(self) -> Sequence[str]:
+        """Return child names in container order, preserving duplicates."""
+        self._ensure_populated()
+        return tuple([node.name for node in self.children])
+
+    def all_items(self) -> Sequence[tuple[str, AbstractBaseTreeNode]]:
+        """Return ``(name, child)`` pairs in container order, preserving duplicates."""
+        self._ensure_populated()
+        return tuple([(node.name, node) for node in self.children])
+
+    def all_values(self) -> Sequence[AbstractBaseTreeNode]:
+        """Return child nodes in container order, preserving duplicates."""
+        self._ensure_populated()
+        return tuple(self.children)
 
     @overload
     def __getitem__(self, key: str) -> AbstractBaseTreeNode: ...
@@ -463,7 +529,7 @@ class AbstractTreeContainer(
     def __getitem__(
         self, key: IdOrNameIndex
     ) -> AbstractBaseTreeNode | Sequence[AbstractBaseTreeNode]:
-        """Allows accessing child nodes by their ID or name.
+        """Look up child nodes by name or indexed selector.
 
         - If `key` is a string, it attempts to find a single child with that name.
         - If `key` is a slice with start of :class:`~labapi.util.index.IdIndex` (e.g., ``Index.Id:"some_id"``),
@@ -484,14 +550,17 @@ class AbstractTreeContainer(
                 for node in self.children:
                     if node.id == val:
                         return node
-                raise KeyError(f'Node with id "{val}" not found')
+                raise KeyError(f'Node with id "{val}" not found in "{self.path}"')
             case slice(start=Index.Name, stop=val):
                 return [node for node in self.children if node.name == val]
             case str():
                 for node in self.children:
                     if node.name == key:
                         return node
-                raise KeyError(f'Node with name "{key}" not found')
+                available_children = sorted(node.name for node in self.children)
+                raise KeyError(
+                    f'Child "{key}" not found in "{self.path}" (available: {available_children})'
+                )
             case _:
                 raise TypeError(
                     "Invalid key type. Use `str`, `Index.Id:<id>`, or `Index.Name:<name>`."
@@ -520,25 +589,16 @@ class AbstractTreeContainer(
 
         return False
 
-    def enumerate_all(
+    def _enumerate_nodes(
         self,
         *,
         depth: int = 1,
         timeout: timedelta = timedelta(seconds=5),
         _timeout: float | None = None,
         _current_depth: int = 0,
-    ) -> Sequence[str]:
-        """Enumerates all children (directories and pages) up to a specified depth.
-
-        Returns relative path strings from the current container for all descendant
-        nodes, including both directories and pages. Each path is relative to this
-        container (e.g., "Folder/Page" or "Folder/Subfolder/Page").
-
-        :param depth: The maximum depth to traverse. Default is 1 (only immediate children).
-        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
-        :returns: A sequence of relative path strings for all descendants.
-        """
-        current: MutableSequence[str] = []
+    ) -> Sequence[tuple[str, AbstractTreeNode]]:
+        """Enumerate descendant paths paired with the node they resolved from."""
+        current: MutableSequence[tuple[str, AbstractTreeNode]] = []
 
         if _current_depth >= depth:
             return current
@@ -551,16 +611,22 @@ class AbstractTreeContainer(
             name = child.name
 
             if time.monotonic() > _timeout:
+                warnings.warn(
+                    "Tree enumeration timed out before traversal completed; "
+                    "returned paths are partial and may be unsafe for sync/export workflows.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
                 break
 
-            current.append(name)
+            current.append((name, child))
 
             try:
                 container = child.as_dir()
                 current.extend(
                     [
-                        f"{name}/{child_path}"
-                        for child_path in container.enumerate_all(
+                        (f"{name}/{child_path}", descendant)
+                        for child_path, descendant in container._enumerate_nodes(
                             _current_depth=_current_depth + 1,
                             depth=depth,
                             _timeout=_timeout,
@@ -572,13 +638,51 @@ class AbstractTreeContainer(
 
         return current
 
+    def enumerate_all(
+        self,
+        *,
+        depth: int = 1,
+        timeout: timedelta = timedelta(seconds=5),
+    ) -> Sequence[str]:
+        """Enumerate descendant directory and page paths.
+
+        Returns relative path strings from the current container for all descendant
+        nodes, including both directories and pages. Each path is relative to this
+        container (e.g., "Folder/Page" or "Folder/Subfolder/Page").
+
+        :param depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
+        :returns: A sequence of relative path strings for all descendants.
+        """
+        return [
+            path for path, _node in self.enumerate_nodes(depth=depth, timeout=timeout)
+        ]
+
+    def enumerate_nodes(
+        self,
+        *,
+        depth: int = 1,
+        timeout: timedelta = timedelta(seconds=5),
+    ) -> Sequence[tuple[str, AbstractTreeNode]]:
+        """Enumerate descendant paths paired with their concrete node objects.
+
+        Returns relative path strings from the current container for all descendant
+        nodes, including both directories and pages, paired with the exact in-memory
+        node instance each path came from.
+
+        :param depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
+        :returns: A sequence of ``(relative_path, node)`` pairs for all descendants.
+        """
+        return self._enumerate_nodes(depth=depth, timeout=timeout)
+
     def enumerate_dirs(
         self,
         *,
         depth: int = 1,
         timeout: timedelta = timedelta(seconds=5),
     ) -> Sequence[str]:
-        """Enumerates only directories up to a specified depth.
+        """Enumerate descendant directory paths.
 
         Returns relative path strings from the current container for all descendant
         directories (excluding pages). Each path is relative to this container.
@@ -587,8 +691,8 @@ class AbstractTreeContainer(
         :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
         :returns: A sequence of relative path strings for all descendant directories.
         """
-        all_names = self.enumerate_all(depth=depth, timeout=timeout)
-        return [name for name in all_names if self.traverse(name).is_dir()]
+        all_nodes = self.enumerate_nodes(depth=depth, timeout=timeout)
+        return [path for path, node in all_nodes if node.is_dir()]
 
     def enumerate_pages(
         self,
@@ -596,7 +700,7 @@ class AbstractTreeContainer(
         depth: int = 1,
         timeout: timedelta = timedelta(seconds=5),
     ) -> Sequence[str]:
-        """Enumerates only pages up to a specified depth.
+        """Enumerate descendant page paths.
 
         Returns relative path strings from the current container for all descendant
         pages (excluding directories). Each path is relative to this container.
@@ -605,8 +709,8 @@ class AbstractTreeContainer(
         :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
         :returns: A sequence of relative path strings for all descendant pages.
         """
-        all_names = self.enumerate_all(depth=depth, timeout=timeout)
-        return [name for name in all_names if not self.traverse(name).is_dir()]
+        all_nodes = self.enumerate_nodes(depth=depth, timeout=timeout)
+        return [path for path, node in all_nodes if not node.is_dir()]
 
     def create(
         self,
@@ -616,7 +720,7 @@ class AbstractTreeContainer(
         parents: bool = False,
         if_exists: InsertBehavior = InsertBehavior.Raise,
     ) -> T:
-        """Creates a new child node (page or directory) within this container.
+        """Create a child page or directory in this container.
 
         This method supports different behaviors if a node with the same name already exists.
 
@@ -628,10 +732,12 @@ class AbstractTreeContainer(
         :returns: The newly created (or existing) node of type `cls`.
         :raises RuntimeError: If `if_exists` is `InsertBehavior.Raise` and the node already exists.
         """
-        if not isinstance(name, str) and name.is_absolute():
-            path = name.relative_to(self)
+        normalized_name = NotebookPath(name) if isinstance(name, str) else name
+
+        if normalized_name.is_absolute():
+            path = normalized_name.relative_to(self)
         else:
-            path = (self.path / name).relative_to(self)
+            path = normalized_name.resolve(self.path).relative_to(self)
 
         if len(path) == 0:
             raise ValueError("Path cannot be empty")
@@ -657,9 +763,9 @@ class AbstractTreeContainer(
                 nbid=self.root.id,
                 parent_tree_id=self.tree_id,
                 display_text=path.name,
-                is_folder="false"
-                if cls.__name__ == "NotebookPage"
-                else "true",  # TODO make more resilient
+                is_folder=(
+                    "true" if issubclass(cls, AbstractTreeContainer) else "false"
+                ),
             )
 
             tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
@@ -690,7 +796,7 @@ class AbstractTreeContainer(
             )
 
     def dir(self, name: str | NotebookPath) -> NotebookDirectory:
-        """Ensures a directory exists at the given path and returns it.
+        """Ensure a directory exists at ``name`` and return it.
 
         Shorthand for :meth:`create` with ``cls=NotebookDirectory``,
         ``if_exists=InsertBehavior.Retain``, and ``parents=True``.
@@ -708,7 +814,7 @@ class AbstractTreeContainer(
         )
 
     def page(self, name: str | NotebookPath) -> NotebookPage:
-        """Ensures a page exists at the given path and returns it.
+        """Ensure a page exists at ``name`` and return it.
 
         Shorthand for :meth:`create` with ``cls=NotebookPage``,
         ``if_exists=InsertBehavior.Retain``, and ``parents=True``.
@@ -727,7 +833,7 @@ class AbstractTreeContainer(
 
     @override
     def is_dir(self) -> Literal[True]:
-        """Indicates that this node is a directory (container).
+        """Return ``True`` because containers are directories.
 
         :returns: Always True.
         """
@@ -735,7 +841,7 @@ class AbstractTreeContainer(
 
     @override
     def refresh(self) -> Self:
-        """Refreshes the container by clearing its cached children.
+        """Refresh this container by clearing its cached children.
 
         This method clears the internal children cache, forcing the container
         to re-fetch its children from the LabArchives API on the next access.

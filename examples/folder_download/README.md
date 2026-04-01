@@ -6,13 +6,13 @@ This example demonstrates how to download a complete LabArchives folder structur
 
 This example requires the following packages:
 
-- `labapi` (the core library)
+- `labapi[dotenv,builtin-auth]` (the core library plus local auth helpers)
 
 You can install the dependencies using:
 
 ```bash
 # Using pip
-pip install .
+pip install -e "../../[dotenv,builtin-auth]"
 
 # Using uv (recommended)
 uv sync
@@ -51,7 +51,8 @@ uv run python examples/folder_download/folder_download.py --notebook "My Noteboo
 
 ## Configuration
 
-Requires a `.env` file in the project root with your LabArchives credentials:
+Requires a `.env` file in the project root with your LabArchives credentials.
+The `.env` file is only auto-loaded when the `dotenv` extra is installed:
 
 ```env
 ACCESS_KEYID=your_access_key_id

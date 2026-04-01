@@ -6,13 +6,8 @@ import shutil
 import tempfile
 from collections.abc import Buffer
 from mimetypes import guess_type
-from typing import TYPE_CHECKING, TypeAlias
-
-if TYPE_CHECKING:
-    from io import BufferedRandom, BufferedReader, BytesIO
-    from tempfile import (  # pyright: ignore[reportPrivateUsage]
-        SpooledTemporaryFile,
-    )
+from os.path import basename
+from typing import Any, BinaryIO, Protocol, TypeAlias
 
 # NOTE: from Pylance
 # Unfortunately PEP 688 does not allow us to distinguish read-only
@@ -21,6 +16,39 @@ if TYPE_CHECKING:
 # distinguish these cases in the type system.
 # Same as WriteableBuffer, but also includes read-only buffer types (like bytes).
 ReadableBuffer: TypeAlias = Buffer  # stable
+
+
+class NamedBinaryIO(Protocol):
+    """Binary file-like object with a ``name`` attribute."""
+
+    @property
+    def name(self) -> str:
+        """Return the local filename for this stream."""
+        ...
+
+    def read(self, size: int = -1, /) -> bytes:
+        """Read bytes from the stream."""
+        ...
+
+    def write(self, data: ReadableBuffer, /) -> int:
+        """Write bytes to the stream."""
+        ...
+
+    def seek(self, offset: int, whence: int = 0, /) -> int:
+        """Move the stream cursor."""
+        ...
+
+    def tell(self) -> int:
+        """Return the current stream cursor position."""
+        ...
+
+    def close(self) -> None:
+        """Close the stream."""
+        ...
+
+    def seekable(self) -> bool:
+        """Return whether the stream supports random access."""
+        ...
 
 
 class Attachment:
@@ -35,43 +63,50 @@ class Attachment:
     """
 
     @staticmethod
-    def from_file(file: BufferedReader | BufferedRandom) -> Attachment:
-        """Creates an Attachment from a file object by cloning its content.
+    def from_file(file: NamedBinaryIO) -> Attachment:
+        """Create an attachment by cloning a seekable file object.
 
         The content of the provided file is copied into a temporary buffer,
         making the Attachment independent of the original file's state.
-        The MIME type is automatically guessed from the file's name.
-        If the MIME type cannot be determined, it defaults to "application/octet-stream".
+        The MIME type is automatically guessed from the local file name.
+        If the MIME type cannot be determined, it defaults to
+        "application/octet-stream".
 
         :param file: The file object to create an attachment from. Must have a `name` attribute.
         :returns: A new Attachment object wrapping a clone of the file.
         """
+        if not file.seekable():
+            raise ValueError("Attachment.from_file requires a seekable file object")
+
+        remote_filename = basename(file.name)
         mime_type = guess_type(file.name)[0] or "application/octet-stream"
+        original_position = file.tell()
 
         # Create a spooled temporary file as the new backing buffer.
         # It stays in memory until it reaches 4MB, then rolls over to disk.
         backing = tempfile.SpooledTemporaryFile(max_size=4 * 1024 * 1024, mode="w+b")
-        shutil.copyfileobj(file, backing)
+        try:
+            file.seek(0)
+            shutil.copyfileobj(file, backing)
+        finally:
+            file.seek(original_position)
         backing.seek(0)
 
         return Attachment(
-            backing,  # pyright: ignore[reportArgumentType]
+            backing,
             mime_type,
-            file.name,
+            remote_filename,
             caption=f"API-uploaded {mime_type} file.",
         )
 
     def __init__(
         self,
-        backing: BufferedRandom
-        | BufferedReader
-        | BytesIO
-        | SpooledTemporaryFile[bytes],
+        backing: BinaryIO,
         mime_type: str,
         filename: str,
         caption: str,
     ):
-        """Initializes an Attachment object.
+        """Initialize an attachment wrapper.
 
         :param backing: The file-like object that contains the attachment data.
                         Can be a BufferedRandom, BufferedReader, BytesIO, or TemporaryFile.
@@ -87,8 +122,8 @@ class Attachment:
         self._filename = filename
         self._caption = caption
 
-    def __getattr__(self, attr: str):
-        """Delegates attribute access to the backing file-like object.
+    def __getattr__(self, attr: str) -> Any:
+        """Delegate unknown attributes to the backing file object.
 
         This allows the Attachment to behave like the underlying file object
         for operations like read(), write(), etc.
@@ -99,9 +134,33 @@ class Attachment:
         """
         return getattr(self._backing, attr)
 
+    def read(self, size: int = -1, /) -> bytes:
+        """Read bytes from the backing attachment stream."""
+        return self._backing.read(size)
+
+    def write(self, data: ReadableBuffer, /) -> int:
+        """Write bytes to the backing attachment stream."""
+        return self._backing.write(data)
+
+    def seek(self, offset: int, whence: int = 0, /) -> int:
+        """Move the backing stream cursor."""
+        return self._backing.seek(offset, whence)
+
+    def tell(self) -> int:
+        """Return the current backing stream cursor position."""
+        return self._backing.tell()
+
+    def close(self) -> None:
+        """Close the backing attachment stream."""
+        self._backing.close()
+
+    def seekable(self) -> bool:
+        """Return whether the backing stream supports random access."""
+        return self._backing.seekable()
+
     @property
     def filename(self) -> str:
-        """The filename of the attachment.
+        """Return the attachment filename.
 
         :returns: The filename.
         """
@@ -109,7 +168,7 @@ class Attachment:
 
     @property
     def mime_type(self) -> str:
-        """The MIME type of the attachment.
+        """Return the attachment MIME type.
 
         :returns: The MIME type (e.g., "image/png", "application/pdf").
         """
@@ -117,7 +176,7 @@ class Attachment:
 
     @property
     def caption(self) -> str:
-        """The caption associated with the attachment.
+        """Return the attachment caption.
 
         :returns: The caption text.
         """

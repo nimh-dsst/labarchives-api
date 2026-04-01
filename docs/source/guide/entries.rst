@@ -8,7 +8,7 @@ Entries are the fundamental building blocks of a LabArchives page. They contain 
 Accessing Entries
 -----------------
 
-You can access the entries of a :class:`~labapi.tree.page.NotebookPage` through its ``entries`` property. This property returns an :class:`~labapi.entry.collection.Entries` object, which behaves like a sequence.
+You can access the entries of a :class:`~labapi.tree.page.NotebookPage` through its ``entries`` property. This property returns an :class:`~labapi.entry.collection.Entries` object, which behaves like a sequence of entries.
 
 .. code-block:: python
 
@@ -34,7 +34,7 @@ Text-based Entries
 
 Text-based entries store their content as strings.
 
-* **Rich Text Entry** (:class:`~labapi.entry.entries.text.TextEntry`): Used for formatted text, typically HTML. Content type: ``"text entry"``.
+* **Rich Text Entry** (:class:`~labapi.entry.entries.text.TextEntry`): Used for formatted text, typically HTML. Content type: ``"text entry"``. See `MDN HTML documentation <https://developer.mozilla.org/en-US/docs/Web/HTML>`_ for supported markup patterns.
 * **Plain Text Entry** (:class:`~labapi.entry.entries.text.PlainTextEntry`): Used for unformatted, raw text. Content type: ``"plain text entry"``.
 * **Header Entry** (:class:`~labapi.entry.entries.text.HeaderEntry`): Used for headings or titles within a page. Content type: ``"heading"``.
 
@@ -43,9 +43,9 @@ Text-based entries store their content as strings.
    # Accessing text content
    text_entry = page.entries[0]
    print(text_entry.content)
-   
-   # Updating text content
-   text_entry.content = "<p>Updated rich text content</p>"
+
+   # Updating rich text content
+   text_entry.content = "<p>Updated <strong>rich text</strong> content</p>"
 
 Attachment Entries
 ~~~~~~~~~~~~~~~~~~
@@ -72,6 +72,11 @@ Widget entries (:class:`~labapi.entry.entries.widget.WidgetEntry`) embed interac
 .. note::
    Widget entries are currently read-only in ``labapi``. Their ``content`` property returns the widget's internal data as a JSON-formatted string.
 
+If LabArchives returns an entry type that ``labapi`` does not model yet,
+:attr:`~labapi.tree.page.NotebookPage.entries` wraps it as
+:class:`~labapi.entry.entries.unknown.UnknownEntry` and emits a warning instead
+of silently dropping it.
+
 Creating New Entries
 --------------------
 
@@ -81,14 +86,14 @@ You can create new entries using the :meth:`~labapi.entry.collection.Entries.cre
 
    from labapi import TextEntry, HeaderEntry, PlainTextEntry
 
-   # Create a rich text entry
-   page.entries.create(TextEntry, "<h1>New Section</h1><p>Some content...</p>")
-   
-   # Create a heading
+   # Create a rich text entry (HTML is rendered in LabArchives)
+   page.entries.create(TextEntry, "<h2>New Section</h2><p>Some <em>formatted</em> content...</p>")
+
+   # Create a heading (displayed as a section label/divider)
    page.entries.create(HeaderEntry, "Experiment Notes")
-   
-   # Create a plain text entry
-   page.entries.create(PlainTextEntry, "Raw data string")
+
+   # Create a plain text entry (displayed literally)
+   page.entries.create(PlainTextEntry, "<h2>Raw instrument output</h2>")
 
 Creating Attachments
 ~~~~~~~~~~~~~~~~~~~~
@@ -113,7 +118,7 @@ You can also create an attachment directly from a file on disk:
 
    from labapi import Attachment, AttachmentEntry
 
-   with open("data.csv", "rb+") as f:
+   with open("data.csv", "rb") as f:
        attachment = Attachment.from_file(f)
        page.entries.create(AttachmentEntry, attachment)
 
@@ -147,6 +152,14 @@ For attachments, setting the ``content`` property with a new :class:`~labapi.ent
 
 .. code-block:: python
 
-   with open("updated_data.csv", "rb+") as f:
+   with open("updated_data.csv", "rb") as f:
        new_attachment = Attachment.from_file(f)
        attachment_entry.content = new_attachment
+
+Related Pages
+-------------
+
+* :ref:`writing_rich_text` for practical HTML-rich text snippets.
+* :ref:`creating_pages` for page creation workflows before entry insertion.
+* :doc:`/examples/csv_table` for CSV-to-HTML entry conversion patterns.
+* :ref:`limitations` for current entry-type caveats.

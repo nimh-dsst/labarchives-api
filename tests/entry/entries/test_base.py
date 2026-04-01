@@ -9,6 +9,7 @@ import pytest
 from labapi.entry.entries.attachment import AttachmentEntry
 from labapi.entry.entries.base import Entry
 from labapi.entry.entries.text import HeaderEntry, PlainTextEntry, TextEntry
+from labapi.entry.entries.unknown import UnknownEntry
 from labapi.entry.entries.widget import WidgetEntry
 from labapi.user import User
 
@@ -29,6 +30,16 @@ class TestEntryUnit:
             PlainTextEntry("e", "", Mock(spec=User)).content_type == "plain text entry"
         )
         assert AttachmentEntry("e", "", Mock(spec=User)).content_type == "Attachment"
+        assert (
+            UnknownEntry(
+                "e", "", Mock(spec=User), part_type="future entry"
+            ).content_type
+            == "future entry"
+        )
+
+    def test_unknown_entry_is_not_registered_for_literal_part_type(self):
+        """Test UnknownEntry avoids reserving a plausible upstream part-type value."""
+        assert Entry.is_registered("unknown entry") is False
 
 
 class TestEntryIntegration:
