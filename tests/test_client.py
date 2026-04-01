@@ -6,6 +6,7 @@ import warnings
 from datetime import datetime, timedelta
 from os import getenv
 from unittest.mock import MagicMock, Mock, patch
+from urllib.parse import parse_qsl, urlsplit
 
 import pytest
 from lxml.etree import XMLSyntaxError
@@ -137,6 +138,34 @@ class TestClientUnit:
         # redirect_uri is URL-encoded in the query string
         assert "redirect_uri=http%3A%2F%2Flocalhost%3A8089%2F" in auth_url
         assert "akid=test_akid" in auth_url
+
+    def test_client_generate_auth_url_uses_longer_expiry(self):
+        """Test auth URLs use a longer auth-specific expiration window."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        fixed_now = datetime(2026, 4, 1, 12, 0, 0)
+
+        with patch("labapi.client.datetime") as mock_datetime:
+            mock_datetime.now.return_value = fixed_now
+            auth_url = client.generate_auth_url("http://localhost:8089/")
+
+        expires = dict(parse_qsl(urlsplit(auth_url).query))["expires"]
+        assert int(expires) == round(
+            (fixed_now + timedelta(minutes=5)).timestamp() * 1000
+        )
+
+    def test_client_construct_url_defaults_to_sixty_second_expiry(self):
+        """Test ordinary signed URLs still use the default 60 second TTL."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        fixed_now = datetime(2026, 4, 1, 12, 0, 0)
+
+        with patch("labapi.client.datetime") as mock_datetime:
+            mock_datetime.now.return_value = fixed_now
+            signed_url = client.construct_url("users/get_info", {"uid": "123"})
+
+        expires = dict(parse_qsl(urlsplit(signed_url).query))["expires"]
+        assert int(expires) == round(
+            (fixed_now + timedelta(seconds=60)).timestamp() * 1000
+        )
 
     def test_client_api_get_parses_raw_response_bytes(self):
         """Test Client.api_get parses response.content rather than re-encoded text."""

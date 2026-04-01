@@ -247,6 +247,7 @@ class Client:
         return self.construct_url(
             "api_user_login",
             {"redirect_uri": redirect_url},
+            expires_in=timedelta(minutes=5),
             should_prefix_api=False,
             signature_method=redirect_url,
         )
