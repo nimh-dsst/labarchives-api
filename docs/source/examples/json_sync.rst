@@ -43,8 +43,8 @@ Usage Examples
 Configuration
 -------------
 
-This example expects ``labapi[dotenv,builtin-auth]`` so ``Client()`` can read
-``.env`` and ``default_authenticate()`` can use the local browser flow.
+This example assumes the recommended local interactive install profile,
+``labapi[dotenv,builtin-auth]``. See :ref:`installation`.
 
 This example requires a ``.env`` file with your LabArchives credentials:
 

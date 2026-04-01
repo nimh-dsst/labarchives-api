@@ -1,3 +1,5 @@
+.. _installation:
+
 Installation
 ============
 
@@ -7,135 +9,115 @@ Python Version
 Supports Python 3.12 and newer.
 
 
-Dependencies
-------------
-* `cryptography <https://cryptography.io/en/latest/>`_ is a package providing cryptographic primitives, 
-  in this library used to sign API requests.
-* `lxml <https://lxml.de/apidoc/>`_ is a Pythonic XML library binding. It is used to parse API responses.
-* `requests <https://requests.readthedocs.io/en/latest/>`_ is a simple HTTP library used to interact 
-  with the LabArchives API.
+Choose an Install Profile
+-------------------------
 
-Install
--------
+Pick the smallest install profile that matches how you plan to use ``labapi``:
 
-We recommend using uv to install labapi.
+.. list-table::
+   :header-rows: 1
 
-.. tab-set::
-
-  .. tab-item:: uv
-
-    .. code-block:: bash
-
-      uv add labapi
-
-  .. tab-item:: poetry
-
-    .. code-block:: bash
-
-      poetry add labapi
-  
-  .. tab-item:: pip
-    
-    .. code-block:: bash
-      
-      pip install labapi
-
-If you want :class:`~labapi.client.Client` to automatically load ``API_URL``, ``ACCESS_KEYID``, and ``ACCESS_PWD``
-from a local ``.env`` file, install the ``dotenv`` optional dependency group:
-
-.. code-block:: bash
-
-  pip install 'labapi[dotenv]'
-
-Or set those variables directly in your current shell session:
+   * - Profile
+     - Install target
+     - Use when
+   * - Recommended local interactive
+     - ``labapi[dotenv,builtin-auth]``
+     - You want the quick start, examples, ``.env`` loading, and browser-based ``default_authenticate()``.
+   * - Minimal
+     - ``labapi``
+     - You already manage environment variables or pass credentials directly, and do not need optional helpers.
+   * - Minimal + ``.env`` loading
+     - ``labapi[dotenv]``
+     - You want ``Client()`` to read a local ``.env`` file, but do not need browser helpers.
 
 .. tab-set::
 
-  .. tab-item:: Bash
+   .. tab-item:: uv
 
-    .. code-block:: bash
+      .. code-block:: bash
 
-      export API_URL="https://api.labarchives.com"
-      export ACCESS_KEYID="your_access_key"
-      export ACCESS_PWD="your_access_password"
+         # Recommended local interactive install
+         uv add "labapi[dotenv,builtin-auth]"
 
-  .. tab-item:: PowerShell
+         # Minimal install
+         uv add labapi
 
-    .. code-block:: powershell
+         # Minimal install + .env loading
+         uv add "labapi[dotenv]"
 
-      $env:API_URL="https://api.labarchives.com"
-      $env:ACCESS_KEYID="your_access_key"
-      $env:ACCESS_PWD="your_access_password"
+   .. tab-item:: poetry
 
-  .. tab-item:: Command Prompt
+      .. code-block:: bash
 
-    .. code-block:: bat
+         # Recommended local interactive install
+         poetry add "labapi[dotenv,builtin-auth]"
 
-      set API_URL=https://api.labarchives.com
-      set ACCESS_KEYID=your_access_key
-      set ACCESS_PWD=your_access_password
+         # Minimal install
+         poetry add labapi
+
+         # Minimal install + .env loading
+         poetry add "labapi[dotenv]"
+
+   .. tab-item:: pip
+
+      .. code-block:: bash
+
+         # Recommended local interactive install
+         pip install 'labapi[dotenv,builtin-auth]'
+
+         # Minimal install
+         pip install labapi
+
+         # Minimal install + .env loading
+         pip install 'labapi[dotenv]'
 
 
 .. _optional-deps:
 
-Optional Dependencies
----------------------
+Optional Extras
+---------------
 
-``labapi`` comes with two optional dependency groups:
+``labapi`` currently exposes two optional extras:
 
-.. dropdown:: builtin-auth
+* ``dotenv``: allows :class:`~labapi.client.Client` to read ``API_URL``, ``ACCESS_KEYID``, and ``ACCESS_PWD`` from a local ``.env`` file.
+* ``builtin-auth``: allows :meth:`~labapi.client.Client.default_authenticate` to auto-detect and open a local browser. Without it, you can still use terminal/manual auth or your own callback flow.
 
-  This group of dependencies allows the :meth:`~labapi.client.Client.default_authenticate` function to open 
-  browser windows for higher quality-of-life when running locally.
 
-  .. tab-set::
+Configuration
+-------------
 
-    .. tab-item:: uv
+If you installed ``dotenv``, create a local ``.env`` file:
 
-      .. code-block:: bash
+.. code-block:: toml
 
-        uv add "labapi[builtin-auth]"
+   API_URL="https://api.labarchives.com"
+   ACCESS_KEYID="your_access_key"
+   ACCESS_PWD="your_access_password"
 
-    .. tab-item:: poetry
+If you did not install ``dotenv``, set those values directly in your shell before running your code:
 
-      .. code-block:: bash
+.. tab-set::
 
-        poetry add "labapi[builtin-auth]"
-    
-    .. tab-item:: pip
-      
-      .. code-block:: bash
-        
-        pip install 'labapi[builtin-auth]'
-
-.. dropdown:: dotenv
-
-  This group of dependencies allows the :class:`~labapi.client.Client` constructor to use environment variables 
-  specified in the ``.env`` file in a project. Without this optional dependency, ``Client`` reads only already-set
-  process environment variables.
-
-  .. tab-set::
-
-    .. tab-item:: uv
+   .. tab-item:: Bash
 
       .. code-block:: bash
 
-        uv add "labapi[dotenv]"
+         export API_URL="https://api.labarchives.com"
+         export ACCESS_KEYID="your_access_key"
+         export ACCESS_PWD="your_access_password"
 
-    .. tab-item:: poetry
+   .. tab-item:: PowerShell
 
-      .. code-block:: bash
+      .. code-block:: powershell
 
-        poetry add "labapi[dotenv]"
-    
-    .. tab-item:: pip
-      
-      .. code-block:: bash
-        
-        pip install 'labapi[dotenv]'
+         $env:API_URL="https://api.labarchives.com"
+         $env:ACCESS_KEYID="your_access_key"
+         $env:ACCESS_PWD="your_access_password"
 
+   .. tab-item:: Command Prompt
 
+      .. code-block:: bat
 
-
-
-
+         set API_URL=https://api.labarchives.com
+         set ACCESS_KEYID=your_access_key
+         set ACCESS_PWD=your_access_password

@@ -9,32 +9,34 @@ LabArchives is a cloud-based Electronic Lab Notebook (ELN) for research data man
 
 ## Getting Started
 
-### Prerequisites
+### Install
 
 - **Python 3.12+**
 - **[uv](https://github.com/astral-sh/uv)** (recommended) or `pip`
 
-Install `labapi` directly from PyPI to use it in your own project:
+Choose the install profile that matches how you plan to use `labapi`:
 
 ```bash
-uv add labapi
-# or
-pip install labapi
-```
-
-For the local interactive path used throughout the quick start and examples, install both the `.env` loader and browser-auth extras:
-
-```bash
+# Recommended for local interactive use and the quick start/examples
 uv add "labapi[dotenv,builtin-auth]"
 # or
 pip install 'labapi[dotenv,builtin-auth]'
-```
 
-If you only want `Client()` to automatically load credentials from a local `.env` file, install the `dotenv` extra:
+# Minimal install
+uv add labapi
+# or
+pip install labapi
 
-```bash
+# Minimal install + .env loading
+uv add "labapi[dotenv]"
+# or
 pip install 'labapi[dotenv]'
 ```
+
+The extras do this:
+
+- `dotenv` lets `Client()` load `API_URL`, `ACCESS_KEYID`, and `ACCESS_PWD` from a local `.env` file.
+- `builtin-auth` lets `default_authenticate()` auto-detect and open a local browser. Without it, you can still use terminal/manual auth or your own callback flow.
 
 ### Configuration
 

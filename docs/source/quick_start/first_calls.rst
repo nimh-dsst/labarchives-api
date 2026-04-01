@@ -31,8 +31,8 @@ You will need your API URL, Access Key ID, and Access Password. There are severa
          client = Client()
 
       .. note::
-         Automatic loading from ``.env`` requires the ``dotenv`` extra
-         (for example ``pip install 'labapi[dotenv]'``).
+         Automatic loading from ``.env`` requires the ``dotenv`` extra.
+         See :ref:`installation` for install profiles and package-manager commands.
 
    .. tab-item:: Environment Variables
       :sync: env-vars
@@ -109,9 +109,8 @@ so more complex uses, like those involving a client-server model, should not use
    user = client.default_authenticate()
 
 .. note::
-  For the browser-opening local auth path above, install the ``builtin-auth``
-  extra (for example ``pip install 'labapi[builtin-auth]'``). Pair it with
-  ``dotenv`` if you also want ``Client()`` to read credentials from ``.env``.
+  For this local interactive path, the recommended install profile is
+  ``labapi[dotenv,builtin-auth]``. See :ref:`installation`.
 
 .. note::
   If a compatible browser is not detected, the API will prompt you in the terminal to open a link. 

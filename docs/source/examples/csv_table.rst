@@ -113,8 +113,9 @@ The table will be displayed with LabArchives' default styling.
 Dependencies
 ------------
 
-This example expects ``labapi[dotenv,builtin-auth]`` for local ``.env`` loading
-and browser auth, plus ``beautifulsoup4`` for HTML parsing.
+This example assumes the recommended local interactive install profile,
+``labapi[dotenv,builtin-auth]``, plus ``beautifulsoup4`` for HTML parsing.
+See :ref:`installation`.
 
 Configuration
 -------------

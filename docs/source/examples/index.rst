@@ -73,7 +73,8 @@ Prerequisites
 ~~~~~~~~~~~~~
 
 - **LabArchives API credentials** in a ``.env`` file (``ACCESS_KEYID``, ``ACCESS_PWD``).
-- **Python 3.12+** with ``labapi[dotenv,builtin-auth]`` installed.
+- **Python 3.12+** with the recommended local interactive install profile
+  (``labapi[dotenv,builtin-auth]``; see :ref:`installation`).
 - **beautifulsoup4** (required for the CSV Table example).
 
 Running the Examples

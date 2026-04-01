@@ -586,45 +586,7 @@ class AbstractTreeContainer(
                 return True
 
         return False
-
-    def enumerate_all(
-        self,
-        *,
-        depth: int = 1,
-        timeout: timedelta = timedelta(seconds=5),
-    ) -> Sequence[str]:
-        """Enumerates all children (directories and pages) up to a specified depth.
-
-        Returns relative path strings from the current container for all descendant
-        nodes, including both directories and pages. Each path is relative to this
-        container (e.g., "Folder/Page" or "Folder/Subfolder/Page").
-
-        :param depth: The maximum depth to traverse. Default is 1 (only immediate children).
-        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
-        :returns: A sequence of relative path strings for all descendants.
-        """
-        return [
-            path for path, _node in self.enumerate_nodes(depth=depth, timeout=timeout)
-        ]
-
-    def enumerate_nodes(
-        self,
-        *,
-        depth: int = 1,
-        timeout: timedelta = timedelta(seconds=5),
-    ) -> Sequence[tuple[str, AbstractTreeNode]]:
-        """Enumerate descendant paths paired with their concrete node objects.
-
-        Returns relative path strings from the current container for all descendant
-        nodes, including both directories and pages, paired with the exact in-memory
-        node instance each path came from.
-
-        :param depth: The maximum depth to traverse. Default is 1 (only immediate children).
-        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
-        :returns: A sequence of ``(relative_path, node)`` pairs for all descendants.
-        """
-        return self._enumerate_nodes(depth=depth, timeout=timeout)
-
+    
     def _enumerate_nodes(
         self,
         *,
@@ -673,6 +635,44 @@ class AbstractTreeContainer(
                 pass
 
         return current
+
+    def enumerate_all(
+        self,
+        *,
+        depth: int = 1,
+        timeout: timedelta = timedelta(seconds=5),
+    ) -> Sequence[str]:
+        """Enumerates all children (directories and pages) up to a specified depth.
+
+        Returns relative path strings from the current container for all descendant
+        nodes, including both directories and pages. Each path is relative to this
+        container (e.g., "Folder/Page" or "Folder/Subfolder/Page").
+
+        :param depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
+        :returns: A sequence of relative path strings for all descendants.
+        """
+        return [
+            path for path, _node in self.enumerate_nodes(depth=depth, timeout=timeout)
+        ]
+
+    def enumerate_nodes(
+        self,
+        *,
+        depth: int = 1,
+        timeout: timedelta = timedelta(seconds=5),
+    ) -> Sequence[tuple[str, AbstractTreeNode]]:
+        """Enumerate descendant paths paired with their concrete node objects.
+
+        Returns relative path strings from the current container for all descendant
+        nodes, including both directories and pages, paired with the exact in-memory
+        node instance each path came from.
+
+        :param depth: The maximum depth to traverse. Default is 1 (only immediate children).
+        :param timeout: The maximum time to spend enumerating children. Defaults to 5 seconds.
+        :returns: A sequence of ``(relative_path, node)`` pairs for all descendants.
+        """
+        return self._enumerate_nodes(depth=depth, timeout=timeout)
 
     def enumerate_dirs(
         self,
