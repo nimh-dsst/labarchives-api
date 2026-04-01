@@ -87,10 +87,11 @@ Planning Guidance
 
 To reduce surprises in production integrations:
 
-1. Prefer ID-based addressing in automation.
-2. Refresh parent nodes before critical reads and then re-fetch child objects.
-3. Validate copied content (especially attachments and specialized entries).
-4. Treat unsupported entry types and ``4999`` attachment-update failures as expected error-handling cases.
+- Prefer ID-based addressing in automation.
+- Refresh parent nodes before critical reads and then re-fetch child objects.
+- Validate copied content, especially attachments and specialized entries.
+- Treat unsupported entry types and ``4999`` attachment-update failures as
+  expected error-handling cases.
 
 Related Pages
 -------------

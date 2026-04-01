@@ -161,7 +161,7 @@ with:
         if_exists=InsertBehavior.Retain,
     )
 
-When to use them
+When to Use Them
 ~~~~~~~~~~~~~~~~
 
 Use ``dir()`` and ``page()`` when you want concise, idempotent setup code.
@@ -245,4 +245,6 @@ nodes or strings, combined with ``/``, and converted back to strings. It is used
 Related Pages
 -------------
 
-* :ref:`limitations`
+* :ref:`index_access` for explicit lookup and duplicate-name behavior.
+* :ref:`creating_pages` for path-based creation examples.
+* :ref:`limitations` for current traversal and enumeration caveats.

@@ -3,107 +3,87 @@
 Accessing Items with Index
 ==========================
 
-The ``Index`` utility, located in ``labapi.util``, is used to specify how you want to index into a collection.
+Use ``Index`` when you want explicit, deterministic lookup behavior for
+notebooks, directories, and pages.
 
 .. warning::
    Name-based lookup is ambiguous when duplicate names exist.
-   ``coll["name"]`` returns the **first match** and can silently select the
-   wrong item.
-
-   For deterministic access in integration and automation code, use
+   ``coll["name"]`` returns the first match and can silently select the wrong
+   item. For deterministic access in integration code, use
    ``coll[Index.Id: "..."]``.
-
-   Example:
-
-   - A directory contains two pages named ``"Results"`` for different projects.
-   - ``directory["Results"]`` returns whichever ``Results`` node appears first,
-     not necessarily the one your workflow intended.
-   - ``directory[Index.Name: "Results"]`` returns both, and
-     ``directory[Index.Id: "<tree-id>"]`` returns the exact target.
 
 Supported Collection Types
 --------------------------
 
-This indexing method is supported by the following collection types:
+``Index``-based lookup is supported for:
 
-1. **``Notebooks``**: The collection of notebooks associated with a user (e.g., ``user.notebooks``).
-2. **Tree Containers**: Any object that acts as a container for other tree nodes, including **``Notebook``** and **``NotebookDirectory``** (e.g., ``notebook["Folder"]``).
+- ``user.notebooks``
+- Tree containers such as :class:`~labapi.tree.notebook.Notebook` and
+  :class:`~labapi.tree.directory.NotebookDirectory`
 
 .. warning::
-   This indexing method is **not** supported for page **``Entries``**. Page entries must be accessed by their integer index or via iteration.
+   Page ``Entries`` do not support ``Index``. Access entries by integer index
+   or iteration instead.
 
 .. note::
-   Iterating over ``user.notebooks`` or a tree container yields names. Use ``values()`` to iterate over notebook or node objects, or ``items()`` to iterate over ``(name, object)`` pairs.
+   Iterating over ``user.notebooks`` or a tree container yields names. Use
+   ``values()`` for objects and ``items()`` for ``(name, object)`` pairs.
 
 Basic Access by Name
 --------------------
 
-By default, using a string as a key will look up an item by its name.
+By default, a string key looks up the first item with that name:
 
 .. code-block:: python
 
-    # Access a notebook by name
-    notebook = user.notebooks["My Research Notebook"]
+   notebook = user.notebooks["My Research Notebook"]
+   experiments = notebook["Experiments"]
 
-    # Access a child directory or page by name
-    experiments = notebook["Experiments"]
+If you need duplicate-preserving results, use ``all_keys()``, ``all_items()``,
+and ``all_values()`` on the collection instead of plain mapping helpers.
 
-.. note::
-   If multiple items have the same name, the first match is returned.
-   The ``keys()``, ``items()``, and ``values()`` helpers on ``Notebooks`` and
-   tree containers follow standard mapping semantics.
-   Use ``all_keys()``, ``all_items()``, and ``all_values()``
-   when you need ordered, duplicate-preserving results.
+Explicit Indexing with ``Index``
+--------------------------------
 
-Explicit Indexing with Index
-----------------------------
-
-For more control, or to access items by ID, use the ``Index`` enumeration.
+Use :class:`~labapi.util.types.Index` when you want to say whether you are
+looking up by ID or by name.
 
 Access by ID
 ~~~~~~~~~~~~
 
-Since IDs are unique within LabArchives, this is the most reliable way to access a specific item.
+.. code-block:: python
+
+   from labapi import Index
+
+   notebook = user.notebooks[Index.Id:"12345"]
+   page = notebook[Index.Id:"67890"]
+
+Access by Name
+~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-    from labapi import Index
+   from labapi import Index
 
-    # Access a notebook by its unique ID
-    notebook = user.notebooks[Index.Id: "12345"]
-
-    # Access a child node by its tree ID
-    page = notebook[Index.Id: "67890"]
-
-Access by Name (Explicit)
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can also explicitly state that you are looking up an item by name. This is particularly useful when you want to retrieve *all* items with a certain name, as names in LabArchives are not guaranteed to be unique.
-
-.. code-block:: python
-
-    from labapi import Index
-
-    # Get a list of all notebooks named "Shared Data"
-    shared_notebooks = user.notebooks[Index.Name: "Shared Data"]
-
-    # Get all children named "Protocol" within a directory
-    protocols = experiments[Index.Name: "Protocol"]
+   shared_notebooks = user.notebooks[Index.Name:"Shared Data"]
+   protocols = experiments[Index.Name:"Protocol"]
 
 Summary of Indexing Methods
 ---------------------------
 
-+---------------------------+-----------------------------------+------------------------------------------+
-| Syntax                    | Method                            | Returns                                  |
-+===========================+===================================+==========================================+
-| ``coll["name"]``          | Implicit Name Lookup              | First item with matching name            |
-+---------------------------+-----------------------------------+------------------------------------------+
-| ``coll[Index.Id: "id"]``  | Explicit ID Lookup                | The unique item with matching ID         |
-+---------------------------+-----------------------------------+------------------------------------------+
-| ``coll[Index.Name: "n"]`` | Explicit Name List                | A list of all items with matching name   |
-+---------------------------+-----------------------------------+------------------------------------------+
++---------------------------+---------------------------+----------------------------------------+
+| Syntax                    | Method                    | Returns                                |
++===========================+===========================+========================================+
+| ``coll["name"]``          | Implicit name lookup      | First item with matching name          |
++---------------------------+---------------------------+----------------------------------------+
+| ``coll[Index.Id: "id"]``  | Explicit ID lookup        | The unique item with matching ID       |
++---------------------------+---------------------------+----------------------------------------+
+| ``coll[Index.Name: "n"]`` | Explicit name list lookup | A list of all items with matching name |
++---------------------------+---------------------------+----------------------------------------+
 
 Related Pages
 -------------
 
-* :ref:`limitations`
+- :ref:`paths` for path traversal and duplicate-name caveats.
+- :ref:`limitations` for the broader capability summary.
+- :ref:`integration_design` for ID-first integration guidance.

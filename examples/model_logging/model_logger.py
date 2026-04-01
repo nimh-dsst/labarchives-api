@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""
-Model Logger Example
-
-Logs model metadata, metrics, and artifacts to a structured LabArchives path:
-{notebook}/Model Log/{email}/{iso8601_timestamp}/
-"""
+"""Log model metadata, metrics, and artifacts to LabArchives."""
 
 import sys
 from datetime import datetime
@@ -26,8 +21,7 @@ class ModelLogger:
     """Logs model training runs and metadata to LabArchives."""
 
     def __init__(self, notebook_name: str, user: User):
-        """
-        Initialize the logger with an authenticated user.
+        """Initialize the logger with an authenticated user.
 
         :param notebook_name: Name of the LabArchives notebook.
         :param user: Authenticated LabArchives user session.
@@ -43,8 +37,7 @@ class ModelLogger:
         figures: Sequence[bytes],
         commit: str,
     ) -> None:
-        """
-        Log model metadata and artifacts to LabArchives.
+        """Log model metadata and artifacts to LabArchives.
 
         :param tags: List of tags for the run.
         :param metrics: Dictionary of performance metrics.
@@ -129,6 +122,7 @@ class ModelLogger:
 
 
 def main() -> None:
+    """Run the model logging example."""
     with Client() as client:
         user = client.default_authenticate()
         print(f"Authenticated as: {user.email} (ID: {user.id})")

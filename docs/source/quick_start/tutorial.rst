@@ -3,24 +3,32 @@
 First Success Tutorial
 ======================
 
-This page is a single copy/paste path for first-time users.
-Follow the steps below exactly, and you should be able to create one visible text entry in LabArchives.
+This page is the shortest copy/paste path for first-time users. Follow the
+steps below and you should end up with one visible text entry in LabArchives.
 
-1) Install the recommended local profile
-----------------------------------------
+Install ``labapi``
+------------------
 
 Install ``labapi`` with the extras used throughout this tutorial:
 
-.. code-block:: bash
+.. tab-set::
 
-   uv add "labapi[dotenv,builtin-auth]"
-   # or
-   pip install 'labapi[dotenv,builtin-auth]'
+   .. tab-item:: uv
+
+      .. code-block:: bash
+
+         uv add "labapi[dotenv,builtin-auth]"
+
+   .. tab-item:: pip
+
+      .. code-block:: bash
+
+         pip install "labapi[dotenv,builtin-auth]"
 
 See :ref:`installation` for the other install profiles.
 
-2) Create a ``.env`` file
--------------------------
+Create a ``.env`` File
+----------------------
 
 Create a ``.env`` file in your project folder:
 
@@ -32,11 +40,11 @@ Create a ``.env`` file in your project folder:
 
 Replace the values with your own LabArchives API credentials.
 
-3) Run this minimal script
---------------------------
+Run a Minimal Script
+--------------------
 
-Copy this script into ``first_success.py``. It automatically uses the first notebook in
-your account.
+Copy this script into ``first_success.py``. It automatically uses the first
+notebook in your account.
 
 .. code-block:: python
 
@@ -62,14 +70,22 @@ Then run it:
 
    python first_success.py
 
-4) What you should now see in LabArchives
------------------------------------------
+Confirm the Result
+------------------
 
 After the script finishes:
 
-- You should see a new page in your selected notebook named ``API tutorial - <timestamp>``.
-- Opening that page should show one text entry with the message:
+- You should see a new page in your selected notebook named
+  ``API tutorial - <timestamp>``.
+- Opening that page should show one text entry with the message
   ``Hello from labapi!``.
 
-If this worked, you have completed a full installation + authentication + write path.
-Continue with :ref:`first_calls` for more detail on credentials and authentication options.
+If this worked, you have completed a full installation, authentication, and
+write path.
+
+Related Pages
+-------------
+
+- :ref:`installation` for the broader install matrix.
+- :ref:`first_calls` for more detail on credentials and authentication options.
+- :ref:`creating_pages` for follow-up tree and entry operations.

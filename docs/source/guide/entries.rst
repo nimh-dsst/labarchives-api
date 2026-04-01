@@ -162,4 +162,4 @@ Related Pages
 * :ref:`writing_rich_text` for practical HTML-rich text snippets.
 * :ref:`creating_pages` for page creation workflows before entry insertion.
 * :doc:`/examples/csv_table` for CSV-to-HTML entry conversion patterns.
-* :ref:`limitations`
+* :ref:`limitations` for current entry-type caveats.

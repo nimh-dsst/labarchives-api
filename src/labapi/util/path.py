@@ -284,8 +284,11 @@ class NotebookPath(Sequence[str]):
 
     @override
     def __eq__(self, other: object) -> bool:
-        """Return ``True`` if ``other`` is a ``NotebookPath`` with identical
-        absoluteness, segments, and parent anchor."""
+        """Return ``True`` if ``other`` has the same path semantics.
+
+        Equality compares absoluteness, normalized segments, and any stored
+        parent anchor.
+        """
         if self is other:
             return True
         if not isinstance(other, NotebookPath):

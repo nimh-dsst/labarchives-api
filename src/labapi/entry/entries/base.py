@@ -33,7 +33,7 @@ class Entry(ABC, Generic[T]):
 
     @staticmethod
     def is_registered(part_type: str) -> bool:
-        """Checks if an entry class is registered for a given part type.
+        """Return whether an entry class is registered for ``part_type``.
 
         :param part_type: The LabArchives part type identifier to check.
         :returns: True if a class is registered for this part type, False otherwise.
@@ -42,7 +42,7 @@ class Entry(ABC, Generic[T]):
 
     @staticmethod
     def class_of(part_type: str) -> Type[Entry[Any]]:
-        """Retrieves the registered entry class for a given part type.
+        """Return the registered entry class for ``part_type``.
 
         :param part_type: The LabArchives part type identifier.
         :returns: The :class:`Entry` subclass registered for this part type.
@@ -52,7 +52,7 @@ class Entry(ABC, Generic[T]):
 
     @staticmethod
     def from_part_type(part_type: str, eid: str, data: str, user: User) -> Entry[Any]:
-        """Factory method to create an entry of the appropriate type.
+        """Create an entry instance for a LabArchives part type.
 
         This method takes a part type string and returns the corresponding
         entry class instance. The part type is normalized before matching.
@@ -79,7 +79,7 @@ class Entry(ABC, Generic[T]):
         data: str,
         user: User,
     ):
-        """Initializes an Entry object.
+        """Initialize an entry.
 
         :param eid: The unique ID of the entry.
         :param user: The authenticated user associated with this entry.
@@ -90,6 +90,7 @@ class Entry(ABC, Generic[T]):
         self._user = user
 
     def __init_subclass__(cls, part_type: str = "", **kwargs: Any) -> None:
+        """Register concrete entry subclasses by their LabArchives part type."""
         if not isabstract(cls) and part_type == "":
             raise TypeError(f"{cls.__name__} must define a part_type")
 
@@ -100,7 +101,7 @@ class Entry(ABC, Generic[T]):
 
     @property
     def id(self):
-        """The unique identifier of the entry.
+        """Return the unique identifier of the entry.
 
         :returns: The entry's ID as a string.
         """
@@ -108,7 +109,7 @@ class Entry(ABC, Generic[T]):
 
     @property
     def content_type(self) -> str:
-        """The content type identifier for the entry.
+        """Return the LabArchives content type identifier for this entry.
 
         :returns: A string representing the entry's type (e.g., "text entry", "Attachment").
         """
@@ -117,7 +118,7 @@ class Entry(ABC, Generic[T]):
     @property
     @abstractmethod
     def content(self) -> T:
-        """The content of the entry.
+        """Return the entry content.
 
         The specific type of the content depends on the entry type
         (e.g., string for text entries, :class:`~labapi.entry.attachment.Attachment` for attachments).
@@ -129,7 +130,7 @@ class Entry(ABC, Generic[T]):
     @content.setter
     @abstractmethod
     def content(self, value: T) -> None:
-        """Sets the content of the entry.
+        """Set the entry content.
 
         This operation typically updates the entry in LabArchives via an API call.
 

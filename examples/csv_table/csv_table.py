@@ -1,17 +1,5 @@
 #!/usr/bin/env python3
-"""
-CSV Table Upload/Download
-
-Upload CSV files as formatted HTML tables in LabArchives,
-and download HTML tables back as CSV files.
-
-Usage:
-    # Upload CSV as HTML table
-    python csv_table.py upload data.csv "Results/Table 1" --notebook "My Notebook"
-
-    # Download HTML table as CSV
-    python csv_table.py download "Results/Table 1" output.csv --notebook "My Notebook"
-"""
+"""Upload and download LabArchives HTML table entries as CSV."""
 
 import argparse
 import csv
@@ -52,14 +40,12 @@ def get_or_create_page(container: AbstractTreeContainer, path: str) -> NotebookP
 
 
 def csv_to_html_table(csv_file: Path, has_header: bool = True) -> str:
-    """
-    Convert a CSV file to an HTML table.
+    """Convert a CSV file to an HTML table.
 
     :param csv_file: Path to the CSV file
     :param has_header: Whether the first row is a header
     :returns: HTML string containing the table
     """
-
     with csv_file.open("r", encoding="utf-8") as f:
         reader = csv.reader(f)
         rows = list(reader)
@@ -95,13 +81,11 @@ def csv_to_html_table(csv_file: Path, has_header: bool = True) -> str:
 
 
 def html_table_to_csv(html: str, output_file: Path) -> bool:
-    """
-    Extract HTML tables from HTML content and save as CSV.
+    """Extract HTML tables from HTML content and save as CSV.
 
     :param html: HTML content containing tables
     :param output_file: Path to save the CSV file
     """
-
     soup = BeautifulSoup(html, "html.parser")
     tables = soup.find_all("table")
 
@@ -155,7 +139,6 @@ def upload_csv_as_table(
     has_header: bool = True,
 ) -> None:
     """Upload a CSV file as an HTML table to a LabArchives page."""
-
     if not csv_file.exists():
         print(f"Error: CSV file '{csv_file}' does not exist")
         sys.exit(1)
@@ -189,7 +172,6 @@ def download_table_as_csv(
     entry_index: int = -1,
 ) -> None:
     """Download an HTML table from a LabArchives page as a CSV file."""
-
     notebooks = user.notebooks
     try:
         notebook = notebooks[notebook_name]
@@ -251,6 +233,7 @@ def download_table_as_csv(
 
 
 def main() -> None:
+    """Run the CSV table example CLI."""
     parser = argparse.ArgumentParser(
         description="Upload CSV files as HTML tables or download HTML tables as CSV"
     )

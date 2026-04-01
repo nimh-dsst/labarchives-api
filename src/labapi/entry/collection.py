@@ -30,7 +30,7 @@ class Entries(Sequence["Entry[Any]"]):
     """
 
     def __init__(self, entries: Sequence[Entry[Any]], user: User, page: NotebookPage):
-        """Initializes an Entries collection.
+        """Initialize an entries collection.
 
         :param entries: A sequence of :class:`~labapi.entry.Entry` objects.
         :param user: The authenticated user.
@@ -57,6 +57,7 @@ class Entries(Sequence["Entry[Any]"]):
     def __getitem__(
         self, index: SupportsIndex | str | slice[Any, Any, Any]
     ) -> Entry[Any] | Sequence[Entry[Any]]:
+        """Look up entries by index, slice, or entry identifier."""
         if isinstance(index, str):
             for entry in self._entries:
                 if entry.id == index:
@@ -66,14 +67,17 @@ class Entries(Sequence["Entry[Any]"]):
 
     @override
     def __iter__(self) -> Iterator[Entry[Any]]:
+        """Iterate over a snapshot of this page's entries."""
         return iter(tuple(self._entries))
 
     @override
     def __reversed__(self) -> Iterator[Entry[Any]]:
+        """Iterate over a snapshot of this page's entries in reverse order."""
         return reversed(tuple(self._entries))
 
     @override
     def __len__(self):
+        """Return the number of entries in this collection."""
         return len(self._entries)
 
     # TODO delete entries
@@ -85,7 +89,7 @@ class Entries(Sequence["Entry[Any]"]):
         filename: str | None = None,
         caption: str | None = None,
     ) -> tuple[AttachmentEntry, TextEntry]:
-        """Creates a JSON data entry consisting of an attachment and a reference text entry.
+        """Create a JSON attachment plus a companion reference text entry.
 
         This method uploads JSON data as an attachment file and creates a
         companion text entry that references the attachment and displays
@@ -139,7 +143,7 @@ class Entries(Sequence["Entry[Any]"]):
     def create(
         self, cls: Type[E], data: str | Attachment, *, client_ip: str | None = None
     ) -> E:
-        """Creates a new entry on the page.
+        """Create a new entry on the page.
 
         This method supports creating any entry type by passing the entry class directly,
         similar to :meth:`~labapi.tree.mixins.AbstractTreeContainer.create`. The created

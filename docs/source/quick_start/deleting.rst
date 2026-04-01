@@ -3,79 +3,73 @@
 Deleting Pages and Directories
 ==============================
 
-Safe deletion for pages and directories is provided with the :meth:`~labapi.tree.mixins.AbstractTreeNode.delete` method. 
-Rather than permanently removing items, deleted items are moved to a special "API Deleted Items" directory with a timestamp.
-
+Use :meth:`~labapi.tree.mixins.AbstractTreeNode.delete` to move pages and
+directories into the notebook's ``API Deleted Items`` folder. This is a safe
+delete workflow rather than a permanent erase.
 
 How Deletion Works
 ------------------
 
 When you delete a page or directory:
 
-1. The item is renamed with a timestamp indicating when it was deleted.
-2. The item is moved to the ``API Deleted Items`` directory in the notebook root.
+1. The item is renamed with a deletion timestamp.
+2. The item is moved to ``API Deleted Items`` under the notebook root.
 
-This preserves your data and allows you to recover deleted items.
+This preserves the content so you can recover it later.
 
-Deleting a Page
----------------
-
-To delete a page, call the :meth:`~labapi.tree.page.NotebookPage.delete` method:
-
-.. code-block:: python
-    
-    # Navigate to a page
-    page = notebook.traverse('My Folder/Page to Delete')
-
-    # Delete the page
-    page.delete()
-
-After deletion, the page will be moved to the "API Deleted Items" directory with a name like:
-``Page to Delete - Deleted at 2024-01-15 14:30:22``
-
-Deleting a Directory
---------------------
-
-Directories are deleted using the same method. The entire directory and all its contents will be moved:
+Delete a Page
+-------------
 
 .. code-block:: python
 
-    # Navigate to a directory
-    directory = notebook.traverse('Old Project')
+   page = notebook.traverse("My Folder/Page to Delete")
+   page.delete()
 
-    # Delete the directory and all its contents
-    directory.delete()
+After deletion, the page is renamed to something like:
+
+.. code-block:: text
+
+   Page to Delete - Deleted at 2024-01-15 14:30:22
+
+Delete a Directory
+------------------
+
+.. code-block:: python
+
+   directory = notebook.traverse("Old Project")
+   directory.delete()
 
 .. warning::
-   When you delete a directory, all pages and subdirectories within it are moved together to the "API Deleted Items" directory. 
-   Make sure you want to delete all contents before proceeding.
+   Deleting a directory moves all of its pages and subdirectories together.
+   Confirm that you want to relocate the entire subtree before you call
+   ``delete()``.
 
-Recovering Deleted Items
-------------------------
+Recover Deleted Items
+---------------------
 
-To recover a deleted item, you can navigate to the "API Deleted Items" directory and move it back:
+To recover a deleted item, navigate to ``API Deleted Items`` and move it back:
 
 .. code-block:: python
 
-    from labapi import Index
+   from labapi import Index
 
-    # Access the API Deleted Items directory
-    deleted_items = notebook[Index.Name:"API Deleted Items"][0]
+   deleted_items = notebook[Index.Name:"API Deleted Items"][0]
+   deleted_page = deleted_items["Page to Delete - Deleted at 2024-01-15 14:30:22"]
 
-    # Find your deleted page
-    deleted_page = deleted_items["Page to Delete - Deleted at 2024-01-15 14:30:22"]
+   original_folder = notebook.traverse("My Folder")
+   deleted_page.move_to(original_folder)
+   deleted_page.name = "Page to Delete"
 
-    # Move it back to its original location (or a new location)
-    original_folder = notebook.traverse('My Folder')
-    deleted_page.move_to(original_folder)
-
-    # Optionally rename it to remove the timestamp
-    deleted_page.name = "Page to Delete"
-
-Deleting Entries
-----------------
+Entry Deletion
+--------------
 
 .. note::
-    Entries (text entries, attachments, headers, etc.) cannot be deleted through the API at this time.
+   Individual entries such as text entries, attachments, and headers cannot be
+   deleted through the API at this time.
 
-    See :ref:`entries` for more information about working with entries.
+Related Pages
+-------------
+
+- :ref:`entries` for current entry-type capabilities.
+- :ref:`limitations` for the broader capability summary.
+- :ref:`copying` if you want duplication rather than move-to-trash behavior.

@@ -1,16 +1,5 @@
 #!/usr/bin/env python3
-"""
-JSON Folder Sync
-
-Synchronize JSON files between a local directory and a LabArchives page.
-
-Usage:
-    # Upload all JSON files from local folder to LabArchives page
-    python json_sync.py upload /path/to/json/folder "Data/Results" --notebook "My Notebook"
-
-    # Download all JSON entries from LabArchives page to local folder
-    python json_sync.py download "Data/Results" /path/to/output/folder --notebook "My Notebook"
-"""
+"""Synchronize JSON files between local disk and a LabArchives page."""
 
 import argparse
 import json
@@ -52,7 +41,6 @@ def upload_json_folder(
     user: User, notebook_name: str, page_path: str, local_folder: Path
 ) -> None:
     """Upload all JSON files from a local folder to a LabArchives page."""
-
     if not local_folder.exists():
         print(f"Error: Local folder '{local_folder}' does not exist")
         sys.exit(1)
@@ -104,7 +92,6 @@ def download_json_entries(
     user: User, notebook_name: str, page_path: str, local_folder: Path
 ) -> None:
     """Download all JSON entries from a LabArchives page to local files."""
-
     # Create output folder if it doesn't exist
     local_folder.mkdir(parents=True, exist_ok=True)
 
@@ -172,6 +159,7 @@ def download_json_entries(
 
 
 def main() -> None:
+    """Run the JSON sync example CLI."""
     parser = argparse.ArgumentParser(
         description="Sync JSON files between local folder and LabArchives page"
     )

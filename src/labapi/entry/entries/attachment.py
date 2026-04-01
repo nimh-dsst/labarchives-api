@@ -28,7 +28,7 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
     """
 
     def __init__(self, eid: str, caption: str, user: User):
-        """Initializes an AttachmentEntry object.
+        """Initialize an attachment entry.
 
         :param eid: The unique ID of the entry.
         :param caption: The caption associated with the attachment.
@@ -40,7 +40,7 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
         self._mime_type = None
 
     def get_attachment(self, use_tempfile: bool = False) -> Attachment:
-        """Retrieves the attachment data.
+        """Return the attachment payload as an independent stream copy.
 
         The attachment data is fetched from the LabArchives API and cached.
         Subsequent calls will return the cached data.
@@ -96,7 +96,7 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
     @property
     @override
     def content(self) -> Attachment:
-        """The attachment content as an :class:`~labapi.entry.attachment.Attachment` object.
+        """Return the attachment content.
 
         This property retrieves the attachment data, caching it for subsequent access.
 
@@ -107,7 +107,7 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
     @content.setter
     @override
     def content(self, value: Attachment):
-        """Sets the attachment content.
+        """Set the attachment content.
 
         This operation updates the attachment in LabArchives via an API call
         and invalidates any previously cached attachment data.
@@ -137,7 +137,7 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
 
     @property
     def caption(self) -> str:
-        """The caption associated with the attachment.
+        """Return the attachment caption.
 
         :returns: The caption string.
         """

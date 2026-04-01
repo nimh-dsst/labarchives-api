@@ -3,75 +3,93 @@
 JSON Folder Sync
 ================
 
-This example demonstrates how to synchronize JSON files between a local directory and a LabArchives page.
-It can upload all JSON files from a local folder to LabArchives as JSON entries, or download JSON entries
-from LabArchives to local JSON files.
+This example syncs JSON content between a local folder and a LabArchives page.
+Use it when you want a simple batch workflow for moving structured JSON files
+in or out of a notebook page.
 
-Use Case
---------
+When to Use It
+--------------
 
 This is useful for:
 
-- Backing up structured data from LabArchives to your local machine
-- Uploading batches of JSON data files to a LabArchives page
-- Syncing experimental data stored as JSON between local and LabArchives
-- Archiving API responses or structured datasets
+- Backing up structured data from LabArchives to your local machine.
+- Uploading batches of JSON data files to a LabArchives page.
+- Syncing experimental data stored as JSON between local files and LabArchives.
+- Archiving API responses or other structured datasets.
 
-Example Code
+Requirements
 ------------
 
-.. literalinclude:: ../../../examples/json_sync/json_sync.py
-   :language: python
+This example assumes the recommended local interactive profile,
+``labapi[dotenv,builtin-auth]``. See :ref:`installation`.
 
-Usage Examples
---------------
-
-**Upload JSON files to LabArchives:**
-
-.. code-block:: bash
-
-    # Upload all JSON files from ./data to a page in LabArchives
-    uv run python examples/json_sync/json_sync.py upload ./data "Experiments/2024/Data Analysis" --notebook "My Notebook"
-
-**Download JSON entries from LabArchives:**
-
-.. code-block:: bash
-
-    # Download all JSON entries from a page to ./output
-    uv run python examples/json_sync/json_sync.py download "Experiments/2024/Data Analysis" ./output --notebook "My Notebook"
+No additional third-party packages are required.
 
 Configuration
 -------------
 
-This example assumes the recommended local interactive install profile,
-``labapi[dotenv,builtin-auth]``. See :ref:`installation`.
+For the local interactive workflow, create a ``.env`` file in the repository
+root:
 
-This example requires a ``.env`` file with your LabArchives credentials:
+.. code-block:: toml
+
+   API_URL="https://api.labarchives.com"
+   ACCESS_KEYID="your_access_key_id"
+   ACCESS_PWD="your_password"
+
+You can also provide the same values through shell environment variables. See
+:ref:`first_calls` for both options.
+
+Common Commands
+---------------
+
+Upload the sample JSON files included in the repository:
 
 .. code-block:: bash
 
-    API_URL=https://api.labarchives.com
-    ACCESS_KEYID=your_access_key_id
-    ACCESS_PWD=your_password
+   uv run python examples/json_sync/json_sync.py upload examples/json_sync/sample_data "Experiments/2024/Data Analysis" --notebook "My Notebook"
 
-See :ref:`first_calls` for more information on setting up credentials.
+Download JSON entries from a page into a local folder:
 
-Notes
------
+.. code-block:: bash
 
-- JSON files are uploaded using the :meth:`~labapi.entry.collection.Entries.create_json_entry` method
-- Each upload creates a JSON attachment with ``application/json`` MIME type and
-  a companion rich-text preview entry
-- Invalid JSON files are skipped with an error message
-- The script creates the output folder if it doesn't exist during download
+   uv run python examples/json_sync/json_sync.py download "Experiments/2024/Data Analysis" ./output --notebook "My Notebook"
 
-Enhancements
+How It Works
 ------------
 
-You could enhance this example to:
+- JSON files are uploaded with
+  :meth:`~labapi.entry.collection.Entries.create_json_entry`.
+- Each upload creates a JSON attachment with ``application/json`` MIME type and
+  a companion rich-text preview entry.
+- Download mode writes each JSON attachment back to a local ``.json`` file.
 
-1. **Implement diff/sync**: Only upload changed files (compare timestamps or content hashes)
-2. **Handle subdirectories**: Recursively process JSON files in subdirectories
-3. **Add filtering**: Only sync files matching certain patterns
-4. **Add progress bars**: Use ``tqdm`` for large file operations
-5. **Error recovery**: Implement retry logic for failed uploads/downloads
+Notes and Limitations
+---------------------
+
+- Invalid JSON files are skipped with an error message.
+- The script creates the output folder if it does not exist during download.
+- The sample upload command uses the checked-in files under
+  ``examples/json_sync/sample_data``.
+
+Ways to Extend It
+-----------------
+
+1. Implement diff-based sync so only changed files are uploaded.
+2. Recurse through subdirectories instead of processing a single folder.
+3. Add filename filtering for larger datasets.
+4. Show progress bars with ``tqdm``.
+5. Add retry logic for failed uploads and downloads.
+
+Source Code
+-----------
+
+.. literalinclude:: ../../../examples/json_sync/json_sync.py
+   :language: python
+
+Related Pages
+-------------
+
+- :doc:`index` for the full examples catalog.
+- :doc:`/guide/json_entries` for the JSON attachment + preview model.
+- :ref:`first_calls` for local authentication setup.

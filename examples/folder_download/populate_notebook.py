@@ -1,13 +1,5 @@
 #!/usr/bin/env python3
-"""
-Populate Notebook with Test Data
-
-Create a nested folder structure and pages with various entry types
-in LabArchives, which can then be downloaded with folder_download.py.
-
-Usage:
-    python populate_notebook.py --notebook "My Notebook"
-"""
+"""Populate a LabArchives notebook with sample folder-download data."""
 
 import argparse
 import sys
@@ -26,7 +18,6 @@ from labapi import (
 )
 def populate_notebook(user: User, notebook_name: str) -> None:
     """Populate a notebook with a nested structure and various entry types."""
-
     notebooks = user.notebooks
     try:
         notebook = notebooks[notebook_name]
@@ -84,6 +75,7 @@ def populate_notebook(user: User, notebook_name: str) -> None:
 
 
 def main() -> None:
+    """Run the sample notebook population CLI."""
     parser = argparse.ArgumentParser(
         description="Populate a LabArchives notebook with test data"
     )

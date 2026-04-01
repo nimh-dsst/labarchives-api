@@ -1,17 +1,5 @@
 #!/usr/bin/env python3
-"""
-LabArchives Folder Download
-
-Download a complete LabArchives folder structure to local disk,
-preserving the directory hierarchy.
-
-Usage:
-    # Download entire notebook
-    python folder_download.py --notebook "My Notebook" ./output
-
-    # Download specific folder within a notebook
-    python folder_download.py --notebook "My Notebook" --path "Experiments/2024" ./output/2024_experiments
-"""
+"""Download a LabArchives notebook folder tree to local disk."""
 
 import argparse
 import sys
@@ -62,7 +50,6 @@ def get_unique_path(
 
 def download_page(page: NotebookPage, output_dir: Path, used_paths: set[Path]) -> None:
     """Download a page and its entries to a directory."""
-
     page_dir = get_unique_path(output_dir, page.name, used_paths, page.id)
     page_dir.mkdir(parents=True, exist_ok=True)
 
@@ -136,7 +123,6 @@ def download_directory(
     directory: AbstractTreeContainer, output_dir: Path, used_paths: set[Path]
 ) -> None:
     """Recursively download a directory and its contents."""
-
     dir_path = get_unique_path(output_dir, directory.name, used_paths, directory.id)
     dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -156,7 +142,6 @@ def download_notebook_or_folder(
     user: User, notebook_name: str, path: str | None, output_dir: Path
 ) -> None:
     """Download a notebook or folder from LabArchives."""
-
     notebooks = user.notebooks
     try:
         notebook = notebooks[notebook_name]
@@ -189,6 +174,7 @@ def download_notebook_or_folder(
 
 
 def main() -> None:
+    """Run the folder download example CLI."""
     parser = argparse.ArgumentParser(
         description="Download LabArchives folder structure to local disk"
     )

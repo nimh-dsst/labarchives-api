@@ -23,7 +23,6 @@ def _matching_browser_choice(
 
 def detect_default_browser() -> Literal["chrome", "firefox", "edge", "terminal"]:
     """Resolve the preferred browser for the current auth attempt."""
-
     raw_env_browser = os.getenv("LA_AUTH_BROWSER", "").strip().lower()
 
     if raw_env_browser == "terminal":

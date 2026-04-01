@@ -57,7 +57,7 @@ def _flatten_dict(
 
 
 def to_bool(s: str) -> bool:
-    """Converts a string representation to a boolean value.
+    """Convert a string representation to a boolean value.
 
     Recognizes "true" (case-insensitive) as True and "false" (case-insensitive) as False.
 
@@ -75,7 +75,7 @@ def to_bool(s: str) -> bool:
 
 
 def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]:
-    """Extracts data from an `lxml.etree.Element` object based on a specified format dictionary.
+    """Extract data from an ``lxml.etree.Element`` using a format dictionary.
 
     This function navigates the XML tree using paths defined in the `format` dictionary
     and applies callable extractors to the text content of the found elements.

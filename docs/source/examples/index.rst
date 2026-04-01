@@ -3,94 +3,79 @@
 Example Applications
 ====================
 
-This section provides example applications demonstrating the LabArchives API client in various scenarios. Start with :ref:`quick_start` for setup and :ref:`guide` for deeper API concepts before running these scripts.
-
-Available Examples
-------------------
+These runnable examples show end-to-end workflows built on top of the core
+``labapi`` APIs. Start with :ref:`installation` if you still need to set up the
+recommended local interactive profile.
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    json_sync
    folder_download
    csv_table
 
-Prerequisites Matrix
---------------------
+Example Matrix
+--------------
 
 .. list-table::
    :header-rows: 1
 
    * - Example
-     - Required extras
-     - Third-party packages
-     - Expected working directory
-     - Auth style
-   * - ``json_sync``
-     - ``labapi[dotenv,builtin-auth]``
+     - Best For
+     - Extra Packages
+   * - :doc:`json_sync`
+     - Syncing JSON attachments and previews between a local folder and a
+       LabArchives page
      - none
-     - Repository root (for ``uv run python examples/json_sync/json_sync.py ...``)
-     - Interactive browser auth via ``Client.default_authenticate()``
-   * - ``folder_download``
-     - ``labapi[dotenv,builtin-auth]``
+   * - :doc:`folder_download`
+     - Exporting notebook structure to local files for backup, review, or
+       archival
      - none
-     - Repository root (for ``uv run python examples/folder_download/folder_download.py ...``)
-     - Interactive browser auth via ``Client.default_authenticate()``
-   * - ``csv_table``
-     - ``labapi[dotenv,builtin-auth]``
+   * - :doc:`csv_table`
+     - Converting CSV data to LabArchives HTML tables and round-tripping back
+       to CSV
      - ``beautifulsoup4``
-     - Repository root (for ``uv run --with beautifulsoup4 python examples/csv_table/csv_table.py ...``)
-     - Interactive browser auth via ``Client.default_authenticate()``
 
-Overview
---------
+Published Examples
+------------------
 
-JSON Folder Sync
-~~~~~~~~~~~~~~~~
-:ref:`example_json_sync`
-
-Synchronizes JSON files between a local directory and LabArchives. Supports batch upload of
-JSON files to a page and downloading JSON entries from a page to local files.
-
-Folder Structure Download
-~~~~~~~~~~~~~~~~~~~~~~~~~
-:ref:`example_folder_download`
-
-Downloads LabArchives folder structures to local disk, preserving directory hierarchy.
-Pages are saved as directories, and entries are exported as individual files.
-
-CSV Table Upload/Download
-~~~~~~~~~~~~~~~~~~~~~~~~~
-:ref:`example_csv_table`
-
-Converts CSV files into HTML tables for upload to LabArchives, and parses HTML tables
-from LabArchives back into CSV format.
+- :doc:`json_sync` synchronizes JSON files between a local folder and a single
+  LabArchives page.
+- :doc:`folder_download` mirrors a notebook subtree to local files while
+  preserving page and directory structure.
+- :doc:`csv_table` uploads CSV data as HTML tables and downloads those tables
+  back to CSV.
 
 Getting Started
 ---------------
 
-Prerequisites
-~~~~~~~~~~~~~
+All published examples assume:
 
-- **LabArchives API credentials** in a ``.env`` file (``ACCESS_KEYID``, ``ACCESS_PWD``).
-- **Python 3.12+** with the recommended local interactive install profile
-  (``labapi[dotenv,builtin-auth]``; see :ref:`installation`).
-- **beautifulsoup4** (required for the CSV Table example).
+- Python 3.12+.
+- The recommended local interactive profile:
+  ``labapi[dotenv,builtin-auth]``.
+- A repository-root working directory when you run ``uv run ...`` commands.
+- Notebook-relative page paths paired with ``--notebook "My Notebook"``.
 
-Running the Examples
-~~~~~~~~~~~~~~~~~~~~
-
-Run the examples from the repository root so the relative paths in the example
-``pyproject.toml`` files and docs stay aligned:
+Use these sample commands as known-good starting points:
 
 .. code-block:: bash
 
-    # Example usage for JSON sync
-    uv run python examples/json_sync/json_sync.py upload ./data "My Notebook/Results" --notebook "My Notebook"
+   uv run python examples/json_sync/json_sync.py upload examples/json_sync/sample_data "Experiments/2024/Data Analysis" --notebook "My Notebook"
+   uv run python examples/folder_download/folder_download.py ./backup --notebook "My Notebook" --path "Experiments/2024"
+   uv run --with beautifulsoup4 python examples/csv_table/csv_table.py upload examples/csv_table/sample_data.csv "Experiments/Results" --notebook "My Notebook"
 
 Additional Local Examples
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 The repository also includes ``examples/model_logging`` and
 ``examples/notebook_logging``. They are maintained alongside the published
 examples above, but do not yet have dedicated Sphinx pages.
+
+Related Pages
+-------------
+
+- :ref:`installation` for package-manager commands and optional extras.
+- :ref:`first_calls` for credential and authentication setup.
+- :ref:`guide` for the behavior behind these workflows.

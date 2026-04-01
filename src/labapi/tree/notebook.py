@@ -29,7 +29,7 @@ class Notebook(AbstractTreeContainer):
     """
 
     def __init__(self, init: NotebookInit, user: User, notebooks: Notebooks):
-        """Initializes a Notebook object.
+        """Initialize a notebook.
 
         :param init: Initial data for the notebook.
         :param user: The authenticated user.
@@ -43,7 +43,7 @@ class Notebook(AbstractTreeContainer):
     @property
     @override
     def id(self) -> str:
-        """The unique ID of the notebook.
+        """Return the notebook identifier.
 
         :returns: The notebook's ID.
         """
@@ -51,7 +51,7 @@ class Notebook(AbstractTreeContainer):
 
     @HasNameMixin.name.setter
     def name(self, value: str):
-        """Sets the name of the notebook.
+        """Set the notebook name.
 
         This operation updates the notebook's name in LabArchives via an API call.
 
@@ -63,7 +63,7 @@ class Notebook(AbstractTreeContainer):
 
     @property
     def is_default(self) -> bool:
-        """Indicates whether this notebook is the user's default notebook.
+        """Return whether this notebook is the user's default notebook.
 
         :returns: True if the notebook is the default, False otherwise.
         """

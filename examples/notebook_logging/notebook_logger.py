@@ -1,17 +1,4 @@
-"""
-Jupyter Notebook Logger
-
-Logs Jupyter notebook runs (cell info, outputs, matplotlib figures) to LabArchives.
-
-LabArchives path structure:
-    {notebook}/Notebook Log/{email}/{iso8601_timestamp}/
-        {timestamp} (page)
-            |- Tags       (text entry)
-            |- Cell Info  (text entry)
-            |- Result     (plain text entry)
-            |- Figure N   (AttachmentEntry: PNG)
-            \\- File N     (AttachmentEntry: arbitrary type)
-"""
+"""Log Jupyter notebook runs, outputs, and artifacts to LabArchives."""
 
 import html
 import os
@@ -48,8 +35,7 @@ class NotebookLogger:
         client: Client | None = None,
         user: User | None = None,
     ) -> None:
-        """
-        Initialize the logger with Jupyter-friendly auth.
+        """Initialize the logger with Jupyter-friendly auth.
 
         Displays a clickable auth link in the notebook cell output, then waits
         for the user to authenticate in their browser.
@@ -237,8 +223,7 @@ class NotebookLogger:
         figures: list[bytes],
         files: list[str] | None = None,
     ) -> None:
-        """
-        Save a notebook run to LabArchives.
+        """Save a notebook run to LabArchives.
 
         :param tags: List of string tags for this run.
         :param cell_info: Dict with 'execution_count' and 'recent_cells'.

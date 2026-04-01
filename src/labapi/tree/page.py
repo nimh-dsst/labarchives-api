@@ -36,7 +36,7 @@ class NotebookPage(AbstractTreeNode):
         parent: AbstractTreeContainer,
         user: User,
     ):
-        """Initializes a NotebookPage object.
+        """Initialize a notebook page.
 
         :param tree_id: The unique ID of the page.
         :param name: The name of the page.
@@ -50,7 +50,7 @@ class NotebookPage(AbstractTreeNode):
     @property
     @override
     def id(self) -> str:
-        """The unique ID of the page.
+        """Return the page identifier.
 
         :returns: The page's ID.
         """
@@ -58,7 +58,7 @@ class NotebookPage(AbstractTreeNode):
 
     @property
     def entries(self) -> Entries:
-        """The collection of entries contained within this page.
+        """Return this page's entries, loading them on first access.
 
         This property lazily loads the entries from the LabArchives API if they
         have not been loaded yet.
@@ -142,7 +142,7 @@ class NotebookPage(AbstractTreeNode):
 
     @override
     def copy_to(self, destination: AbstractTreeContainer) -> NotebookPage:
-        """Copies this page and its entries to a specified destination container.
+        """Copy this page and its entries into ``destination``.
 
         .. warning::
            This method has known limitations:
@@ -196,7 +196,7 @@ class NotebookPage(AbstractTreeNode):
 
     @override
     def is_dir(self) -> Literal[False]:
-        """Indicates that this node is not a directory.
+        """Return ``False`` because pages are leaf nodes.
 
         :returns: Always False.
         """
@@ -204,7 +204,7 @@ class NotebookPage(AbstractTreeNode):
 
     @override
     def refresh(self) -> Self:
-        """Refreshes the page by clearing its cached entries.
+        """Refresh this page by clearing its cached entries.
 
         This method clears the internal entries cache, forcing the page
         to re-fetch its entries from the LabArchives API on the next access.

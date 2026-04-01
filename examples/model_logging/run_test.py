@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""
-Test script for ModelLogger
-
-Reads test data from files and logs them to LabArchives.
-"""
+"""Drive the model logger example with fixture data."""
 
 import argparse
 import json
@@ -14,6 +10,7 @@ from model_logger import ModelLogger
 
 
 def main() -> None:
+    """Run the model logger fixture script."""
     parser = argparse.ArgumentParser(description="Test ModelLogger with files")
     parser.add_argument(
         "--notebook", "-n", required=True, help="LabArchives notebook name"

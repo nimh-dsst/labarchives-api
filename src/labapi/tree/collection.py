@@ -28,7 +28,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
     """
 
     def __init__(self, notebooks: Sequence[NotebookInit], user: User):
-        """Initializes the Notebooks collection.
+        """Initialize the notebook collection.
 
         :param notebooks: A sequence of :class:`~labapi.util.notebookinit.NotebookInit` objects
                           containing initial data for the notebooks.
@@ -52,7 +52,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
     @override
     def __getitem__(self, key: IdOrNameIndex) -> Notebook | list[Notebook]:
-        """Retrieves a notebook or a list of notebooks from the collection using various indexing methods.
+        """Look up notebooks by name or indexed selector.
 
         - If `key` is a string, it attempts to find a single notebook with that name.
         - If `key` is a slice with start of :class:`~labapi.util.index.IdIndex` (e.g., ``Index.Id:"some_id"``),
@@ -82,18 +82,21 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
     @override
     def __iter__(self) -> Iterator[str]:
+        """Iterate over notebook names in collection order."""
         return iter([c.name for c in self._notebooks])
 
     def __reversed__(self) -> Iterator[str]:
+        """Iterate over notebook names in reverse collection order."""
         return reversed([c.name for c in self._notebooks])
 
     @override
     def __len__(self) -> int:
+        """Return the number of notebooks in this collection."""
         return len(self._notebooks)
 
     @override
     def keys(self) -> KeysView[str]:
-        """A mapping-compatible view of notebook names.
+        """Return a mapping-compatible view of notebook names.
 
         :returns: A keys view of notebook names.
         """
@@ -101,7 +104,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
     @override
     def items(self) -> ItemsView[str, Notebook]:
-        """A mapping-compatible view of ``(name, notebook)`` pairs.
+        """Return a mapping-compatible view of ``(name, notebook)`` pairs.
 
         :returns: An items view of ``(name, notebook)`` pairs.
         """
@@ -109,26 +112,26 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
     @override
     def values(self) -> ValuesView[Notebook]:
-        """A mapping-compatible view of notebook objects.
+        """Return a mapping-compatible view of notebook objects.
 
         :returns: A values view of notebook objects.
         """
         return ValuesView({n.name: n for n in self._notebooks})
 
     def all_keys(self) -> Sequence[str]:
-        """A list of notebook names in collection order, preserving duplicates."""
+        """Return notebook names in collection order, preserving duplicates."""
         return [n.name for n in self._notebooks]
 
     def all_items(self) -> Sequence[tuple[str, Notebook]]:
-        """A list of ``(name, notebook)`` tuples in collection order, preserving duplicates."""
+        """Return ``(name, notebook)`` pairs in collection order, preserving duplicates."""
         return [(n.name, n) for n in self._notebooks]
 
     def all_values(self) -> Sequence[Notebook]:
-        """A list of notebook objects in collection order, preserving duplicates."""
+        """Return notebook objects in collection order, preserving duplicates."""
         return list(self._notebooks)
 
     def create_notebook(self, name: str) -> Notebook:
-        """Creates a new notebook in LabArchives.
+        """Create a new notebook in LabArchives.
 
         :param name: The name of the new notebook.
         :returns: The newly created :class:`~labapi.tree.notebook.Notebook` object.

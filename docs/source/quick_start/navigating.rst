@@ -3,223 +3,178 @@
 Navigating the Tree
 ===================
 
-Once you have a :class:`~labapi.tree.notebook.Notebook` object, you can navigate its structure to find the pages and entries you need.
-The notebook is organized as a tree, and you can move through it in several ways.
+Once you have a :class:`~labapi.tree.notebook.Notebook` object, you can move
+through its directories and pages in several ways. The examples below assume
+you already have a ``notebook`` object from :ref:`first_calls`.
 
 .. warning::
    Duplicate-name and first-match behavior are documented in
-   :ref:`index_access`. Review that section before using name-based lookup in
+   :ref:`index_access`. Review that page before relying on name-based lookup in
    automation code.
 
-Traversing the tree with Paths
+Traversing the Tree with Paths
 ------------------------------
 
-The most common way to navigate is using the :meth:`~labapi.tree.mixins.AbstractBaseTreeNode.traverse` method. This method takes a 
-path-like string and returns the object at that location.
+The most common way to navigate is with
+:meth:`~labapi.tree.mixins.AbstractBaseTreeNode.traverse`, which accepts a
+slash-separated path string.
 
 .. code-block:: python
 
-   # Get a page deep within the notebook
    page = notebook.traverse("Experiments/Project A/Results")
 
-   # You can also traverse from any node, not just the notebook root
    experiments = notebook.traverse("Experiments")
    project_a = experiments.traverse("Project A")
 
-Fluent Navigation (Ensure Methods)
-----------------------------------
+Fluent Navigation with ``dir()`` and ``page()``
+-----------------------------------------------
 
-For a more "fluent" and concise navigation style, especially when you want to ensure a path exists while navigating,
-you can use the :meth:`~labapi.tree.mixins.AbstractTreeContainer.dir` and
-:meth:`~labapi.tree.mixins.AbstractTreeContainer.page` methods.
+For a more concise style, use
+:meth:`~labapi.tree.mixins.AbstractTreeContainer.dir` and
+:meth:`~labapi.tree.mixins.AbstractTreeContainer.page`.
 
-These methods act as "ensure" methods: they return the node if it exists, or create it if it's missing.
+These methods return the existing node if it is present, or create it if it is
+missing.
 
 .. code-block:: python
 
-   # Ensures the directory structure exists and returns the final page
    page = notebook.dir("Experiments").dir("Project A").page("Results")
-
-   # Supports paths and automatic parent creation (parents=True by default)
    page = notebook.dir("Experiments/Project A").page("Results")
 
-This style is particularly useful for setting up a notebook structure in a single chain of calls.
-See :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` for more granular control over
-node creation (such as handling duplicates or replacing existing nodes).
-
+See :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` for more control
+over duplicate handling and parent creation.
 
 Accessing Children by Name
 --------------------------
 
-You can access the immediate children of a node by their name using dictionary-style indexing. This will return the first child that
-matches the given name.
-
-.. note::
-   For integration code that must always target a specific node, prefer
-   ID-based access with :attr:`~labapi.util.types.Index.Id`.
+Use dictionary-style indexing to get the first child with a matching name:
 
 .. code-block:: python
 
-   # Get the "Experiments" directory
    experiments = notebook["Experiments"]
-
-   # Get a page within the "Experiments" directory
    project_a = experiments["Project A"]
+
+.. note::
+   For deterministic lookup in integration code, prefer ID-based access with
+   :attr:`~labapi.util.types.Index.Id`.
 
 Accessing Children by ID or Name
 --------------------------------
 
-For more explicit lookups, you can use the :class:`~labapi.util.types.Index` object.
+For more explicit lookups, use :class:`~labapi.util.types.Index`.
 
-Accessing by ID
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To get a single child by its unique ID, use :attr:`~labapi.util.types.Index.Id`:
+Access by ID
+~~~~~~~~~~~~
 
 .. code-block:: python
 
    from labapi import Index
 
-   # Get a specific page by its ID
    page = notebook[Index.Id:"123.45"]
 
-Accessing by Name
-^^^^^^^^^^^^^^^^^
-
-To get a list of all children that match a given name, use :attr:`~labapi.util.types.Index.Name`:
+Access by Name
+~~~~~~~~~~~~~~
 
 .. code-block:: python
 
    from labapi import Index
 
-   # Get all pages named "Results"
    results_pages = notebook[Index.Name:"Results"]
 
-Finding Children
-----------------
+Enumerating Children
+--------------------
 
-To discover what the contents of a directory are, ``labapi`` provides the following methods available on
-:class:`~labapi.tree.notebook.Notebook` and :class:`~labapi.tree.directory.NotebookDirectory`:
+``labapi`` provides enumeration helpers on
+:class:`~labapi.tree.notebook.Notebook` and
+:class:`~labapi.tree.directory.NotebookDirectory`.
 
-Listing All Children
-^^^^^^^^^^^^^^^^^^^^
-
-:meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_all` returns relative path strings for all descendants up to ``depth`` (default is 1):
+List All Children
+~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
    all_items = notebook.enumerate_all()
-   # Returns: ['Experiments', 'Notes']
-
    all_items = notebook.enumerate_all(depth=3)
-   # Returns: ['Experiments', 'Experiments/2024', 'Experiments/2024/Results', 'Experiments/Archive', 'Notes']
 
-   experiments = notebook['Experiments']
+   experiments = notebook["Experiments"]
    experiment_items = experiments.enumerate_all(depth=2)
-   # Returns: ['2024', '2024/Results', 'Archive']
 
 .. note::
-   The ``depth`` parameter controls how many levels deep to traverse in the tree structure:
+   The ``depth`` parameter controls how many levels deep ``labapi`` walks the
+   tree.
 
    Given this tree structure::
 
       Notebook/
-      ├── Experiments/
-      │   ├── 2024/
-      │   │   └── Results
-      │   └── Archive
-      └── Notes
+      |-- Experiments/
+      |   |-- 2024/
+      |   |   `-- Results
+      |   `-- Archive
+      `-- Notes
 
-   - ``depth=1`` returns: ``['Experiments', 'Notes']``
-   - ``depth=2`` returns: ``['Experiments', 'Experiments/2024', 'Experiments/Archive', 'Notes']``
-   - ``depth=3`` returns: ``['Experiments', 'Experiments/2024', 'Experiments/2024/Results', 'Experiments/Archive', 'Notes']``
+   - ``depth=1`` returns ``["Experiments", "Notes"]``.
+   - ``depth=2`` returns
+     ``["Experiments", "Experiments/2024", "Experiments/Archive", "Notes"]``.
+   - ``depth=3`` returns
+     ``["Experiments", "Experiments/2024", "Experiments/2024/Results", "Experiments/Archive", "Notes"]``.
 
-Listing Only Directories
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-:meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_dirs` returns relative path strings for directories only:
+List Only Directories
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
    directories = notebook.enumerate_dirs()
-   # Returns: ['Experiments']
-
    directories = notebook.enumerate_dirs(depth=2)
-   # Returns: ['Experiments', 'Experiments/2024']
 
-   experiments = notebook['Experiments']
+   experiments = notebook["Experiments"]
    subdirs = experiments.enumerate_dirs()
-   # Returns: ['2024']
 
-Listing Only Pages
-^^^^^^^^^^^^^^^^^^
-
-:meth:`~labapi.tree.mixins.AbstractTreeContainer.enumerate_pages` returns relative path strings for pages only:
+List Only Pages
+~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
    pages = notebook.enumerate_pages()
-   # Returns: ['Notes']
-
    pages = notebook.enumerate_pages(depth=2)
-   # Returns: ['Experiments/Archive', 'Notes']
 
-   experiments = notebook['Experiments']
+   experiments = notebook["Experiments"]
    experiment_pages = experiments.enumerate_pages(depth=2)
-   # Returns: ['Archive', '2024/Results']
 
+Accessing Parent and Root
+-------------------------
 
-Accessing the Parent
---------------------
-
-Every node in the tree (except the root) has a :attr:`~labapi.tree.mixins.AbstractBaseTreeNode.parent` attribute that points to its parent node. 
-The tree root is always a :class:`~labapi.tree.notebook.Notebook`, and its parent is itself.
-
-.. code-block:: python
-
-   page = notebook.traverse("Experiments/Project A/Results")
-   project_a = page.parent  # This is the "Project A" directory
-
-Accessing the Root
-------------------
-
-From any node in the tree, you can get to the root :class:`~labapi.tree.notebook.Notebook` object using 
-the :attr:`~labapi.tree.mixins.AbstractBaseTreeNode.root` attribute.
+Every node except the root has a
+:attr:`~labapi.tree.mixins.AbstractBaseTreeNode.parent`. Any node can also
+reach the notebook root through
+:attr:`~labapi.tree.mixins.AbstractBaseTreeNode.root`.
 
 .. code-block:: python
 
    page = notebook.traverse("Experiments/Project A/Results")
-   notebook_root = page.root  # This is the notebook object
+   project_a = page.parent
+   notebook_root = page.root
 
-Checking for Directories
-------------------------
+Type-Safe Directory Access
+--------------------------
 
-You can check if a node is a directory (a container for other nodes) or a page (a leaf node) by using 
-the :meth:`~labapi.tree.mixins.AbstractBaseTreeNode.is_dir` method.
+Use :meth:`~labapi.tree.mixins.AbstractBaseTreeNode.as_dir` when you need to
+tell a type checker that a node is a directory:
 
 .. code-block:: python
+
+   from labapi import NotebookPage
 
    node = notebook.traverse("Experiments/Project A")
    if node.is_dir():
-       print(f"{node.name} is a directory.")
-   else:
-       print(f"{node.name} is a page.")
+       directory = node.as_dir()
+       directory.create(NotebookPage, "New Page")
 
-Type-Safe Navigation
---------------------
+If you call :meth:`~labapi.tree.mixins.AbstractBaseTreeNode.as_dir` on a page,
+it raises :class:`TypeError`.
 
-When you are using a type checker, you can use the :meth:`~labapi.tree.mixins.AbstractBaseTreeNode.as_dir` method to cast a node to a directory. 
-This allows you to access directory-specific methods and attributes without your type checker complaining.
+Related Pages
+-------------
 
-.. code-block:: python
-
-    from labapi import NotebookPage
-
-    node = notebook.traverse("Experiments/Project A")
-    if node.is_dir():
-        directory = node.as_dir()
-        # Now you can access directory-specific methods
-        directory.create(NotebookPage, "New Page")
-
-If you call :meth:`~labapi.tree.mixins.AbstractBaseTreeNode.as_dir` on a node that is not a directory, it will raise a :class:`TypeError`.
-
+- :ref:`first_calls` for getting the initial ``notebook`` object.
+- :ref:`paths` for deeper path-resolution rules.
+- :ref:`index_access` for duplicate-name and explicit lookup behavior.

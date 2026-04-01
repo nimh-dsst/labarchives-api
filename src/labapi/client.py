@@ -1,5 +1,4 @@
-"""
-LabArchives API Client.
+"""LabArchives API Client.
 
 This module provides the core client for interacting with the LabArchives API,
 handling authentication, request signing, and various API call methods.
@@ -71,6 +70,7 @@ class StreamingResponse:
     """
 
     def __init__(self, response: Response):
+        """Initialize a streamed response wrapper."""
         self._response = response
         self._closed = False
 
@@ -124,7 +124,7 @@ class _313HTTPAdapter(HTTPAdapter):
     """
 
     def init_poolmanager(self, *args: Any, **kwargs: Any):
-        """Initializes the connection pool manager with custom SSL context.
+        """Initialize the connection pool manager with a custom SSL context.
 
         This method overrides the default pool manager initialization to inject
         a custom SSL context that disables strict X.509 verification.
@@ -149,6 +149,7 @@ class _AuthResponseCollector:
         callback_path: str = _DEFAULT_AUTH_CALLBACK_PATH,
         timeout: float | None = _DEFAULT_AUTH_CALLBACK_TIMEOUT,
     ):
+        """Initialize a loopback auth callback collector."""
         self._client = client
         self._port = port
         self._callback_path = callback_path
@@ -159,6 +160,7 @@ class _AuthResponseCollector:
         self._httpd: TCPServer | None = None
 
     def __enter__(self) -> Self:
+        """Bind the loopback callback server and return this collector."""
         collector = self
         callback_path = self._callback_path
 
@@ -217,11 +219,13 @@ class _AuthResponseCollector:
         _exc_val: BaseException | None,
         _exc_tb: TracebackType | None,
     ) -> None:
+        """Close the loopback callback server."""
         if self._httpd is not None:
             self._httpd.server_close()
             self._httpd = None
 
     def wait(self) -> User:
+        """Wait for a valid callback, then log in and return the user."""
         if self._httpd is None:
             raise RuntimeError(
                 "collect_auth_response() must be used as a context manager before waiting for a callback"
@@ -250,8 +254,7 @@ class _AuthResponseCollector:
 
 
 class Client:
-    """
-    A client for the LabArchives API.
+    """A client for the LabArchives API.
 
     This class handles the connection to the LabArchives API
     and provides methods for making authenticated API calls.
@@ -266,8 +269,7 @@ class Client:
         *,
         strict_cert: bool = True,
     ):
-        """
-        Initializes a new LabArchives API client.
+        """Initialize a LabArchives API client.
 
         If any parameter is None, the client will attempt to load values from
         a ``.env`` file using ``python-dotenv``. The environment variables used are:
@@ -323,7 +325,7 @@ class Client:
             self.session.mount("https://", _313HTTPAdapter())
 
     def close(self) -> None:
-        """Closes the underlying requests session.
+        """Close the underlying requests session.
 
         Once closed, this client should not be used for further API requests.
         Any :class:`~labapi.user.User` objects derived from this client should
@@ -334,11 +336,11 @@ class Client:
             self._closed = True
 
     def __enter__(self) -> Self:
-        """Returns this client for use as a context manager."""
+        """Return this client for use as a context manager."""
         return self
 
     def __exit__(self, *_: object) -> None:
-        """Closes the client session when exiting a context-manager block."""
+        """Close the client session when leaving a context-manager block."""
         self.close()
 
     def __del__(self) -> None:
@@ -351,13 +353,12 @@ class Client:
             pass
 
     def _ensure_open(self) -> None:
-        """Raises if the client has already been closed."""
+        """Raise if the client has already been closed."""
         if self._closed:
             raise RuntimeError("Client session is closed")
 
     def generate_auth_url(self, redirect_url: str) -> str:
-        """
-        Generates a URL for authenticating with the LabArchives API.
+        """Generate a LabArchives login URL for the given callback.
 
         This URL is used to initiate the authorization code flow,
         redirecting the user to LabArchives to grant permissions.
@@ -375,9 +376,10 @@ class Client:
         )
 
     def login(self, user_email: str, auth_code: str) -> User:
-        """
-        Logs in a user using an authentication code. This can be from the standard
-        authentication flow or a one-hour code from the LabArchives website.
+        """Log in a user with an authentication code.
+
+        This code can come from the standard browser flow or from a one-hour
+        code generated in the LabArchives website.
 
         This method exchanges the authorization code for user access information,
         including their user ID and available notebooks.
@@ -415,8 +417,7 @@ class Client:
 
     @staticmethod
     def _handle_request_status(response: Response) -> None:
-        """
-        Handles the HTTP response status, raising an error for unsuccessful requests.
+        """Raise an error for an unsuccessful HTTP response.
 
         Attempts to parse the LabArchives ``<error>`` XML element from the response
         body to surface a specific error code and description.  Falls back to a
@@ -453,8 +454,7 @@ class Client:
     def stream_api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any
     ) -> StreamingResponse:
-        """
-        Makes a GET request to the LabArchives API and returns the response as a byte stream.
+        """Send a GET request and return a streamed response wrapper.
 
         This is useful for downloading large files or when the response content
         needs to be processed incrementally.
@@ -483,8 +483,7 @@ class Client:
         body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ) -> StreamingResponse:
-        """
-        Makes a POST request to the LabArchives API and returns the response as a byte stream.
+        """Send a POST request and return a streamed response wrapper.
 
         This is useful for uploading large files or when the response content
         needs to be processed incrementally.
@@ -511,8 +510,7 @@ class Client:
     def raw_api_get(
         self, api_method_uri: str | Sequence[str], **kwargs: Any
     ) -> Response:
-        """
-        Makes a GET request to the LabArchives API and returns the raw requests.Response object.
+        """Send a GET request and return the raw ``requests.Response``.
 
         This method is suitable for API calls where the full HTTP response,
         including headers and status code, is needed, and the content is not
@@ -536,8 +534,7 @@ class Client:
         body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ) -> Response:
-        """
-        Makes a POST request to the LabArchives API and returns the raw requests.Response object.
+        """Send a POST request and return the raw ``requests.Response``.
 
         This method is suitable for API calls where the full HTTP response,
         including headers and status code, is needed, and the content is not
@@ -559,8 +556,7 @@ class Client:
         return request
 
     def api_get(self, api_method_uri: str | Sequence[str], **kwargs: Any) -> Element:
-        """
-        Makes a GET request to the LabArchives API and parses the XML response into an lxml Element.
+        """Send a GET request and parse the XML response into an element.
 
         This is the primary method for retrieving structured data from the API.
 
@@ -570,7 +566,6 @@ class Client:
         :returns: An lxml Element representing the root of the XML response.
         :raises RuntimeError: If the API request fails or the response is not valid XML.
         """
-
         return fromstring(self.raw_api_get(api_method_uri, **kwargs).content)
 
     def api_post(
@@ -579,8 +574,7 @@ class Client:
         body: Mapping[str, str] | BufferedIOBase,
         **kwargs: Any,
     ) -> Element:
-        """
-        Makes a POST request to the LabArchives API and parses the XML response into an lxml Element.
+        """Send a POST request and parse the XML response into an element.
 
         This is the primary method for sending data to the API and receiving
         structured XML responses.
@@ -592,7 +586,6 @@ class Client:
         :returns: An lxml Element representing the root of the XML response.
         :raises RuntimeError: If the API request fails or the response is not valid XML.
         """
-
         return fromstring(self.raw_api_post(api_method_uri, body, **kwargs).content)
 
     def default_authenticate(
@@ -601,9 +594,7 @@ class Client:
         port: int = _DEFAULT_AUTH_CALLBACK_PORT,
         timeout: float | None = _DEFAULT_AUTH_CALLBACK_TIMEOUT,
     ) -> User:
-        """
-        Authenticates a user using a default browser (Chrome, Firefox, or Edge)
-        and a local HTTP server to capture the authentication code.
+        """Authenticate a user with the default browser and a loopback callback.
 
         This method opens a browser window, directs the user to the LabArchives
         authentication page, and then listens on a loopback callback URL on
@@ -620,8 +611,8 @@ class Client:
         :param timeout: Maximum number of seconds to wait for a valid callback.
                         Defaults to five minutes. Pass ``None`` to wait indefinitely.
         :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
-        :raises ImportError: If selenium is not installed.
-        :raises RuntimeError: If authentication fails.
+        :raises ImportError: If selenium is required but not installed.
+        :raises AuthenticationError: If authentication fails or times out.
         """
         self._ensure_open()
         callback_path = f"/auth/{token_urlsafe(24)}/"
@@ -686,11 +677,11 @@ class Client:
         callback_path: str = _DEFAULT_AUTH_CALLBACK_PATH,
         timeout: float | None = _DEFAULT_AUTH_CALLBACK_TIMEOUT,
     ) -> _AuthResponseCollector:
-        """
-        Returns an enterable collector for the LabArchives authentication callback.
+        """Return a context manager for collecting a loopback auth callback.
 
-        The returned object binds a local HTTP server on enter, waits for a
-        valid callback when called, and closes the server on exit.
+        The returned collector binds a local HTTP server on enter, waits for a
+        valid callback via :meth:`_AuthResponseCollector.wait`, and closes the
+        server on exit.
 
         :param port: The local callback port to listen on. Defaults to ``8089``.
         :param callback_path: The callback path to accept. Defaults to ``/``.
@@ -718,8 +709,7 @@ class Client:
         should_prefix_api: bool = True,
         signature_method: str | None = None,
     ) -> str:
-        """
-        Constructs a fully qualified and signed URL for a LabArchives API method.
+        """Construct a fully qualified and signed URL for an API method.
 
         This method handles the assembly of the base URL, API method path,
         query parameters, and the HMAC-SHA512 signature required by the LabArchives API.
@@ -779,8 +769,7 @@ class Client:
             return self._sign_url(url, api_method)
 
     def _signature(self, api_method: str, expiry: int) -> str:
-        """
-        Generates the HMAC-SHA512 signature for a LabArchives API request.
+        """Generate the HMAC-SHA512 signature for a LabArchives API request.
 
         This private method is used internally by `_sign_url` to create the
         cryptographic signature based on the Access Key ID, API method, and expiry.
@@ -803,8 +792,7 @@ class Client:
         api_method: str,
         expires_in: timedelta | datetime = timedelta(seconds=60),
     ) -> str:
-        """
-        Signs a given URL with the HMAC-SHA512 signature and adds necessary query parameters.
+        """Sign a URL and append the LabArchives auth query parameters.
 
         This private method appends the Access Key ID, expiration timestamp, and
         the generated signature to the URL's query string.

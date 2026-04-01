@@ -9,7 +9,7 @@ contributors working on tree, entry, and client internals.
 The intent is to describe **current behavior and invariants**, including places
 where the design is intentionally incomplete.
 
-Subsystem map
+Subsystem Map
 -------------
 
 At a high level, runtime flow goes through these layers:
@@ -26,7 +26,7 @@ At a high level, runtime flow goes through these layers:
    :class:`~labapi.util.path.NotebookPath`,
    indexing types, and XML extraction)
 
-Client and User boundary
+Client and User Boundary
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 :class:`~labapi.client.Client` is responsible for connection/auth concerns and
@@ -39,7 +39,7 @@ add ``uid``. Most internal modules call the API through
 :class:`~labapi.user.User` rather than directly through
 :class:`~labapi.client.Client`.
 
-Tree model boundary
+Tree Model Boundary
 ~~~~~~~~~~~~~~~~~~~
 
 The tree model is split between mapping-style collections and node/container
@@ -56,7 +56,7 @@ mixins:
 Most operations that mutate the notebook hierarchy are implemented in
 ``tree/mixins.py`` and then reused by concrete node types.
 
-Entry model boundary
+Entry Model Boundary
 ~~~~~~~~~~~~~~~~~~~~
 
 :attr:`~labapi.tree.page.NotebookPage.entries` lazily fetches page entries and
@@ -66,7 +66,7 @@ The :class:`~labapi.entry.collection.Entries` collection owns page-level entry
 creation methods and appends newly created entries to local state after
 successful API calls.
 
-Utility layer boundary
+Utility Layer Boundary
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The ``labapi.util`` package provides shared primitives that keep core modules
@@ -80,7 +80,7 @@ small and predictable:
 Cache model and invariants
 --------------------------
 
-Container population cache (``_populated``)
+Container Population Cache (``_populated``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :class:`~labapi.tree.mixins.AbstractTreeContainer` lazily loads children on
@@ -93,10 +93,11 @@ first access:
 * :meth:`~labapi.tree.mixins.AbstractTreeContainer.refresh` clears
   ``_children`` and resets ``_populated=False``.
 
-Invariant: while ``_populated`` is true, read APIs for that container should be
-served from local ``_children`` without another tree-level API call.
+.. note::
+   While ``_populated`` is true, read APIs for that container should be served
+   from local ``_children`` without another tree-level API call.
 
-Page entries cache (``_entries``)
+Page Entries Cache (``_entries``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :attr:`~labapi.tree.page.NotebookPage.entries` is also lazy:
@@ -107,10 +108,11 @@ Page entries cache (``_entries``)
 * :meth:`~labapi.tree.page.NotebookPage.refresh` resets ``_entries`` back to
   ``None``.
 
-Invariant: repeated ``page.entries`` access should return the same
-:class:`~labapi.entry.collection.Entries` object until refresh.
+.. note::
+   Repeated ``page.entries`` access should return the same
+   :class:`~labapi.entry.collection.Entries` object until refresh.
 
-Path cache (``_has_path``)
+Path Cache (``_has_path``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Every tree node memoizes its :class:`~labapi.util.path.NotebookPath`:
@@ -123,10 +125,11 @@ Every tree node memoizes its :class:`~labapi.util.path.NotebookPath`:
   :meth:`~labapi.tree.mixins.AbstractBaseTreeNode._invalidate_path` after
   mutating local tree state.
 
-Invariant: cached paths are stable until the node or one of its loaded
-ancestors is renamed or moved.
+.. note::
+   Cached paths are stable until the node or one of its loaded ancestors is
+   renamed or moved.
 
-Path stability and traversal expectations
+Path Stability and Traversal Expectations
 -----------------------------------------
 
 :class:`~labapi.util.path.NotebookPath` canonicalizes path-like input and
@@ -153,16 +156,16 @@ Enumeration helpers build on the same traversal model:
   from that shared traversal so duplicate names do not get re-resolved through
   ``traverse()``.
 
-Mutation invariants and refresh expectations
+Mutation Invariants and Refresh Expectations
 --------------------------------------------
 
-General rule
+General Rule
 ~~~~~~~~~~~~
 
 Mutating methods first call the API and then update local in-memory state when
 the API call succeeds.
 
-Create operations
+Create Operations
 ~~~~~~~~~~~~~~~~~
 
 :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` inserts new nodes and
@@ -172,7 +175,7 @@ with ``_populated=True`` and empty children.
 When ``if_exists=InsertBehavior.Replace``, existing matching nodes are deleted
 before creating a replacement.
 
-Move operations
+Move Operations
 ~~~~~~~~~~~~~~~
 
 :meth:`~labapi.tree.mixins.AbstractTreeNode.move_to` updates the server parent,
@@ -183,7 +186,7 @@ then mutates both local parents:
 * appends to destination ``_children``
 * invalidates cached paths for the moved node and any loaded descendants
 
-Delete operations
+Delete Operations
 ~~~~~~~~~~~~~~~~~
 
 :meth:`~labapi.tree.mixins.AbstractTreeNode.delete` is implemented as
@@ -197,7 +200,7 @@ move-to-trash semantics:
 This means local state continues to reference the same Python object, but under
 its new parent and new name.
 
-When to call refresh
+When to Call Refresh
 ~~~~~~~~~~~~~~~~~~~~
 
 Use :meth:`~labapi.tree.mixins.AbstractTreeContainer.refresh` (or
@@ -211,7 +214,7 @@ Current behavior is intentionally shallow:
 * page ``refresh()`` clears the page's entries cache, but existing entry
   instances are not invalidated in place
 
-Entry registry and dispatch
+Entry Registry and Dispatch
 ---------------------------
 
 :class:`~labapi.entry.entries.base.Entry` classes self-register through
@@ -224,7 +227,7 @@ registered class. Recognized-but-unimplemented and fully unknown types are
 wrapped as :class:`~labapi.entry.entries.unknown.UnknownEntry` with warnings in
 :attr:`~labapi.tree.page.NotebookPage.entries`.
 
-Known shortcuts and TODO areas
+Known Shortcuts and TODO Areas
 ------------------------------
 
 These are current incomplete areas that contributors should treat carefully:
@@ -237,7 +240,7 @@ These are current incomplete areas that contributors should treat carefully:
 * ``create_json_entry()`` still creates two concrete entries and does not yet
   model that pair as one logical unit
 
-Contributor checklist for internal changes
+Contributor Checklist for Internal Changes
 ------------------------------------------
 
 Before changing tree/entry/client internals:
@@ -253,3 +256,10 @@ Before changing tree/entry/client internals:
    :meth:`~labapi.entry.entries.base.Entry.from_part_type` dispatch behavior.
 5. Update this page (and related guide pages) when module boundaries or
    invariants change.
+
+Related Pages
+-------------
+
+* :ref:`contributing`
+* :ref:`integration_design`
+* :ref:`clearing_cache`

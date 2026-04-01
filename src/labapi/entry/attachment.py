@@ -22,19 +22,33 @@ class NamedBinaryIO(Protocol):
     """Binary file-like object with a ``name`` attribute."""
 
     @property
-    def name(self) -> str: ...
+    def name(self) -> str:
+        """Return the local filename for this stream."""
+        ...
 
-    def read(self, size: int = -1, /) -> bytes: ...
+    def read(self, size: int = -1, /) -> bytes:
+        """Read bytes from the stream."""
+        ...
 
-    def write(self, data: ReadableBuffer, /) -> int: ...
+    def write(self, data: ReadableBuffer, /) -> int:
+        """Write bytes to the stream."""
+        ...
 
-    def seek(self, offset: int, whence: int = 0, /) -> int: ...
+    def seek(self, offset: int, whence: int = 0, /) -> int:
+        """Move the stream cursor."""
+        ...
 
-    def tell(self) -> int: ...
+    def tell(self) -> int:
+        """Return the current stream cursor position."""
+        ...
 
-    def close(self) -> None: ...
+    def close(self) -> None:
+        """Close the stream."""
+        ...
 
-    def seekable(self) -> bool: ...
+    def seekable(self) -> bool:
+        """Return whether the stream supports random access."""
+        ...
 
 
 class Attachment:
@@ -50,7 +64,7 @@ class Attachment:
 
     @staticmethod
     def from_file(file: NamedBinaryIO) -> Attachment:
-        """Creates an Attachment from a file object by cloning its content.
+        """Create an attachment by cloning a seekable file object.
 
         The content of the provided file is copied into a temporary buffer,
         making the Attachment independent of the original file's state.
@@ -92,7 +106,7 @@ class Attachment:
         filename: str,
         caption: str,
     ):
-        """Initializes an Attachment object.
+        """Initialize an attachment wrapper.
 
         :param backing: The file-like object that contains the attachment data.
                         Can be a BufferedRandom, BufferedReader, BytesIO, or TemporaryFile.
@@ -109,7 +123,7 @@ class Attachment:
         self._caption = caption
 
     def __getattr__(self, attr: str) -> Any:
-        """Delegates attribute access to the backing file-like object.
+        """Delegate unknown attributes to the backing file object.
 
         This allows the Attachment to behave like the underlying file object
         for operations like read(), write(), etc.
@@ -146,7 +160,7 @@ class Attachment:
 
     @property
     def filename(self) -> str:
-        """The filename of the attachment.
+        """Return the attachment filename.
 
         :returns: The filename.
         """
@@ -154,7 +168,7 @@ class Attachment:
 
     @property
     def mime_type(self) -> str:
-        """The MIME type of the attachment.
+        """Return the attachment MIME type.
 
         :returns: The MIME type (e.g., "image/png", "application/pdf").
         """
@@ -162,7 +176,7 @@ class Attachment:
 
     @property
     def caption(self) -> str:
-        """The caption associated with the attachment.
+        """Return the attachment caption.
 
         :returns: The caption text.
         """
