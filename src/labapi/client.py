@@ -15,7 +15,9 @@ from http.server import SimpleHTTPRequestHandler
 from io import BufferedIOBase
 from operator import itemgetter
 from os import getenv
+from secrets import token_urlsafe
 from socketserver import TCPServer
+from time import monotonic
 from types import TracebackType
 from typing import Any, Self, Iterator, Mapping, Sequence, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -44,10 +46,8 @@ _AUTH_ERROR_CODES: frozenset[int] = frozenset(
 
 _DEFAULT_AUTH_CALLBACK_HOST = "127.0.0.1"
 _DEFAULT_AUTH_CALLBACK_PORT = 8089
-
-
-def _auth_callback_url(port: int = _DEFAULT_AUTH_CALLBACK_PORT) -> str:
-    return f"http://{_DEFAULT_AUTH_CALLBACK_HOST}:{port}/"
+_DEFAULT_AUTH_CALLBACK_PATH = "/"
+_DEFAULT_AUTH_CALLBACK_TIMEOUT = 300.0
 
 
 try:
@@ -136,6 +136,117 @@ class _313HTTPAdapter(HTTPAdapter):
         context.verify_flags &= ~ssl.VERIFY_X509_STRICT
 
         super().init_poolmanager(*args, **kwargs, ssl_context=context)  # pyright: ignore[reportUnknownMemberType]
+
+
+class _AuthResponseCollector:
+    """Context manager for binding and waiting on a loopback auth callback."""
+
+    def __init__(
+        self,
+        client: Client,
+        *,
+        port: int = _DEFAULT_AUTH_CALLBACK_PORT,
+        callback_path: str = _DEFAULT_AUTH_CALLBACK_PATH,
+        timeout: float | None = _DEFAULT_AUTH_CALLBACK_TIMEOUT,
+    ):
+        self._client = client
+        self._port = port
+        self._callback_path = callback_path
+        self._timeout = timeout
+        self._error: str | None = None
+        self._email: str | None = None
+        self._auth_code: str | None = None
+        self._httpd: TCPServer | None = None
+
+    def __enter__(self) -> Self:
+        collector = self
+        callback_path = self._callback_path
+
+        class AuthRequestHandler(SimpleHTTPRequestHandler):
+            def _write_response(self, status_code: int, message: str) -> None:
+                self.send_response(status_code)
+                self.send_header("Content-type", "text/html")
+                self.end_headers()
+                self.wfile.write(message.encode("utf-8"))
+
+            @override
+            def do_GET(self) -> None:
+                _scheme, _netloc, path, querystring, _fragment = urlsplit(self.path)
+
+                if path != callback_path:
+                    self._write_response(404, "Unexpected authentication callback.")
+                    return
+
+                query = dict(parse_qsl(querystring))
+
+                error = query.get("error")
+                if error is not None:
+                    self._write_response(200, f"Error: {error}")
+                    collector._error = error
+                    return
+
+                auth_code = query.get("auth_code")
+                email = query.get("email")
+                if auth_code is not None and email is not None:
+                    self._write_response(
+                        200,
+                        "Thanks for Authenticating. Close this Window",
+                    )
+                    collector._auth_code = auth_code
+                    collector._email = email
+                    return
+
+                self._write_response(400, "Invalid authentication callback.")
+
+            @override
+            def log_message(self, format: str, *args: Any) -> None:
+                pass
+
+        class LoopbackTCPServer(TCPServer):
+            allow_reuse_address = True
+
+        self._httpd = LoopbackTCPServer(
+            (_DEFAULT_AUTH_CALLBACK_HOST, self._port),
+            AuthRequestHandler,
+        )
+        return self
+
+    def __exit__(
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
+    ) -> None:
+        if self._httpd is not None:
+            self._httpd.server_close()
+            self._httpd = None
+
+    def wait(self) -> User:
+        if self._httpd is None:
+            raise RuntimeError(
+                "collect_auth_response() must be used as a context manager before waiting for a callback"
+            )
+
+        deadline = None if self._timeout is None else monotonic() + self._timeout
+
+        while True:
+            if self._error is not None:
+                raise AuthenticationError(f"Authentication failed: {self._error}")
+
+            if self._auth_code is not None and self._email is not None:
+                return self._client.login(self._email, self._auth_code)
+
+            if deadline is not None:
+                remaining = deadline - monotonic()
+                if remaining <= 0:
+                    raise AuthenticationError(
+                        "Timed out waiting for the authentication callback"
+                    )
+                self._httpd.timeout = min(remaining, 0.5)
+            else:
+                self._httpd.timeout = None
+
+            self._httpd.handle_request()
 
 
 class Client:
@@ -484,14 +595,20 @@ class Client:
 
         return fromstring(self.raw_api_post(api_method_uri, body, **kwargs).content)
 
-    def default_authenticate(self, *, port: int = _DEFAULT_AUTH_CALLBACK_PORT) -> User:
+    def default_authenticate(
+        self,
+        *,
+        port: int = _DEFAULT_AUTH_CALLBACK_PORT,
+        timeout: float | None = _DEFAULT_AUTH_CALLBACK_TIMEOUT,
+    ) -> User:
         """
         Authenticates a user using a default browser (Chrome, Firefox, or Edge)
         and a local HTTP server to capture the authentication code.
 
         This method opens a browser window, directs the user to the LabArchives
-        authentication page, and then listens on ``http://127.0.0.1:<port>/``
-        for the redirect containing the authorization code. If no compatible
+        authentication page, and then listens on a loopback callback URL on
+        ``127.0.0.1:<port>`` for the redirect containing the authorization code.
+        If no compatible
         browser is detected, it falls back to printing the authentication URL to
         the terminal, requiring the user to manually open it.
 
@@ -500,111 +617,97 @@ class Client:
            Install it with: ``pip install selenium``
 
         :param port: The local callback port to listen on. Defaults to ``8089``.
+        :param timeout: Maximum number of seconds to wait for a valid callback.
+                        Defaults to five minutes. Pass ``None`` to wait indefinitely.
         :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
         :raises ImportError: If selenium is not installed.
         :raises RuntimeError: If authentication fails.
         """
         self._ensure_open()
-        auth_url = self.generate_auth_url(_auth_callback_url(port))
+        callback_path = f"/auth/{token_urlsafe(24)}/"
+        auth_url = self.generate_auth_url(
+            f"http://{_DEFAULT_AUTH_CALLBACK_HOST}:{port}{callback_path}"
+        )
 
         driver = None
-        options = None
-        try:
-            match detect_default_browser():
-                case "chrome":
-                    import selenium.webdriver as webdriver
+        with self.collect_auth_response(
+            port=port,
+            callback_path=callback_path,
+            timeout=timeout,
+        ) as auth_response_collector:
+            try:
+                match detect_default_browser():
+                    case "chrome":
+                        import selenium.webdriver as webdriver
 
-                    options = webdriver.ChromeOptions()
-                    driver = webdriver.Chrome(options=options)
-                    print("Opening Chrome for authentication...")
-                case "firefox":
-                    import selenium.webdriver as webdriver
+                        driver = webdriver.Chrome(options=webdriver.ChromeOptions())
+                        print("Opening Chrome for authentication...")
+                    case "firefox":
+                        import selenium.webdriver as webdriver
 
-                    options = webdriver.FirefoxOptions()
-                    driver = webdriver.Firefox(options=options)
-                    print("Opening Firefox for authentication...")
-                case "edge":
-                    import selenium.webdriver as webdriver
+                        driver = webdriver.Firefox(options=webdriver.FirefoxOptions())
+                        print("Opening Firefox for authentication...")
+                    case "edge":
+                        import selenium.webdriver as webdriver
 
-                    options = webdriver.EdgeOptions()
-                    driver = webdriver.Edge(options=options)
-                    print("Opening Edge for authentication...")
-                case "terminal":
-                    print("Open authentication URL in your browser:")
-                    print(auth_url)
+                        driver = webdriver.Edge(options=webdriver.EdgeOptions())
+                        print("Opening Edge for authentication...")
+                    case "terminal":
+                        print("Open authentication URL in your browser:")
+                        print(auth_url)
+                    case _:
+                        print(
+                            "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
+                        )
+                        print("Open authentication URL in your browser:")
+                        print(auth_url)
 
-            if driver is not None:
-                driver.get(auth_url)
-                print(
-                    "Please complete the authentication in the opened browser window..."
-                )
+                if driver is not None:
+                    driver.get(auth_url)
+                    print(
+                        "Please complete the authentication in the opened browser window..."
+                    )
 
-            return self.collect_auth_response(port=port)
-        except ImportError as e:
-            raise ImportError(
-                "Selenium is required for automatic browser-based authentication. "
-                "Install it with: pip install selenium\n"
-                "Alternatively, use manual authentication with LA_AUTH_BROWSER=terminal."
-            ) from e
-        finally:
-            if driver is not None:
-                driver.quit()
+                return auth_response_collector.wait()
+            except ImportError as e:
+                raise ImportError(
+                    "Selenium is required for automatic browser-based authentication. "
+                    "Install it with: pip install selenium\n"
+                    "Alternatively, use manual authentication with LA_AUTH_BROWSER=terminal."
+                ) from e
+            finally:
+                if driver is not None:
+                    driver.quit()
 
-    def collect_auth_response(self, *, port: int = _DEFAULT_AUTH_CALLBACK_PORT) -> User:
+    def collect_auth_response(
+        self,
+        *,
+        port: int = _DEFAULT_AUTH_CALLBACK_PORT,
+        callback_path: str = _DEFAULT_AUTH_CALLBACK_PATH,
+        timeout: float | None = _DEFAULT_AUTH_CALLBACK_TIMEOUT,
+    ) -> _AuthResponseCollector:
         """
-        Launches a local HTTP server to capture the authentication response from LabArchives.
+        Returns an enterable collector for the LabArchives authentication callback.
 
-        This server listens on ``http://127.0.0.1:<port>/`` for the redirect
-        from LabArchives containing the authorization code and user email after
-        successful authentication.
+        The returned object binds a local HTTP server on enter, waits for a
+        valid callback when called, and closes the server on exit.
 
         :param port: The local callback port to listen on. Defaults to ``8089``.
-        :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
-        :raises KeyError: If the authentication code or email is not received.
+        :param callback_path: The callback path to accept. Defaults to ``/``.
+        :param timeout: Maximum number of seconds to wait for a valid callback.
+                        Defaults to five minutes. Pass ``None`` to wait indefinitely.
+        :returns: An enterable collector with a ``wait()`` method for the authentication callback.
         """
+        self._ensure_open()
+        if not callback_path.startswith("/"):
+            callback_path = f"/{callback_path}"
 
-        auth_info: dict[str, str] = {}
-
-        class AuthRequestHandler(SimpleHTTPRequestHandler):
-            @override
-            def do_GET(self):
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
-
-                _s, _n, _p, querystring, _f = urlsplit(self.path)
-
-                query = dict(parse_qsl(querystring))
-
-                if "error" in query:
-                    self.wfile.write(
-                        bytes(f"Error: {query['error']}", encoding="utf-8")
-                    )
-                    auth_info["error"] = query["error"]
-                else:
-                    self.wfile.write(b"Thanks for Authenticating. Close this Window")
-                    auth_info["auth_code"] = query["auth_code"]
-                    auth_info["email"] = query["email"]
-
-            @override
-            def log_message(self, format: str, *args: Any) -> None:
-                pass
-
-        with TCPServer(
-            (_DEFAULT_AUTH_CALLBACK_HOST, port),
-            AuthRequestHandler,
-        ) as httpd:
-            httpd.handle_request()
-
-        if "error" in auth_info:
-            raise AuthenticationError(f"Authentication failed: {auth_info['error']}")
-
-        if "auth_code" not in auth_info or "email" not in auth_info:
-            raise AuthenticationError(
-                "Authentication callback did not include both auth_code and email"
-            )
-
-        return self.login(auth_info["email"], auth_info["auth_code"])
+        return _AuthResponseCollector(
+            self,
+            port=port,
+            callback_path=callback_path,
+            timeout=timeout,
+        )
 
     def construct_url(
         self,

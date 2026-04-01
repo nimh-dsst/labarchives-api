@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-import warnings
+import socket
 from datetime import datetime, timedelta
+from http.client import HTTPConnection
 from os import getenv
+from threading import Thread
+from time import monotonic, sleep
 from unittest.mock import MagicMock, Mock, patch
 from urllib.parse import parse_qsl, urlsplit
 
@@ -14,6 +17,23 @@ from requests import Response
 
 from labapi import Client, User
 from labapi.exceptions import ApiError, AuthenticationError
+
+
+class FakeLoopbackTCPServer:
+    """Simple test double for a bound auth callback listener."""
+
+    def __init__(self, server_address, _handler_cls):
+        self.server_address = server_address
+        self.timeout: float | None = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return False
+
+    def server_close(self):
+        pass
 
 
 def make_response(
@@ -28,6 +48,36 @@ def make_response(
     response._content = body.encode("utf-8")
     response.encoding = "utf-8"
     return response
+
+
+def reserve_local_port() -> int:
+    """Reserve an ephemeral localhost port for loopback auth tests."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
+
+
+def wait_for_local_listener(port: int, *, timeout: float = 2.0) -> None:
+    """Wait until a local TCP listener is accepting connections."""
+    deadline = monotonic() + timeout
+    while monotonic() < deadline:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            if sock.connect_ex(("127.0.0.1", port)) == 0:
+                return
+        sleep(0.01)
+
+    raise AssertionError("Timed out waiting for the auth callback listener to bind")
+
+
+def local_get(port: int, path: str) -> tuple[int, str]:
+    """Issue a simple loopback GET request for auth callback tests."""
+    connection = HTTPConnection("127.0.0.1", port, timeout=2)
+    try:
+        connection.request("GET", path)
+        response = connection.getresponse()
+        return response.status, response.read().decode("utf-8")
+    finally:
+        connection.close()
 
 
 class TestClientUnit:
@@ -388,94 +438,162 @@ class TestClientUnit:
         with pytest.raises(XMLSyntaxError):
             client.api_post("entries/add_entry", {"entry_data": "<p>Hello</p>"})
 
-    def test_default_authenticate_warns_when_no_browser_detected(
-        self, capsys, monkeypatch
-    ):
+    def test_default_authenticate_uses_loopback_callback_url(self):
+        """Test interactive auth passes the same loopback callback URL to the collector."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        generate_auth_url = Mock(return_value="https://auth.test/url")
+        auth_response_collector = MagicMock()
+        auth_response_collector.__enter__.return_value = auth_response_collector
+        auth_response_collector.wait.return_value = Mock(spec=User)
+
+        with (
+            patch.object(client, "generate_auth_url", generate_auth_url),
+            patch.object(
+                client,
+                "collect_auth_response",
+                return_value=auth_response_collector,
+            ) as collect_auth_response_factory,
+            patch("labapi.client.token_urlsafe", return_value="test-token"),
+            patch("labapi.client.detect_default_browser", return_value="terminal"),
+        ):
+            result = client.default_authenticate()
+
+        assert result is auth_response_collector.wait.return_value
+        generate_auth_url.assert_called_once_with(
+            "http://127.0.0.1:8089/auth/test-token/"
+        )
+        collect_auth_response_factory.assert_called_once_with(
+            port=8089,
+            callback_path="/auth/test-token/",
+            timeout=300.0,
+        )
+        auth_response_collector.__enter__.assert_called_once_with()
+        auth_response_collector.wait.assert_called_once_with()
+        auth_response_collector.__exit__.assert_called_once()
+
+    def test_default_authenticate_accepts_custom_callback_port(self):
+        """Test interactive auth forwards a caller-provided callback port."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        generate_auth_url = Mock(return_value="https://auth.test/url")
+        auth_response_collector = MagicMock()
+        auth_response_collector.__enter__.return_value = auth_response_collector
+        auth_response_collector.wait.return_value = Mock(spec=User)
+
+        with (
+            patch.object(client, "generate_auth_url", generate_auth_url),
+            patch.object(
+                client,
+                "collect_auth_response",
+                return_value=auth_response_collector,
+            ) as collect_auth_response_factory,
+            patch("labapi.client.token_urlsafe", return_value="test-token"),
+            patch("labapi.client.detect_default_browser", return_value="terminal"),
+        ):
+            result = client.default_authenticate(port=9001, timeout=90.0)
+
+        assert result is auth_response_collector.wait.return_value
+        generate_auth_url.assert_called_once_with(
+            "http://127.0.0.1:9001/auth/test-token/"
+        )
+        collect_auth_response_factory.assert_called_once_with(
+            port=9001,
+            callback_path="/auth/test-token/",
+            timeout=90.0,
+        )
+
+    def test_default_authenticate_warns_when_no_browser_detected(self, capsys):
         """Test terminal fallback output when no compatible browser is detected."""
         client = Client("https://api.test.com", "test_akid", "test_password")
-        client.collect_auth_response = Mock(return_value=Mock(spec=User))
-        monkeypatch.delenv("LA_AUTH_BROWSER", raising=False)
+        generate_auth_url = Mock(return_value="https://auth.test/url")
+        auth_response_collector = MagicMock()
+        auth_response_collector.__enter__.return_value = auth_response_collector
+        auth_response_collector.wait.return_value = Mock(spec=User)
 
-        with patch("labapi.client.detect_default_browser", return_value=None):
-            with warnings.catch_warnings():
-                warnings.simplefilter("error")
-                client.default_authenticate()
+        with (
+            patch.object(client, "generate_auth_url", generate_auth_url),
+            patch.object(
+                client,
+                "collect_auth_response",
+                return_value=auth_response_collector,
+            ),
+            patch("labapi.client.token_urlsafe", return_value="test-token"),
+            patch("labapi.client.detect_default_browser", return_value=None),
+        ):
+            client.default_authenticate()
 
         captured = capsys.readouterr()
         assert "WARNING: No compatible browser detected" in captured.out
         assert "Open authentication URL in your browser:" in captured.out
+        assert "https://auth.test/url" in captured.out
 
     def test_default_authenticate_does_not_warn_when_terminal_is_explicit(
-        self, monkeypatch
+        self, capsys
     ):
         """Test no warning is shown when terminal auth is explicitly configured."""
         client = Client("https://api.test.com", "test_akid", "test_password")
-        client.collect_auth_response = Mock(return_value=Mock(spec=User))
-        monkeypatch.setenv("LA_AUTH_BROWSER", "terminal")
-
-        with patch("labapi.client.detect_default_browser", return_value=None):
-            with warnings.catch_warnings():
-                warnings.simplefilter("error")
-                client.default_authenticate()
-
-    def test_default_authenticate_does_not_warn_when_nonterminal_env_is_explicit(
-        self, monkeypatch
-    ):
-        """Test client fallback warning is reserved for unset LA_AUTH_BROWSER."""
-        client = Client("https://api.test.com", "test_akid", "test_password")
-        client.collect_auth_response = Mock(return_value=Mock(spec=User))
-        monkeypatch.setenv("LA_AUTH_BROWSER", "chrome")
-
-        with patch("labapi.client.detect_default_browser", return_value=None):
-            with warnings.catch_warnings():
-                warnings.simplefilter("error")
-                client.default_authenticate()
-
-    def test_default_authenticate_uses_loopback_callback_url(self, monkeypatch):
-        """Test interactive auth uses the same loopback callback URL it listens on."""
-        client = Client("https://api.test.com", "test_akid", "test_password")
         generate_auth_url = Mock(return_value="https://auth.test/url")
-        collect_auth_response = Mock(return_value=Mock(spec=User))
-        monkeypatch.setenv("LA_AUTH_BROWSER", "terminal")
+        auth_response_collector = MagicMock()
+        auth_response_collector.__enter__.return_value = auth_response_collector
+        auth_response_collector.wait.return_value = Mock(spec=User)
 
         with (
             patch.object(client, "generate_auth_url", generate_auth_url),
-            patch.object(client, "collect_auth_response", collect_auth_response),
+            patch.object(
+                client,
+                "collect_auth_response",
+                return_value=auth_response_collector,
+            ),
+            patch("labapi.client.token_urlsafe", return_value="test-token"),
             patch("labapi.client.detect_default_browser", return_value="terminal"),
         ):
             client.default_authenticate()
 
-        generate_auth_url.assert_called_once_with("http://127.0.0.1:8089/")
-        collect_auth_response.assert_called_once_with(port=8089)
+        captured = capsys.readouterr()
+        assert "WARNING: No compatible browser detected" not in captured.out
+        assert "Open authentication URL in your browser:" in captured.out
+        assert "https://auth.test/url" in captured.out
 
-    def test_default_authenticate_accepts_custom_callback_port(self, monkeypatch):
-        """Test interactive auth uses a caller-provided callback port."""
+    def test_default_authenticate_binds_listener_before_printing_auth_url(self):
+        """Test terminal fallback is printed only after the callback listener binds."""
         client = Client("https://api.test.com", "test_akid", "test_password")
         generate_auth_url = Mock(return_value="https://auth.test/url")
-        collect_auth_response = Mock(return_value=Mock(spec=User))
-        monkeypatch.setenv("LA_AUTH_BROWSER", "terminal")
+        events: list[str] = []
+        auth_response_collector = MagicMock()
+        auth_response_collector.__enter__.side_effect = lambda: (
+            events.append("bind"),
+            auth_response_collector,
+        )[1]
+        auth_response_collector.wait.return_value = Mock(spec=User)
+        auth_response_collector.wait.side_effect = lambda: (
+            events.append("wait"),
+            auth_response_collector.wait.return_value,
+        )[1]
 
         with (
             patch.object(client, "generate_auth_url", generate_auth_url),
-            patch.object(client, "collect_auth_response", collect_auth_response),
+            patch.object(
+                client,
+                "collect_auth_response",
+                return_value=auth_response_collector,
+            ),
+            patch("labapi.client.token_urlsafe", return_value="test-token"),
             patch("labapi.client.detect_default_browser", return_value="terminal"),
+            patch("builtins.print", side_effect=lambda *args, **kwargs: events.append("print")),
         ):
-            client.default_authenticate(port=9001)
+            client.default_authenticate()
 
-        generate_auth_url.assert_called_once_with("http://127.0.0.1:9001/")
-        collect_auth_response.assert_called_once_with(port=9001)
+        assert events.index("bind") < events.index("print")
+        assert events.index("print") < events.index("wait")
 
     def test_collect_auth_response_binds_loopback_callback_listener(self):
-        """Test auth callback capture binds the expected loopback listener."""
+        """Test auth callback collector binds the expected loopback listener."""
         client = Client("https://api.test.com", "test_akid", "test_password")
-        bind_info: dict[str, tuple[str, int]] = {}
-
-        class StopServer(Exception):
-            """Sentinel exception to stop before request handling."""
+        bind_info: dict[str, object] = {}
 
         class FakeTCPServer:
             def __init__(self, server_address, _handler_cls):
                 bind_info["server_address"] = server_address
+                self.timeout = None
 
             def __enter__(self):
                 return self
@@ -483,26 +601,25 @@ class TestClientUnit:
             def __exit__(self, exc_type, exc_val, exc_tb):
                 return False
 
-            def handle_request(self):
-                raise StopServer()
+            def server_close(self):
+                bind_info["closed"] = True
 
         with patch("labapi.client.TCPServer", FakeTCPServer):
-            with pytest.raises(StopServer):
-                client.collect_auth_response()
+            with client.collect_auth_response() as auth_response_collector:
+                assert hasattr(auth_response_collector, "wait")
+                assert bind_info["server_address"] == ("127.0.0.1", 8089)
 
-        assert bind_info["server_address"] == ("127.0.0.1", 8089)
+        assert bind_info["closed"] is True
 
     def test_collect_auth_response_accepts_custom_callback_port(self):
-        """Test auth callback capture can bind a caller-provided port."""
+        """Test auth callback collector can bind a caller-provided port."""
         client = Client("https://api.test.com", "test_akid", "test_password")
-        bind_info: dict[str, tuple[str, int]] = {}
-
-        class StopServer(Exception):
-            """Sentinel exception to stop before request handling."""
+        bind_info: dict[str, object] = {}
 
         class FakeTCPServer:
             def __init__(self, server_address, _handler_cls):
                 bind_info["server_address"] = server_address
+                self.timeout = None
 
             def __enter__(self):
                 return self
@@ -510,14 +627,70 @@ class TestClientUnit:
             def __exit__(self, exc_type, exc_val, exc_tb):
                 return False
 
-            def handle_request(self):
-                raise StopServer()
+            def server_close(self):
+                bind_info["closed"] = True
 
         with patch("labapi.client.TCPServer", FakeTCPServer):
-            with pytest.raises(StopServer):
-                client.collect_auth_response(port=9001)
+            with client.collect_auth_response(port=9001) as auth_response_collector:
+                assert hasattr(auth_response_collector, "wait")
+                assert bind_info["server_address"] == ("127.0.0.1", 9001)
 
-        assert bind_info["server_address"] == ("127.0.0.1", 9001)
+        assert bind_info["closed"] is True
+
+    def test_collect_auth_response_requires_context_manager(self):
+        """Test auth callback collector must be entered before waiting."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+
+        auth_response_collector = client.collect_auth_response()
+
+        with pytest.raises(
+            RuntimeError,
+            match="must be used as a context manager before waiting for a callback",
+        ):
+            auth_response_collector.wait()
+
+    def test_collect_auth_response_ignores_invalid_callbacks_until_valid(self):
+        """Test auth callback collector ignores stray requests until the expected callback arrives."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        login = Mock(return_value=Mock(spec=User))
+        port = reserve_local_port()
+        result: dict[str, User] = {}
+        errors: list[BaseException] = []
+
+        def run_collect_auth_response() -> None:
+            try:
+                with client.collect_auth_response(
+                    port=port,
+                    callback_path="/expected/",
+                    timeout=2.0,
+                ) as auth_response_collector:
+                    result["user"] = auth_response_collector.wait()
+            except BaseException as exc:
+                errors.append(exc)
+
+        with patch.object(client, "login", login):
+            thread = Thread(target=run_collect_auth_response, daemon=True)
+            thread.start()
+            wait_for_local_listener(port)
+
+            status, _ = local_get(port, "/unexpected/?auth_code=bad&email=bad")
+            assert status == 404
+
+            status, _ = local_get(port, "/expected/")
+            assert status == 400
+
+            status, _ = local_get(
+                port,
+                "/expected/?auth_code=good-code&email=user%40example.com",
+            )
+            assert status == 200
+
+            thread.join(timeout=5)
+
+        assert not thread.is_alive()
+        assert not errors
+        assert result["user"] is login.return_value
+        login.assert_called_once_with("user@example.com", "good-code")
 
     def test_stream_api_get_yields_chunks_and_returns_response(self):
         """Test stream_api_get yields streamed chunks and returns the response."""
