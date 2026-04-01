@@ -199,7 +199,7 @@ def test_extract_etree_missing_element_raises():
     with pytest.raises(
         ExtractionError,
         match=(
-            r"Could not find value for '\\./missing' while parsing element at /root"
+            r"Could not find value for '.+/missing' while parsing element at /root"
         ),
     ):
         extract_etree(element, format_dict)
@@ -220,7 +220,7 @@ def test_extract_etree_mapper_fails_raises():
     with pytest.raises(
         ExtractionError,
         match=(
-            r"Could not map value 'not_a_bool' with to_bool for '\\./value' while "
+            r"Could not map value 'not_a_bool' with to_bool for '.+/value' while "
             r"parsing element at /root"
         ),
     ):

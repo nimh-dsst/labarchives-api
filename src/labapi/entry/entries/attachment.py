@@ -51,10 +51,6 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
         :returns: An :class:`~labapi.entry.attachment.Attachment` object containing the file data and metadata.
         """
         if self._filedata is None or self._filedata.closed:
-            attachment = self._user.client.stream_api_get(
-                "entries/entry_attachment", uid=self._user.id, eid=self.id
-            )
-
             output = TemporaryFile() if use_tempfile else BytesIO()
 
             with self._user.client.stream_api_get(

@@ -595,12 +595,12 @@ class AbstractTreeContainer(
             name = child.name
 
             if time.monotonic() > _timeout:
-                    warnings.warn(
-                        "Tree enumeration timed out before traversal completed; "
-                        "returned paths are partial and may be unsafe for sync/export workflows.",
-                        RuntimeWarning,
-                        stacklevel=2,
-                    )
+                warnings.warn(
+                    "Tree enumeration timed out before traversal completed; "
+                    "returned paths are partial and may be unsafe for sync/export workflows.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
                 break
 
             current.append(name)

@@ -94,14 +94,14 @@ def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]
     etree_path = _etree.getroottree().getpath(_etree)
 
     for key, mapper in flat.items():
-        query_path = f"./{key}"
-        value = _etree.findtext(query_path)
+        message_path = f"./{key}"
+        value = _etree.findtext(f"./{key}")
 
         if (
-            value is None
-        ):  # XXX should we collate errors and return at end with the dict or?
+                value is None
+            ):  # XXX should we collate errors and return at end with the dict or?
             raise ExtractionError(
-                f"Could not find value for {query_path!r} while parsing element at {etree_path}"
+                f"Could not find value for './{key}' while parsing element at {etree_path}"
             )
 
         leaf = key.split("/")[-1]
@@ -117,7 +117,7 @@ def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]
         except ValueError as err:
             raise ExtractionError(
                 f"Could not map value {value!r} with {mapper.__name__} for "
-                f"{query_path!r} while parsing element at {etree_path}"
+                f"{message_path!r} while parsing element at {etree_path}"
             ) from err
 
     return items

@@ -58,9 +58,9 @@ class Entries(Sequence["Entry[Any]"]):
     ) -> Entry[Any] | Sequence[Entry[Any]]:
         if isinstance(index, str):
             for entry in self._entries:
-                if entry.id == eid:
+                if entry.id == index:
                     return entry
-            raise KeyError(f"Entry with id '{eid}' not found")
+            raise KeyError(f"Entry with id '{index}' not found")
         return self._entries[index]
 
     @override

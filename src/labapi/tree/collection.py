@@ -118,15 +118,15 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
     def all_keys(self) -> Sequence[str]:
         """A list of notebook names in collection order, preserving duplicates."""
-        return tuple([n.name for n in self._notebooks])
+        return [n.name for n in self._notebooks]
 
     def all_items(self) -> Sequence[tuple[str, Notebook]]:
         """A list of ``(name, notebook)`` tuples in collection order, preserving duplicates."""
-        return tuple([(n.name, n) for n in self._notebooks])
+        return [(n.name, n) for n in self._notebooks]
 
     def all_values(self) -> Sequence[Notebook]:
         """A list of notebook objects in collection order, preserving duplicates."""
-        return tuple(self._notebooks)
+        return list(self._notebooks)
 
     def create_notebook(self, name: str) -> Notebook:
         """Creates a new notebook in LabArchives.

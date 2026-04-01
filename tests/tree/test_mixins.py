@@ -7,7 +7,7 @@ from datetime import timedelta
 import pytest
 
 from labapi import Index, Notebook, NotebookDirectory, NotebookPage
-from labapi.exceptions import NodeExistsError, TraversalError, TreeChildParseError
+from labapi.exceptions import NodeExistsError, TraversalError
 from labapi.tree.mixins import (
     AbstractTreeContainer,
 )
@@ -262,8 +262,8 @@ class TestTreeMixinsIntegration:
             child.name == "Snapshot Test Page" for child in notebook_tree.children
         )
 
-    def test_children_parse_failure_has_context(self, client, notebook_tree: Notebook):
-        """Test malformed tree children raise errors with container and node context."""
+    def test_children_accepts_empty_display_text(self, client, notebook_tree: Notebook):
+        """Test child nodes with empty display-text are accepted."""
         dir_1 = notebook_tree[Index.Id : "dir-1"].as_dir()
         dir_1._populated = False
 
@@ -279,14 +279,9 @@ class TestTreeMixinsIntegration:
         </tree-tools>
         """
 
-        with pytest.raises(
-            TreeChildParseError,
-            match=(
-                r"Could not parse tree child at /tree-tools/level-nodes/level-node "
-                r"for parent tree_id='dir-1'"
-            ),
-        ):
-            _ = dir_1.children
+        children = dir_1.children
+        assert len(children) == 1
+        assert children[0].name == ""
 
         api_call = client.api_log
         assert api_call[0] == "tree_tools/get_tree_level"

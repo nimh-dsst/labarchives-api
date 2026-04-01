@@ -217,6 +217,7 @@ class TestNotebooksIntegration:
         </notebooks>
         """
         notebooks.create_notebook("Test Notebook 3")
+        client.clear_log()
 
         assert len(snapshot) == 2
         assert all(nb.id in {"testnb2", "testnb3"} for nb in snapshot)
