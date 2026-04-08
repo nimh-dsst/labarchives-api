@@ -40,8 +40,15 @@ from .tree import (
 )
 from .user import User
 from .util import Index, InsertBehavior, JsonData, NotebookPath
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("labapi")
+except PackageNotFoundError:
+    __version__ = "unknown"
 
 __all__ = [
+    "__version__",
     "ApiError",
     "AbstractTreeContainer",
     "Attachment",
