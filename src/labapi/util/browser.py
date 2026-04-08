@@ -18,8 +18,9 @@ def _is_choosable(string: str) -> TypeGuard[_ChoosableBrowser]:
     return string in _CHOOSEABLE_BROWSERS
 
 
-def _parse_detectable(string: str) -> _DetectableBrowser | Literal[False]:
-    assert isinstance(string, str)
+def _parse_detectable(string: str | None) -> _DetectableBrowser | Literal[False]:
+    if string is None:
+        return False
 
     lowered = string.lower().strip()
     for d in _DETECTABLE_BROWSERS:
