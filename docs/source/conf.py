@@ -5,6 +5,9 @@
 
 import os
 import sys
+from datetime import datetime
+from email.utils import getaddresses
+from importlib.metadata import metadata as _metadata, version as _version
 
 sys.path.insert(0, os.path.abspath("../../src"))
 
@@ -12,13 +15,14 @@ sys.path.insert(0, os.path.abspath("../../src"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "labapi"
-copyright = "2026, Christoph Li and Joshua Lawrimore"
-author = (
-    "Christoph Li <christoph.li@nih.gov>, Joshua Lawrimore <josh.lawrimore@nih.gov>"
-)
+_dist_metadata = _metadata(project)
+author = _dist_metadata["Author-email"]
+author_names = [name for name, _ in getaddresses([author])]
 
-version = "0.1.0"
-release = "0.1.0"
+copyright = f"{datetime.now().year}, {' and '.join(author_names)}"
+
+release = _version("labapi")
+version = ".".join(release.split(".")[:2])
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -34,7 +38,6 @@ extensions = [
 ]
 
 autodoc_mock_imports = ["installed_browsers", "selenium"]
-autosummary_mock_imports = ["installed_browsers", "selenium"]
 
 templates_path = ["_templates"]
 exclude_patterns = []
