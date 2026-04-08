@@ -40,10 +40,13 @@ class TestWidgetEntryIntegration:
     """Integration tests with real objects and mocked API."""
 
     def test_widget_entry_content_setter(self, user: User):
-        """Test WidgetEntry.content setter raises AttributeError as it is read-only."""
+        """Test WidgetEntry.content setter raises NotImplementedError."""
         entry = WidgetEntry("eid_widget", "Old widget data", user)
 
-        with pytest.raises(AttributeError, match="Widget entries are read-only."):
+        with pytest.raises(
+            NotImplementedError,
+            match=r"Cannot update unimplemented entry type 'widget entry'",
+        ):
             entry.content = "New widget data"
 
         assert entry.content == "Old widget data"

@@ -18,19 +18,19 @@ def test_attachment_from_file():
         mode="w+b", suffix=".txt", delete=False
     ) as temp_file:
         temp_file.write(b"Test content")
-        temp_file_path = temp_file.name
+        temp_file_path = Path(temp_file.name)
 
     try:
         # Open the file and create attachment
-        with open(temp_file_path, "r+b") as file:
+        with temp_file_path.open("r+b") as file:
             attachment = Attachment.from_file(file)
 
-            assert attachment.filename == Path(temp_file_path).name
+            assert attachment.filename == temp_file_path.name
             assert attachment.mime_type == "text/plain"
             assert attachment.caption == "API-uploaded text/plain file."
     finally:
         # Clean up
-        Path(temp_file_path).unlink(missing_ok=True)
+        temp_file_path.unlink(missing_ok=True)
 
 
 def test_attachment_from_file_buffered_reader():
@@ -40,20 +40,20 @@ def test_attachment_from_file_buffered_reader():
         mode="w+b", suffix=".txt", delete=False
     ) as temp_file:
         temp_file.write(b"Test content for BufferedReader")
-        temp_file_path = temp_file.name
+        temp_file_path = Path(temp_file.name)
 
     try:
         # Open the file with 'rb' (read-only binary mode)
-        with open(temp_file_path, "rb") as file:
+        with temp_file_path.open("rb") as file:
             attachment = Attachment.from_file(file)
 
             # Read content from attachment to verify cloning
             assert attachment.read() == b"Test content for BufferedReader"
-            assert attachment.filename == Path(temp_file_path).name
+            assert attachment.filename == temp_file_path.name
             assert attachment.mime_type == "text/plain"
     finally:
         # Clean up
-        Path(temp_file_path).unlink(missing_ok=True)
+        temp_file_path.unlink(missing_ok=True)
 
 
 def test_attachment_from_file_preserves_cursor_and_copies_full_file():
@@ -62,10 +62,10 @@ def test_attachment_from_file_preserves_cursor_and_copies_full_file():
         mode="w+b", suffix=".txt", delete=False
     ) as temp_file:
         temp_file.write(b"0123456789")
-        temp_file_path = temp_file.name
+        temp_file_path = Path(temp_file.name)
 
     try:
-        with open(temp_file_path, "r+b") as file:
+        with temp_file_path.open("r+b") as file:
             file.seek(4)
 
             attachment = Attachment.from_file(file)
@@ -83,16 +83,16 @@ def test_attachment_from_file_unknown_mimetype():
         mode="w+b", suffix=".unknownext", delete=False
     ) as temp_file:
         temp_file.write(b"Test content")
-        temp_file_path = temp_file.name
+        temp_file_path = Path(temp_file.name)
 
     try:
-        with open(temp_file_path, "r+b") as file:
+        with temp_file_path.open("r+b") as file:
             attachment = Attachment.from_file(file)
 
             assert attachment.mime_type == "application/octet-stream"
             assert attachment.caption == "API-uploaded application/octet-stream file."
     finally:
-        Path(temp_file_path).unlink(missing_ok=True)
+        temp_file_path.unlink(missing_ok=True)
 
 
 def test_attachment_from_file_requires_seekable_file():

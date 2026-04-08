@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import warnings
 from io import BytesIO
 from unittest.mock import Mock
 
 import pytest
 
 from labapi import Index, Notebook, NotebookPage
-from labapi.entry import Attachment, Entries, UnknownEntry
+from labapi.entry import Attachment, Entries, UnknownEntry, WidgetEntry
 from labapi.user import User
 
 
@@ -202,116 +203,110 @@ class TestNotebookPageIntegration:
         page = notebook_tree[Index.Id : "page-1"]
 
         assert isinstance(page, NotebookPage)
-        client.clear_log()
+        client.clear_api_calls()
 
         # Mock API response for entries
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <entry>
-                <eid>entry_1</eid>
-                <part-type>text entry</part-type>
-                <attach-file-name></attach-file-name>
-                <attach-content-type></attach-content-type>
-                <entry-data><![CDATA[<p>Test content</p>]]></entry-data>
-            </entry>
-            <entry>
-                <eid>entry_2</eid>
-                <part-type>heading</part-type>
-                <attach-file-name></attach-file-name>
-                <attach-content-type></attach-content-type>
-                <entry-data><![CDATA[<h1>Header</h1>]]></entry-data>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml(
+                "entry_1",
+                part_type="text entry",
+                entry_data="<p>Test content</p>",
+            ),
+            client.entry_xml(
+                "entry_2",
+                part_type="heading",
+                entry_data="<h1>Header</h1>",
+            ),
+            include_response=False,
+        )
 
-        entries = page.entries
+        with pytest.warns(
+            UserWarning, match="Wrapping as UnimplementedEntry"
+        ) as caught:
+            entries = page.entries
 
         assert isinstance(entries, Entries)
         assert len(entries) == 2
+        assert len(caught) == 2
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "tree_tools/get_entries_for_page"
         assert api_call[1]["page_tree_id"] == "page-1"
         assert api_call[1]["nbid"] == notebook_tree.id
         assert api_call[1]["entry_data"] is True
-        client.clear_log()
+        client.clear_api_calls()
 
     def test_page_entries_caching(self, client, notebook_tree: Notebook):
         """Test NotebookPage.entries caches the result."""
         page = notebook_tree[Index.Id : "page-1"]
 
         assert isinstance(page, NotebookPage)
-        client.clear_log()
+        client.clear_api_calls()
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <entry>
-                <eid>entry_1</eid>
-                <part-type>text entry</part-type>
-                <attach-file-name></attach-file-name>
-                <attach-content-type></attach-content-type>
-                <entry-data><![CDATA[<p>Content</p>]]></entry-data>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml(
+                "entry_1",
+                part_type="text entry",
+                entry_data="<p>Content</p>",
+            ),
+            include_response=False,
+        )
 
-        entries1 = page.entries
-        client.api_log  # consume the load call
+        with pytest.warns(
+            UserWarning, match="Wrapping as UnimplementedEntry"
+        ) as caught:
+            entries1 = page.entries
+        _ = client.pop_api_call()  # consume the load call
 
         entries2 = page.entries
 
         assert entries1 is entries2
-        client.clear_log()
+        assert len(caught) == 1
+        client.clear_api_calls()
 
-    def test_page_entries_wrap_known_unimplemented_type(
+    def test_page_entries_wrap_sketch_entry_as_unknown(
         self, client, notebook_tree: Notebook
     ):
-        """Test NotebookPage.entries preserves recognized-but-unimplemented entries."""
+        """Test NotebookPage.entries currently wraps sketch entries as unknown."""
         page = notebook_tree[Index.Id : "page-1"]
 
         assert isinstance(page, NotebookPage)
-        client.clear_log()
+        client.clear_api_calls()
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <entry>
-                <eid>entry_unknown_known</eid>
-                <part-type>sketch entry</part-type>
-                <attach-file-name></attach-file-name>
-                <attach-content-type></attach-content-type>
-                <entry-data><![CDATA[sketch payload]]></entry-data>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml(
+                "entry_unknown_known",
+                part_type="sketch entry",
+                entry_data="sketch payload",
+            ),
+            include_response=False,
+        )
 
-        with pytest.warns(UserWarning, match="Wrapping as UnknownEntry"):
+        with pytest.warns(RuntimeWarning, match="Wrapping as UnknownEntry"):
             entries = page.entries
 
         assert len(entries) == 1
         assert isinstance(entries[0], UnknownEntry)
         assert entries[0].content_type == "sketch entry"
         assert entries[0].content == "sketch payload"
-        client.api_log
-        client.clear_log()
+        _ = client.pop_api_call()
+        client.clear_api_calls()
 
     def test_page_entries_wrap_unknown_type(self, client, notebook_tree: Notebook):
         """Test NotebookPage.entries preserves truly unknown entries."""
         page = notebook_tree[Index.Id : "page-1"]
 
         assert isinstance(page, NotebookPage)
-        client.clear_log()
+        client.clear_api_calls()
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <entry>
-                <eid>entry_unknown_new</eid>
-                <part-type>future entry</part-type>
-                <attach-file-name></attach-file-name>
-                <attach-content-type></attach-content-type>
-                <entry-data><![CDATA[future payload]]></entry-data>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml(
+                "entry_unknown_new",
+                part_type="future entry",
+                entry_data="future payload",
+            ),
+            include_response=False,
+        )
 
         with pytest.warns(RuntimeWarning, match="Wrapping as UnknownEntry"):
             entries = page.entries
@@ -320,57 +315,87 @@ class TestNotebookPageIntegration:
         assert isinstance(entries[0], UnknownEntry)
         assert entries[0].content_type == "future entry"
         assert entries[0].content == "future payload"
-        client.api_log
-        client.clear_log()
+        _ = client.pop_api_call()
+        client.clear_api_calls()
+
+    def test_page_entries_preserve_widget_entry_without_warning(
+        self, client, notebook_tree: Notebook
+    ):
+        """Test widget entries load as WidgetEntry without fallback warnings."""
+        page = notebook_tree[Index.Id : "page-1"]
+
+        assert isinstance(page, NotebookPage)
+        client.clear_api_calls()
+
+        client.api_response = client.entries_response(
+            client.entry_xml(
+                "entry_widget",
+                part_type="widget entry",
+                entry_data='{"kind":"widget"}',
+            ),
+            include_response=False,
+        )
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            entries = page.entries
+
+        assert len(entries) == 1
+        assert type(entries[0]) is WidgetEntry
+        assert entries[0].content_type == "widget entry"
+        assert entries[0].content == '{"kind":"widget"}'
+        assert caught == []
+        _ = client.pop_api_call()
+        client.clear_api_calls()
 
     def test_page_refresh(self, client, notebook_tree: Notebook):
         """Test NotebookPage.refresh clears cached entries."""
         page = notebook_tree[Index.Id : "page-1"]
 
         assert isinstance(page, NotebookPage)
-        client.clear_log()
+        client.clear_api_calls()
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <entry>
-                <eid>entry_1</eid>
-                <part-type>text entry</part-type>
-                <attach-file-name></attach-file-name>
-                <attach-content-type></attach-content-type>
-                <entry-data><![CDATA[<p>Old</p>]]></entry-data>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml(
+                "entry_1",
+                part_type="text entry",
+                entry_data="<p>Old</p>",
+            ),
+            include_response=False,
+        )
 
-        entries1 = page.entries
+        with pytest.warns(
+            UserWarning, match="Wrapping as UnimplementedEntry"
+        ) as caught1:
+            entries1 = page.entries
         assert len(entries1) == 1
-        client.api_log  # consume the load call
+        assert len(caught1) == 1
+        _ = client.pop_api_call()  # consume the load call
 
         page.refresh()
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <entry>
-                <eid>entry_2</eid>
-                <part-type>heading</part-type>
-                <attach-file-name></attach-file-name>
-                <attach-content-type></attach-content-type>
-                <entry-data><![CDATA[<h1>New</h1>]]></entry-data>
-            </entry>
-            <entry>
-                <eid>entry_3</eid>
-                <part-type>text entry</part-type>
-                <attach-file-name></attach-file-name>
-                <attach-content-type></attach-content-type>
-                <entry-data><![CDATA[<p>New2</p>]]></entry-data>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml(
+                "entry_2",
+                part_type="heading",
+                entry_data="<h1>New</h1>",
+            ),
+            client.entry_xml(
+                "entry_3",
+                part_type="text entry",
+                entry_data="<p>New2</p>",
+            ),
+            include_response=False,
+        )
 
-        entries2 = page.entries
+        with pytest.warns(
+            UserWarning, match="Wrapping as UnimplementedEntry"
+        ) as caught2:
+            entries2 = page.entries
         assert len(entries2) == 2
         assert entries1 is not entries2
+        assert len(caught2) == 2
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "tree_tools/get_entries_for_page"
-        client.clear_log()
+        client.clear_api_calls()

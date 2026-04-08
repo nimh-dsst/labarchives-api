@@ -98,17 +98,16 @@ class TestAttachmentEntryIntegration:
         )
 
         # Mock API response
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <success>true</success>
-        </entry>
-        """
+        client.api_response = client.xml(
+            "entry",
+            client.xml("success", True),
+        )
 
         # Update content
         entry.content = new_attachment
 
         # Verify API call
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "entries/update_attachment"
         assert api_call[1]["filename"] == "new_file.txt"
         assert api_call[1]["caption"] == "New caption"
@@ -129,16 +128,15 @@ class TestAttachmentEntryIntegration:
         )
         new_attachment.read(4)
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <success>true</success>
-        </entry>
-        """
+        client.api_response = client.xml(
+            "entry",
+            client.xml("success", True),
+        )
 
         entry.content = new_attachment
 
         assert backing.tell() == 0
-        _ = client.api_log
+        _ = client.pop_api_call()
 
     def test_attachment_entry_get_attachment_caching(self, client, user: User):
         """Test AttachmentEntry.get_attachment reuses download cache without sharing handles."""

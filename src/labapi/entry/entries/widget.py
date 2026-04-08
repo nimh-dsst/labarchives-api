@@ -6,24 +6,17 @@ which represents a widget entry within a LabArchives page.
 
 from __future__ import annotations
 
-from typing import override
+from typing import TYPE_CHECKING
 
-from .text import PlainTextEntry
+from .unknown import UnimplementedEntry
+
+if TYPE_CHECKING:
+    from labapi.user import User
 
 
-class WidgetEntry(PlainTextEntry, part_type="widget entry"):
-    """Represents a widget entry on a LabArchives page.
+class WidgetEntry(UnimplementedEntry, part_type="widget entry"):
+    """Backward-compatible widget entry alias using unimplemented behavior."""
 
-    Widget entries typically embed interactive content or external applications.
-    At this time, LabArchives returns the value of the widget as a JSON string
-    and not the content making up the widget.
-    """
-
-    @PlainTextEntry.content.setter
-    @override
-    def content(self, value: str) -> None:
-        """Widget entries are read-only for the API.
-
-        :raises AttributeError: Always, as updating widget content is not supported.
-        """
-        raise AttributeError("Widget entries are read-only.")
+    def __init__(self, eid: str, data: str, user: User):
+        """Initialize a widget entry as an unimplemented entry wrapper."""
+        super().__init__(eid, data, user, part_type="widget entry")

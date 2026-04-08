@@ -8,7 +8,7 @@ and attachment entries.
 from .attachment import AttachmentEntry
 from .base import Entry
 from .text import HeaderEntry, PlainTextEntry, TextEntry
-from .unknown import UnknownEntry
+from .unknown import UnimplementedEntry, UnknownEntry
 from .widget import WidgetEntry
 
 __all__ = [
@@ -17,6 +17,7 @@ __all__ = [
     "HeaderEntry",
     "PlainTextEntry",
     "TextEntry",
+    "UnimplementedEntry",
     "UnknownEntry",
     "WidgetEntry",
 ]

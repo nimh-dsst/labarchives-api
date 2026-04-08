@@ -9,10 +9,17 @@ entries contained within the page.
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, Literal, cast, override, Self
+from typing import TYPE_CHECKING, Any, Literal, Self, cast, override
 
-from labapi.entry import Attachment, Entries, Entry, UnknownEntry
-from labapi.util import ALL_PART_TYPES, InsertBehavior, extract_etree
+from labapi.entry import (
+    Attachment,
+    Entries,
+    Entry,
+    UnimplementedEntry,
+    UnknownEntry,
+    WidgetEntry,
+)
+from labapi.util import InsertBehavior, extract_etree
 
 from .mixins import AbstractTreeContainer, AbstractTreeNode
 
@@ -24,7 +31,8 @@ class NotebookPage(AbstractTreeNode):
     """Represents a single page within a LabArchives notebook.
 
     A `NotebookPage` is a leaf node in the tree structure and contains
-    a collection of :class:`~labapi.entry.Entry` objects. It provides
+    a collection of :class:`~labapi.entry.entries.base.Entry` objects. It
+    provides
     functionalities to access and manage these entries.
     """
 
@@ -68,7 +76,8 @@ class NotebookPage(AbstractTreeNode):
            Iterators over the collection are also snapshots and are therefore
            insulated from later collection mutations.
 
-        :returns: An :class:`~labapi.entry.Entries` object managing the page's entries.
+        :returns: An :class:`~labapi.entry.collection.Entries` object managing
+                  the page's entries.
         """
         if self._entries is None:
             entries: list[Entry[Any]] = []
@@ -94,47 +103,32 @@ class NotebookPage(AbstractTreeNode):
 
                 part_type = entry_data["part-type"]
 
-                if part_type in ALL_PART_TYPES:
-                    if Entry.is_registered(part_type):
-                        # Cast extracted string values to ensure type checker knows they're not None
-                        entries.append(
-                            Entry.from_part_type(
-                                part_type,
-                                cast(str, entry_data["eid"]),
-                                cast(str, entry_data["entry-data"]),
-                                self._user,
-                            )
-                        )
-                    else:
-                        warnings.warn(
-                            f"Entry type '{part_type}' (ID: {entry_data['eid']}) is recognized but not "
-                            f"implemented in labapi. Wrapping as UnknownEntry.",
-                            UserWarning,
-                            stacklevel=2,
-                        )
-                        entries.append(
-                            UnknownEntry(
-                                cast(str, entry_data["eid"]),
-                                cast(str, entry_data["entry-data"]),
-                                self._user,
-                                part_type=part_type,
-                            )
-                        )
-                else:
+                # Cast extracted string values to ensure type checker knows they're not None
+                entry_obj = Entry.from_part_type(
+                    part_type,
+                    cast(str, entry_data["eid"]),
+                    cast(str, entry_data["entry-data"]),
+                    self._user,
+                )
+
+                if isinstance(entry_obj, WidgetEntry):
+                    pass
+                elif isinstance(entry_obj, UnimplementedEntry):
+                    warnings.warn(
+                        f"Entry type '{part_type}' (ID: {entry_data['eid']}) is recognized but not "
+                        f"implemented in labapi. Wrapping as UnimplementedEntry.",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+                elif isinstance(entry_obj, UnknownEntry):
                     warnings.warn(
                         f"Unknown entry type '{part_type}' (ID: {entry_data['eid']}) encountered. "
                         f"Wrapping as UnknownEntry.",
                         RuntimeWarning,
                         stacklevel=2,
                     )
-                    entries.append(
-                        UnknownEntry(
-                            cast(str, entry_data["eid"]),
-                            cast(str, entry_data["entry-data"]),
-                            self._user,
-                            part_type=part_type,
-                        )
-                    )
+
+                entries.append(entry_obj)
 
             self._entries = Entries(entries, self._user, self)
 

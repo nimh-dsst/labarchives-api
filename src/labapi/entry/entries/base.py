@@ -4,18 +4,16 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from inspect import isabstract
-from typing import TYPE_CHECKING, Any, Generic, Type, TypeVar
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from labapi.user import User
 
 
-T = TypeVar("T")
-
-_entries_registry: dict[str, Type[Entry[Any]]] = {}
+_entries_registry: dict[str, type[Entry[Any]]] = {}
 
 
-class Entry(ABC, Generic[T]):
+class Entry[T](ABC):
     """Abstract base class for all entry types on a LabArchives page.
 
     This class provides a common interface for different entry types such as
@@ -41,11 +39,12 @@ class Entry(ABC, Generic[T]):
         return part_type in _entries_registry
 
     @staticmethod
-    def class_of(part_type: str) -> Type[Entry[Any]]:
+    def class_of(part_type: str) -> type[Entry[Any]]:
         """Return the registered entry class for ``part_type``.
 
         :param part_type: The LabArchives part type identifier.
-        :returns: The :class:`Entry` subclass registered for this part type.
+        :returns: The :class:`~labapi.entry.entries.base.Entry` subclass
+                  registered for this part type.
         :raises KeyError: If no class is registered for the specified part type.
         """
         return _entries_registry[part_type]
@@ -55,7 +54,10 @@ class Entry(ABC, Generic[T]):
         """Create an entry instance for a LabArchives part type.
 
         This method takes a part type string and returns the corresponding
-        entry class instance. The part type is normalized before matching.
+        entry class instance when one is registered. Recognized-but-unimplemented
+        part types resolve to :class:`~labapi.entry.entries.unimplemented.UnimplementedEntry`,
+        while truly unknown part types fall back to
+        :class:`~labapi.entry.entries.unknown.UnknownEntry`.
 
         :param part_type: The type of entry to create (e.g., "heading", "text entry",
                          "plain text entry", "attachment", "widget entry").
@@ -64,13 +66,18 @@ class Entry(ABC, Generic[T]):
                     For attachment entries, this is the caption.
         :param user: The authenticated user associated with this entry.
         :returns: An entry instance of the appropriate type.
-        :raises NotImplementedError: If the part type is not recognized or implemented.
         """
-        try:
-            klass = _entries_registry[part_type]
-            return klass(eid, data, user)
-        except KeyError:
-            raise NotImplementedError(f"{part_type}")
+        klass = _entries_registry.get(part_type)
+
+        if klass is None:
+            from .unknown import UnknownEntry
+
+            return UnknownEntry(eid, data, user, part_type=part_type)
+
+        if klass._is_meta:
+            return klass(eid, data, user, part_type=part_type)  # pyright: ignore[reportCallIssue]
+
+        return klass(eid, data, user)
 
     # TODO perms
     def __init__(
@@ -89,14 +96,25 @@ class Entry(ABC, Generic[T]):
         self._data = data
         self._user = user
 
-    def __init_subclass__(cls, part_type: str = "", **kwargs: Any) -> None:
+    def __init_subclass__(
+        cls,
+        part_type: str = "",
+        meta_part_types: set[str] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Register concrete entry subclasses by their LabArchives part type."""
         if not isabstract(cls) and part_type == "":
             raise TypeError(f"{cls.__name__} must define a part_type")
 
         cls._part_type = part_type
-
+        cls._is_meta = False
         _entries_registry[part_type] = cls
+
+        if meta_part_types is not None and len(meta_part_types) > 0:
+            cls._is_meta = True
+            for m_part_type in meta_part_types:
+                _entries_registry[m_part_type] = cls
+
         super().__init_subclass__(**kwargs)
 
     @property

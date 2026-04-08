@@ -11,7 +11,7 @@ from .comment import Comment
 from .entries.attachment import AttachmentEntry
 from .entries.base import Entry
 from .entries.text import HeaderEntry, PlainTextEntry, TextEntry
-from .entries.unknown import UnknownEntry
+from .entries.unknown import UnimplementedEntry, UnknownEntry
 from .entries.widget import WidgetEntry
 
 __all__ = [
@@ -23,6 +23,7 @@ __all__ = [
     "HeaderEntry",
     "PlainTextEntry",
     "TextEntry",
+    "UnimplementedEntry",
     "UnknownEntry",
     "WidgetEntry",
 ]

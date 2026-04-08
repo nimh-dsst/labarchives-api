@@ -7,7 +7,7 @@ from datetime import datetime
 from html import escape
 from io import BytesIO
 from json import dumps
-from typing import TYPE_CHECKING, Any, SupportsIndex, Type, TypeVar, overload, override
+from typing import TYPE_CHECKING, Any, SupportsIndex, TypeVar, overload, override
 
 from labapi.util import extract_etree
 
@@ -32,7 +32,8 @@ class Entries(Sequence["Entry[Any]"]):
     def __init__(self, entries: Sequence[Entry[Any]], user: User, page: NotebookPage):
         """Initialize an entries collection.
 
-        :param entries: A sequence of :class:`~labapi.entry.Entry` objects.
+        :param entries: A sequence of
+                        :class:`~labapi.entry.entries.base.Entry` objects.
         :param user: The authenticated user.
         :param page: The page that this collection belongs to.
         """
@@ -131,17 +132,17 @@ class Entries(Sequence["Entry[Any]"]):
     @overload
     def create(
         self,
-        cls: Type[AttachmentEntry],
+        cls: type[AttachmentEntry],
         data: Attachment,
         *,
         client_ip: str | None = None,
     ) -> AttachmentEntry: ...
 
     @overload
-    def create(self, cls: Type[E], data: str, *, client_ip: str | None = None) -> E: ...
+    def create(self, cls: type[E], data: str, *, client_ip: str | None = None) -> E: ...
 
     def create(
-        self, cls: Type[E], data: str | Attachment, *, client_ip: str | None = None
+        self, cls: type[E], data: str | Attachment, *, client_ip: str | None = None
     ) -> E:
         """Create a new entry on the page.
 
@@ -149,15 +150,25 @@ class Entries(Sequence["Entry[Any]"]):
         similar to :meth:`~labapi.tree.mixins.AbstractTreeContainer.create`. The created
         entry is automatically added to the collection.
 
-        :param cls: The entry class to create (e.g., :class:`~labapi.entry.entries.TextEntry`,
-                   :class:`~labapi.entry.entries.HeaderEntry`,
-                   :class:`~labapi.entry.entries.AttachmentEntry`).
+        :param cls: The entry class to create (e.g.,
+                    :class:`~labapi.entry.entries.text.TextEntry`,
+                    :class:`~labapi.entry.entries.text.HeaderEntry`, or
+                    :class:`~labapi.entry.entries.attachment.AttachmentEntry`).
         :param data: The content of the entry. For text-based entries, this should be a string.
-                    For :class:`~labapi.entry.entries.AttachmentEntry`, this should be an
-                    :class:`~labapi.entry.Attachment` object.
+                    For
+                    :class:`~labapi.entry.entries.attachment.AttachmentEntry`,
+                    this should be an
+                    :class:`~labapi.entry.attachment.Attachment` object.
         :param client_ip: Optional end-user IP to pass through on attachment uploads.
         :returns: The newly created entry object of the specified type.
-        :raises RuntimeError: If the API call to create the entry fails.
+        :raises TypeError: If ``data`` does not match the entry class being
+                           created.
+        :raises RuntimeError: If the underlying client session has been closed.
+        :raises AuthenticationError: If LabArchives rejects the request due to
+                                     invalid or expired credentials.
+        :raises ApiError: If LabArchives returns any other non-success response.
+
+        Invalid XML propagates ``lxml.etree.XMLSyntaxError``.
         """
         if issubclass(cls, AttachmentEntry):
             if not isinstance(data, Attachment):

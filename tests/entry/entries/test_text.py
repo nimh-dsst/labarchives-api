@@ -62,17 +62,16 @@ class TestTextEntryIntegration:
         entry = TextEntry("eid_text", "<p>Old content</p>", user)
 
         # Mock API response
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <success>true</success>
-        </entry>
-        """
+        client.api_response = client.xml(
+            "entry",
+            client.xml("success", True),
+        )
 
         # Update content
         entry.content = "<p>New content</p>"
 
         # Verify API call was made with correct parameters
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "entries/update_entry"
         assert api_call[1]["entry_data"] == "<p>New content</p>"
         assert api_call[1]["eid"] == "eid_text"
@@ -84,15 +83,14 @@ class TestTextEntryIntegration:
         """Test HeaderEntry.content setter updates via API."""
         entry = HeaderEntry("eid_header", "<h1>Old Header</h1>", user)
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <success>true</success>
-        </entry>
-        """
+        client.api_response = client.xml(
+            "entry",
+            client.xml("success", True),
+        )
 
         entry.content = "<h1>New Header</h1>"
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "entries/update_entry"
         assert api_call[1]["entry_data"] == "<h1>New Header</h1>"
         assert entry.content == "<h1>New Header</h1>"
@@ -101,15 +99,14 @@ class TestTextEntryIntegration:
         """Test PlainTextEntry.content setter updates via API."""
         entry = PlainTextEntry("eid_plain", "Old text", user)
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entry>
-            <success>true</success>
-        </entry>
-        """
+        client.api_response = client.xml(
+            "entry",
+            client.xml("success", True),
+        )
 
         entry.content = "New text"
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "entries/update_entry"
         assert api_call[1]["entry_data"] == "New text"
         assert entry.content == "New text"

@@ -1,4 +1,4 @@
-"""Unknown entry fallback type."""
+"""Entry fallback types."""
 
 from __future__ import annotations
 
@@ -10,10 +10,11 @@ if TYPE_CHECKING:
     from labapi.user import User
 
 _UNKNOWN_ENTRY_REGISTRY_SENTINEL = "__labapi_internal_unknown_entry__"
+_UNIMPLEMENTED_ENTRY_REGISTRY_SENTINEL = "__labapi_internal_unknown_entry__"
 
 
 class UnknownEntry(Entry[str], part_type=_UNKNOWN_ENTRY_REGISTRY_SENTINEL):
-    """Fallback entry wrapper for unimplemented or unknown upstream part types."""
+    """Fallback entry wrapper for unknown upstream part types."""
 
     def __init__(self, eid: str, data: str, user: User, *, part_type: str):
         """Initialize an unknown entry wrapper."""
@@ -38,4 +39,25 @@ class UnknownEntry(Entry[str], part_type=_UNKNOWN_ENTRY_REGISTRY_SENTINEL):
         """Reject updates for unsupported entry types."""
         raise NotImplementedError(
             f"Cannot update unsupported entry type '{self._source_part_type}'"
+        )
+
+
+class UnimplementedEntry(
+    UnknownEntry,
+    part_type=_UNIMPLEMENTED_ENTRY_REGISTRY_SENTINEL,
+    meta_part_types={
+        "Attachment",
+        "plain text entry",
+        "heading",
+        "text entry",
+    },
+):
+    """Fallback entry wrapper for known upstream part types not yet implemented."""
+
+    @UnknownEntry.content.setter
+    @override
+    def content(self, value: str) -> None:
+        """Reject updates for recognized-but-unimplemented entry types."""
+        raise NotImplementedError(
+            f"Cannot update unimplemented entry type '{self._source_part_type}'"
         )
