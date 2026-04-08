@@ -45,6 +45,7 @@ dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
     "pyright>=1.1.406",
+    "radon>=6.0.1",
     "ruff>=0.14.11",
     "types-lxml>=2026.1.1",
     "pre-commit>=4.5.1",
@@ -61,6 +62,23 @@ where = ["src"]
 pythonpath = "src"
 testpaths = ["tests"]
 addopts = "--cov=labapi --cov-report=term-missing"
+
+[tool.ruff.lint]
+extend-select = ["A", "ARG", "B", "C4", "C90", "D", "I", "ICN", "INP", "PIE", "PLR0912", "PT", "PTH", "RET", "RUF", "SIM", "UP"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-branches = 8
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.per-file-ignores]
+"docs/source/conf.py" = ["INP001"]
+"examples/**/*.py" = ["PLR0912"]
+"examples/notebook_logging/notebook_logger.py" = ["INP001"]
 
 [tool.uv]
 cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]

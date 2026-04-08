@@ -1,6 +1,13 @@
 repos:
   - repo: local
     hooks:
+      - id: pyright-check
+        name: Run Pyright
+        entry: uv
+        args: [run, pyright]
+        language: system
+        pass_filenames: false
+        always_run: true
       - id: pytest-check
         name: Run Pytest (pre-push)
         entry: uv
