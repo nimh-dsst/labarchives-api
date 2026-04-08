@@ -11,7 +11,9 @@ This example demonstrates a structured way to log machine learning model metadat
 
 ## Dependencies
 
-- `labapi` (the core library)
+- `labapi[dotenv,builtin-auth]` for the documented local interactive workflow
+
+Run installation commands from the repository root.
 
 ## Usage
 
@@ -36,6 +38,7 @@ with Client() as client:
 Requires a `.env` file in the project root with your LabArchives credentials:
 
 ```env
+API_URL=https://api.labarchives.com
 ACCESS_KEYID=your_access_key_id
 ACCESS_PWD=your_password
 ```

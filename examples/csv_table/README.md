@@ -11,9 +11,11 @@ This example requires the following packages:
 
 You can install the dependencies using:
 
+Run these commands from the repository root.
+
 ```bash
 # Using pip
-pip install -e "../../[dotenv,builtin-auth]" beautifulsoup4
+pip install -e ".[dotenv,builtin-auth]" beautifulsoup4
 
 # Using uv (recommended)
 uv sync

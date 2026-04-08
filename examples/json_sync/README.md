@@ -10,9 +10,11 @@ This example requires the following packages:
 
 You can install the dependencies using:
 
+Run these commands from the repository root.
+
 ```bash
 # Using pip
-pip install -e "../../[dotenv,builtin-auth]"
+pip install -e ".[dotenv,builtin-auth]"
 
 # Using uv (recommended)
 uv sync

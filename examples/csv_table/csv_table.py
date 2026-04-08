@@ -9,9 +9,9 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from labapi import (
+    AbstractTreeContainer,
     Client,
     InsertBehavior,
-    AbstractTreeContainer,
     NotebookPage,
     TextEntry,
     TraversalError,

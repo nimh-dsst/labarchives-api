@@ -16,7 +16,7 @@ This example demonstrates how to use the `NotebookLogger` to capture and save yo
 
 Ensure you have the following installed:
 
-- `labapi` (this package)
+- `labapi[dotenv,builtin-auth]` (this package plus the documented local auth helpers)
 - `ipywidgets`
 - `matplotlib`
 - `pandas`
@@ -24,6 +24,8 @@ Ensure you have the following installed:
 - `jupyter` or `jupyterlab`
 
 ### Installation
+
+Run these commands from the repository root.
 
 If you are using `uv`, you can run:
 
@@ -35,7 +37,7 @@ Or with `pip`:
 
 ```bash
 pip install ipywidgets matplotlib pandas numpy jupyter
-pip install -e ../../
+pip install -e ".[dotenv,builtin-auth]"
 ```
 
 ## How to Use
