@@ -185,11 +185,10 @@ class TestNotebooksIntegration:
 
     def test_notebooks_create_notebook(self, client, notebooks: Notebooks):
         """Test Notebooks.create_notebook creates a new notebook."""
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <notebooks>
-            <nbid>new_nb_id</nbid>
-        </notebooks>
-        """
+        client.api_response = client.xml(
+            "notebooks",
+            client.xml("nbid", "new_nb_id"),
+        )
 
         new_notebook = notebooks.create_notebook("New Notebook")
 
@@ -201,7 +200,7 @@ class TestNotebooksIntegration:
         assert len(notebooks) == 4
         assert notebooks[Index.Id : "new_nb_id"] is new_notebook
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "notebooks/create_notebook"
         assert api_call[1]["name"] == "New Notebook"
         assert api_call[1]["initial_folders"] == "Empty"
@@ -212,13 +211,12 @@ class TestNotebooksIntegration:
         """Previously returned name-index snapshots should not change after create."""
         snapshot = notebooks[Index.Name : "Test Notebook 3"]
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <notebooks>
-            <nbid>new_nb_id_for_snapshot_test</nbid>
-        </notebooks>
-        """
+        client.api_response = client.xml(
+            "notebooks",
+            client.xml("nbid", "new_nb_id_for_snapshot_test"),
+        )
         notebooks.create_notebook("Test Notebook 3")
-        client.clear_log()
+        client.clear_api_calls()
 
         assert len(snapshot) == 2
         assert all(nb.id in {"testnb2", "testnb3"} for nb in snapshot)
@@ -230,12 +228,11 @@ class TestNotebooksIntegration:
         self, client, notebooks: Notebooks
     ):
         """Test Notebooks.create_notebook raises RuntimeError if API returns existing ID."""
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <notebooks>
-            <nbid>testnb1</nbid>
-        </notebooks>
-        """
+        client.api_response = client.xml(
+            "notebooks",
+            client.xml("nbid", "testnb1"),
+        )
 
         with pytest.raises(ApiError, match="API returned an existing notebook ID"):
             notebooks.create_notebook("Duplicate")
-        client.clear_log()
+        client.clear_api_calls()

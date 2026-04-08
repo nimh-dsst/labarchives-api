@@ -32,15 +32,14 @@ class TestNotebookIntegration:
 
     def test_notebook_name_setter(self, client, notebook: Notebook):
         """Test Notebook.name setter updates name via API."""
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <notebooks>
-            <success>true</success>
-        </notebooks>
-        """
+        client.api_response = client.xml(
+            "notebooks",
+            client.xml("success", True),
+        )
 
         notebook.name = "Updated Notebook Name"
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "notebooks/modify_notebook_info"
         assert api_call[1]["nbid"] == "testnb1"
         assert api_call[1]["name"] == "Updated Notebook Name"

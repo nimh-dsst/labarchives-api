@@ -184,7 +184,7 @@ class TestEntriesIntegration:
         return page
 
     @pytest.mark.parametrize(
-        "cls,data",
+        ("cls", "data"),
         [
             (TextEntry, "<p>New content</p>"),
             (HeaderEntry, "<h1>Title</h1>"),
@@ -195,14 +195,7 @@ class TestEntriesIntegration:
         """Test Entries.create dispatches correctly for all text entry types."""
         entries = Entries([], user, mock_page)
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>new_eid</eid>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(client.entry_xml("new_eid"))
 
         entry = entries.create(cls, data)
 
@@ -211,7 +204,7 @@ class TestEntriesIntegration:
         assert len(entries) == 1
         assert entries[0] is entry
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "entries/add_entry"
         assert api_call[1]["entry_data"] == data
         assert api_call[1]["pid"] == "test_page_id"
@@ -221,14 +214,9 @@ class TestEntriesIntegration:
         """Test Entries.create with attachment type."""
         entries = Entries([], user, mock_page)
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>new_attachment_eid</eid>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml("new_attachment_eid")
+        )
 
         # Create attachment
         backing = BytesIO(b"File content")
@@ -247,7 +235,7 @@ class TestEntriesIntegration:
         assert len(entries) == 1
 
         # Verify API call
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "entries/add_attachment"
         assert api_call[1]["filename"] == "test.txt"
         assert api_call[1]["caption"] == "Test file"
@@ -261,14 +249,9 @@ class TestEntriesIntegration:
         """Test Entries.create passes through client_ip for attachment uploads."""
         entries = Entries([], user, mock_page)
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>new_attachment_eid</eid>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml("new_attachment_eid")
+        )
 
         attachment = Attachment(
             backing=BytesIO(b"File content"),
@@ -279,7 +262,7 @@ class TestEntriesIntegration:
 
         entries.create(AttachmentEntry, attachment, client_ip="203.0.113.7")
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "entries/add_attachment"
         assert api_call[1]["client_ip"] == "203.0.113.7"
 
@@ -289,14 +272,9 @@ class TestEntriesIntegration:
         """Test Entries.create rewinds seekable attachments before upload."""
         entries = Entries([], user, mock_page)
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>rewound_attachment_eid</eid>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml("rewound_attachment_eid")
+        )
 
         backing = BytesIO(b"File content")
         attachment = Attachment(
@@ -310,29 +288,17 @@ class TestEntriesIntegration:
         entries.create(AttachmentEntry, attachment)
 
         assert backing.tell() == 0
-        _ = client.api_log
+        _ = client.pop_api_call()
 
     def test_entries_create_json_entry(self, client, user: User, mock_page):
         """Test Entries.create_json_entry creates both attachment and text entry."""
         entries = Entries([], user, mock_page)
 
         # Mock API responses (first for attachment, then for text)
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>json_attachment_eid</eid>
-            </entry>
-        </entries>
-        """
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>json_text_eid</eid>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml("json_attachment_eid")
+        )
+        client.api_response = client.entries_response(client.entry_xml("json_text_eid"))
 
         # Create JSON entry
         data = {"key": "value", "number": 42}
@@ -353,7 +319,7 @@ class TestEntriesIntegration:
         assert "uploaded_data_" in text_entry.content
         assert ".json" in text_entry.content
         assert file_entry.id in text_entry.content
-        client.clear_log()
+        client.clear_api_calls()
 
     def test_entries_create_json_entry_custom_filename_and_caption(
         self, client, user: User, mock_page
@@ -361,22 +327,10 @@ class TestEntriesIntegration:
         """Test Entries.create_json_entry accepts stable filename and caption overrides."""
         entries = Entries([], user, mock_page)
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>json_attachment_eid</eid>
-            </entry>
-        </entries>
-        """
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>json_text_eid</eid>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml("json_attachment_eid")
+        )
+        client.api_response = client.entries_response(client.entry_xml("json_text_eid"))
 
         file_entry, text_entry = entries.create_json_entry(
             {"key": "value"},
@@ -390,12 +344,12 @@ class TestEntriesIntegration:
         )
         assert "json_attachment_eid" in text_entry.content
 
-        attachment_call = client.api_log
+        attachment_call = client.pop_api_call()
         assert attachment_call[0] == "entries/add_attachment"
         assert attachment_call[1]["filename"] == "metrics.json"
         assert attachment_call[1]["caption"] == "Metrics Snapshot"
 
-        text_call = client.api_log
+        text_call = client.pop_api_call()
         assert text_call[0] == "entries/add_entry"
         assert "Metrics Snapshot" in text_call[1]["entry_data"]
 
@@ -405,22 +359,10 @@ class TestEntriesIntegration:
         """Test JSON preview HTML escapes caption and JSON payload values."""
         entries = Entries([], user, mock_page)
 
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>json_attachment_eid</eid>
-            </entry>
-        </entries>
-        """
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <entries>
-            <response></response>
-            <entry>
-                <eid>json_text_eid</eid>
-            </entry>
-        </entries>
-        """
+        client.api_response = client.entries_response(
+            client.entry_xml("json_attachment_eid")
+        )
+        client.api_response = client.entries_response(client.entry_xml("json_text_eid"))
 
         caption = '<script>alert("x")</script> & metrics'
         data = {
@@ -443,11 +385,11 @@ class TestEntriesIntegration:
         assert "&lt;/pre&gt;" in text_entry.content
         assert text_entry.content.count("</pre>") == 1
 
-        attachment_call = client.api_log
+        attachment_call = client.pop_api_call()
         assert attachment_call[0] == "entries/add_attachment"
         assert attachment_call[1]["caption"] == caption
 
-        text_call = client.api_log
+        text_call = client.pop_api_call()
         assert text_call[0] == "entries/add_entry"
         assert "<script>alert(" not in text_call[1]["entry_data"]
         assert (
