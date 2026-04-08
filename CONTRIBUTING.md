@@ -39,9 +39,9 @@ uv run pytest --integration tests/test_integration.py
 
 ## Code Style
 
-Ruff handles linting and formatting. After installing both hook types:
+Ruff handles linting, formatting, and branch-complexity checks. Pyright handles type checking. After installing both hook types:
 
-- `ruff-check` and `ruff-format` run on `pre-commit`
+- `ruff-check`, `ruff-format`, and `pyright-check` run on `pre-commit`
 - `pytest-check` runs `uv run pytest --no-cov` on `pre-push`
 
 Manual equivalents:
@@ -49,6 +49,8 @@ Manual equivalents:
 ```bash
 uv run ruff check --fix .   # lint
 uv run ruff format .        # format
+uv run pyright              # typecheck
+uv run radon cc src tests -s -a  # complexity report
 uv run pytest --no-cov      # pre-push test gate
 ```
 

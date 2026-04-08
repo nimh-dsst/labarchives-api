@@ -82,7 +82,10 @@ After running ``pre-commit install --hook-type pre-commit --hook-type pre-push``
 
 - ``ruff-check`` lints and auto-fixes safe issues.
 - ``ruff-format`` enforces consistent formatting.
+- ``pyright-check`` runs ``uv run pyright`` on ``pre-commit``.
 - ``pytest-check`` runs ``uv run pytest --no-cov`` on ``pre-push``.
+
+Ruff also enforces the branch-complexity gate during ``ruff check``.
 
 Run the checks manually with:
 
@@ -90,6 +93,8 @@ Run the checks manually with:
 
    uv run ruff check --fix .
    uv run ruff format .
+   uv run pyright
+   uv run radon cc src tests -s -a
    uv run pytest --no-cov
 
 Or check without making changes:
