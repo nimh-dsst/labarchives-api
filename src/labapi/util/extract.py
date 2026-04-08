@@ -7,8 +7,8 @@ strings to booleans, and a general-purpose XML extraction function.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 import warnings
+from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Any
 
 from labapi.exceptions import ExtractionError
@@ -74,21 +74,21 @@ def to_bool(s: str) -> bool:
             raise ValueError(f"Cannot convert '{s}' to bool")
 
 
-def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]:
+def extract_etree(_etree: Element, schema: EtreeExtractorDict) -> dict[str, Any]:
     """Extract data from an ``lxml.etree.Element`` using a format dictionary.
 
-    This function navigates the XML tree using paths defined in the `format` dictionary
+    This function navigates the XML tree using paths defined in the `schema` dictionary
     and applies callable extractors to the text content of the found elements.
 
     :param _etree: The `lxml.etree.Element` from which to extract data.
-    :param format: A dictionary defining the structure and extraction logic.
+    :param schema: A dictionary defining the structure and extraction logic.
                    Keys are XML element tags (or paths), and values are either
                    nested `EtreeExtractorDict` or callable functions to process the text.
     :returns: A dictionary containing the extracted and processed data.
     :raises ExtractionError: If an element specified in the format is not found in the etree,
                              or if a callable extractor fails to process a value.
     """
-    flat = _flatten_dict(format)
+    flat = _flatten_dict(schema)
 
     items: dict[str, Any] = {}
     etree_path = _etree.getroottree().getpath(_etree)
@@ -109,7 +109,8 @@ def extract_etree(_etree: Element, format: EtreeExtractorDict) -> dict[str, Any]
         if leaf in items:
             warnings.warn(
                 f"Duplicate extractor leaf '{leaf}' encountered at './{key}'; "
-                "overwriting previous value"
+                "overwriting previous value",
+                stacklevel=2,
             )
 
         try:

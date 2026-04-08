@@ -9,7 +9,8 @@ callers can reliably catch failures by category.
 Public Exception Hierarchy
 --------------------------
 
-All custom exceptions inherit from :class:`~labapi.LabArchivesError`:
+All custom exceptions inherit from
+:class:`~labapi.exceptions.LabArchivesError`:
 
 .. code-block:: text
 
@@ -41,15 +42,16 @@ Common Operations and Raised Exceptions
 ---------------------------------------
 
 :meth:`~labapi.tree.mixins.AbstractTreeContainer.create`
-   Raises :class:`~labapi.NodeExistsError` when creating a duplicate node with
+   Raises :class:`~labapi.exceptions.NodeExistsError` when creating a duplicate
+   node with
    ``if_exists=InsertBehavior.Raise``.
 
    Raises :class:`ValueError` when creating a multi-segment path without
    ``parents=True`` and an intermediate parent is missing.
 
 :meth:`~labapi.tree.mixins.AbstractBaseTreeNode.traverse`
-   Raises :class:`~labapi.TraversalError` when an intermediate path segment
-   exists but is not a directory.
+   Raises :class:`~labapi.exceptions.TraversalError` when an intermediate path
+   segment exists but is not a directory.
 
 Related Pages
 -------------

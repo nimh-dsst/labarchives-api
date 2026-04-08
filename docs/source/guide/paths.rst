@@ -46,7 +46,7 @@ and accepts a slash-separated path string.
 Absolute vs Relative Paths
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Paths starting with ``/`` are **absolute** — they are resolved from the notebook root regardless
+Paths starting with ``/`` are **absolute** - they are resolved from the notebook root regardless
 of where you call ``traverse``.
 
 .. code-block:: python
@@ -241,7 +241,7 @@ nodes or strings, combined with ``/``, and converted back to strings. It is used
 
     page_path.is_relative_to(folder)   # True if page is inside folder
     page_path.is_relative_to(notebook) # True (everything is inside the notebook)
-    
+
 Related Pages
 -------------
 

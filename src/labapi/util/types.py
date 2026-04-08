@@ -20,7 +20,7 @@ class InsertBehavior(Enum):
     Retain = 2
     """Keep the existing node and return it."""
     Raise = 3
-    """Raise a RuntimeError if the node already exists."""
+    """Raise :class:`~labapi.exceptions.NodeExistsError` if the node already exists."""
 
 
 class Index(Enum):
