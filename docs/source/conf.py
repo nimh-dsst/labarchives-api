@@ -1,15 +1,13 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""Sphinx configuration for the LabArchives API documentation."""
 
-import os
 import sys
 from datetime import datetime
 from email.utils import getaddresses
-from importlib.metadata import metadata as _metadata, version as _version
+from importlib.metadata import metadata as _metadata
+from importlib.metadata import version as _version
+from pathlib import Path
 
-sys.path.insert(0, os.path.abspath("../../src"))
+sys.path.insert(0, str((Path(__file__).resolve().parents[2] / "src").resolve()))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -19,7 +17,7 @@ _dist_metadata = _metadata(project)
 author = _dist_metadata["Author-email"]
 author_names = [name for name, _ in getaddresses([author])]
 
-copyright = f"{datetime.now().year}, {' and '.join(author_names)}"
+copyright = f"{datetime.now().year}, {' and '.join(author_names)}"  # noqa: A001
 
 release = _version("labapi")
 version = ".".join(release.split(".")[:2])
