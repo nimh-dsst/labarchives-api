@@ -84,50 +84,47 @@ class TestUserIntegration:
 
     def test_user_api_get_full_flow(self, client, user: User):
         """Test User.api_get full flow with MockClient."""
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <result>
-            <value>test_value</value>
-        </result>
-        """
+        client.api_response = client.xml(
+            "result",
+            client.xml("value", "test_value"),
+        )
 
         expected_response = client.api_response
         response = user.api_get("test_endpoint", param1="value1")
 
         assert response == expected_response
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "test_endpoint"
         assert api_call[1]["param1"] == "value1"
         assert api_call[1]["uid"] == "testid1"
 
     def test_user_api_post_full_flow(self, client, user: User):
         """Test User.api_post full flow with MockClient."""
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <result>
-            <success>true</success>
-        </result>
-        """
+        client.api_response = client.xml(
+            "result",
+            client.xml("success", True),
+        )
 
         user.api_post("test_post_endpoint", {"data": "test_data"}, param1="value1")
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "test_post_endpoint"
         assert api_call[1]["param1"] == "value1"
         assert api_call[1]["uid"] == "testid1"
 
     def test_user_get_max_upload_size(self, client, user: User):
         """Test User.get_max_upload_size retrieves and parses max file size."""
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <users>
-            <max-file-size type="integer">104857600</max-file-size>
-        </users>
-        """
+        client.api_response = client.xml(
+            "users",
+            client.xml("max-file-size", 104857600, type="integer"),
+        )
 
         max_size = user.get_max_upload_size()
 
         assert max_size == 104857600
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "users/max_file_size"
         assert api_call[1]["uid"] == "testid1"
 

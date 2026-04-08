@@ -41,7 +41,7 @@ class User:
 
         :param uid: The unique ID of the user.
         :param email: The email address of the user.
-        :param notebooks: A sequence of :class:`~labapi.util.notebookinit.NotebookInit` objects
+        :param notebooks: A sequence of :class:`~labapi.util.types.NotebookInit` objects
                           representing the notebooks accessible to the user.
         :param client: The :class:`~labapi.client.Client` instance used for API communication.
         """
@@ -83,8 +83,14 @@ class User:
         :param api_method_uri: The API method URI (e.g., "get_user_settings").
                                Can be a string or a sequence of strings representing path segments.
         :param kwargs: Additional query parameters to pass to the API method.
-        :returns: The response from the API, typically an lxml Element.
-        :raises RuntimeError: If the API request fails.
+        :returns: The response from the API, typically an
+                  ``lxml.etree.Element``.
+        :raises RuntimeError: If the underlying client session has been closed.
+        :raises AuthenticationError: If LabArchives rejects the request due to
+                                     invalid or expired credentials.
+        :raises ApiError: If LabArchives returns any other non-success response.
+
+        Invalid XML propagates ``lxml.etree.XMLSyntaxError``.
         """
         return self._client.api_get(api_method_uri, **kwargs, uid=self._id)
 
@@ -102,8 +108,14 @@ class User:
                                Can be a string or a sequence of strings representing path segments.
         :param body: The request body, which can be a mapping of form data or a file-like object.
         :param kwargs: Additional query parameters to pass to the API method.
-        :returns: The response from the API, typically an lxml Element.
-        :raises RuntimeError: If the API request fails.
+        :returns: The response from the API, typically an
+                  ``lxml.etree.Element``.
+        :raises RuntimeError: If the underlying client session has been closed.
+        :raises AuthenticationError: If LabArchives rejects the request due to
+                                     invalid or expired credentials.
+        :raises ApiError: If LabArchives returns any other non-success response.
+
+        Invalid XML propagates ``lxml.etree.XMLSyntaxError``.
         """
         return self._client.api_post(api_method_uri, body, **kwargs, uid=self._id)
 
@@ -113,7 +125,14 @@ class User:
         The unit of the returned value is bytes.
 
         :returns: The maximum upload size in bytes.
-        :raises RuntimeError: If the API request fails.
+        :raises RuntimeError: If the underlying client session has been closed.
+        :raises AuthenticationError: If LabArchives rejects the request due to
+                                     invalid or expired credentials.
+        :raises ApiError: If LabArchives returns any other non-success response.
+        :raises labapi.exceptions.ExtractionError: If the response does not
+                                                   include ``max-file-size``.
+
+        Invalid XML propagates ``lxml.etree.XMLSyntaxError``.
         """
         return extract_etree(
             self.api_get("users/max_file_size"), {"max-file-size": int}

@@ -25,7 +25,7 @@ Choose an API Access Level
      - :class:`requests.Response`
    * - Streaming large responses
      - ``user.client.stream_api_get()`` / ``stream_api_post()``
-     - Byte chunks
+     - :class:`labapi.client.StreamingResponse`
    * - A signed URL for another tool
      - ``user.client.construct_url()``
      - A URL string
@@ -94,16 +94,21 @@ If you need HTTP headers or the raw response body, use
 Streaming Data
 ~~~~~~~~~~~~~~
 
-For large attachments or incremental processing, use the streaming methods:
+For large attachments or incremental processing, use the streaming methods.
+They return a :class:`~labapi.client.StreamingResponse`, which is both
+iterable and a context manager:
 
 .. code-block:: python
 
-   with open("large_file.zip", "wb") as f:
-       for chunk in user.client.stream_api_get(
+   with (
+       user.client.stream_api_get(
            "entries/entry_attachment",
            uid=user.id,
            eid="987.6",
-       ):
+       ) as stream,
+       open("large_file.zip", "wb") as f,
+   ):
+       for chunk in stream:
            f.write(chunk)
 
 Constructing Signed URLs

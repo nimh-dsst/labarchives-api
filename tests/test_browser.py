@@ -22,7 +22,7 @@ def browser_module():
 
 
 @pytest.fixture
-def mock_installed_browsers(browser_module):
+def mock_installed_browsers():
     """Fixture to mock the optional installed_browsers dependency."""
     mock_module = MagicMock()
     with patch.dict("sys.modules", {"installed_browsers": mock_module}):
@@ -137,7 +137,7 @@ def test_browser_detection_warns_when_nonterminal_env_requires_optional_deps(
         patch.dict("sys.modules", {"installed_browsers": None}),
         pytest.warns(
             UserWarning,
-            match="Automatic browser detection requires the optional 'builtin-auth' dependencies",
+            match="Non-terminal browsers require the optional 'builtin-auth' dependencies",
         ),
     ):
         assert browser_module.detect_default_browser() == "terminal"
