@@ -53,3 +53,5 @@ docs/source/reference/generated/
 
 .ipynb-checkpoints
 .tmpdocs
+
+.complexipy-cache/
