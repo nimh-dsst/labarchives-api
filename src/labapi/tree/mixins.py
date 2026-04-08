@@ -717,7 +717,7 @@ class AbstractTreeContainer(
         all_nodes = self.enumerate_nodes(depth=depth, timeout=timeout)
         return [path for path, node in all_nodes if not node.is_dir()]
 
-    def create(
+    def create(  # noqa: PLR0912
         self,
         cls: type[T],
         name: str | NotebookPath,
