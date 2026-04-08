@@ -87,8 +87,8 @@ Container Population Cache (``_populated``)
 first access:
 
 * :attr:`~labapi.tree.mixins.AbstractTreeContainer.children` and mapping access
-  call :meth:`~labapi.tree.mixins.AbstractTreeContainer._ensure_populated`.
-* :meth:`~labapi.tree.mixins.AbstractTreeContainer._ensure_populated` fetches
+  call the internal ``_ensure_populated()`` helper.
+* ``_ensure_populated()`` fetches
   ``tree_tools/get_tree_level`` once and marks the container as populated.
 * :meth:`~labapi.tree.mixins.AbstractTreeContainer.refresh` clears
   ``_children`` and resets ``_populated=False``.
@@ -119,11 +119,8 @@ Every tree node memoizes its :class:`~labapi.util.path.NotebookPath`:
 
 * first :attr:`~labapi.tree.mixins.AbstractBaseTreeNode.path` access computes
   and caches a :class:`~labapi.util.path.NotebookPath` for the node.
-* :meth:`~labapi.tree.mixins.AbstractBaseTreeNode._invalidate_path` clears the
+* rename and move operations clear the
   cached path for the current node and any loaded descendants.
-* rename and move operations call
-  :meth:`~labapi.tree.mixins.AbstractBaseTreeNode._invalidate_path` after
-  mutating local tree state.
 
 .. note::
    Cached paths are stable until the node or one of its loaded ancestors is
@@ -214,16 +211,11 @@ Current behavior is intentionally shallow:
 * page ``refresh()`` clears the page's entries cache, but existing entry
   instances are not invalidated in place
 
-Entry Registry and Dispatch
----------------------------
+Other Entry Types
+-----------------
 
-:class:`~labapi.entry.entries.base.Entry` classes self-register through
-:meth:`~labapi.entry.entries.base.Entry.__init_subclass__` by declaring a
-``part_type``. The global registry maps ``part_type`` -> class.
 
-When page entries are loaded,
-:meth:`~labapi.entry.entries.base.Entry.from_part_type` dispatches to the
-registered class. Recognized-but-unimplemented and fully unknown types are
+When page entries are loaded, recognized-but-unimplemented and fully unknown types are
 wrapped as :class:`~labapi.entry.entries.unknown.UnknownEntry` with warnings in
 :attr:`~labapi.tree.page.NotebookPage.entries`.
 
@@ -252,7 +244,7 @@ Before changing tree/entry/client internals:
    :meth:`~labapi.tree.page.NotebookPage.refresh` should be required.
 3. Ensure parent/child bookkeeping stays symmetric for moves/deletes.
 4. If you add or change entry types, confirm
-   :meth:`~labapi.entry.entries.base.Entry.__init_subclass__` registry +
+   entry registration plus
    :meth:`~labapi.entry.entries.base.Entry.from_part_type` dispatch behavior.
 5. Update this page (and related guide pages) when module boundaries or
    invariants change.

@@ -20,7 +20,7 @@ from collections.abc import (
     ValuesView,
 )
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Literal, Self, Type, TypeVar, cast, overload, override
+from typing import TYPE_CHECKING, Literal, Self, TypeVar, cast, overload, override
 
 from labapi.exceptions import (
     ExtractionError,
@@ -198,7 +198,8 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
            this method, as '..' is reserved for parent navigation.
 
         :param path: The slash-separated path to the desired node (e.g., "My Folder/My Page" or "/Folder/Subfolder/Page").
-        :returns: The :class:`AbstractTreeContainer` or :class:`AbstractTreeNode` found at the specified path.
+        :returns: The :class:`~labapi.tree.mixins.AbstractBaseTreeNode` found
+                  at the specified path.
         :raises TraversalError: If traversal cannot continue through a segment.
         """
         canonical = NotebookPath(path) if isinstance(path, str) else path
@@ -251,36 +252,38 @@ class AbstractBaseTreeNode(ABC, HasNameMixin):
         return curr
 
     def as_dir(self) -> AbstractTreeContainer:
-        """Return this node cast to :class:`AbstractTreeContainer`.
+        """Return this node cast to :class:`~labapi.tree.mixins.AbstractTreeContainer`.
 
         This method provides a convenient way to perform directory-specific
         operations on a node after checking its type, with static type
         checking support.
 
-        :returns: The node cast to an :class:`AbstractTreeContainer`.
+        :returns: The node cast to an
+                  :class:`~labapi.tree.mixins.AbstractTreeContainer`.
         :raises TypeError: If the node is not a directory (i.e., `is_dir()` returns `False`).
         """
         if self.is_dir():
             return cast(AbstractTreeContainer, self)
-        else:
-            raise TypeError("Node is not a directory")
+
+        raise TypeError("Node is not a directory")
 
     def as_page(self) -> NotebookPage:
-        """Return this node cast to :class:`NotebookPage`.
+        """Return this node cast to :class:`~labapi.tree.page.NotebookPage`.
 
         This method provides a convenient way to perform page-specific
         operations on a node after checking its type, with static type
         checking support.
 
-        :returns: The node cast to a :class:`NotebookPage`.
+        :returns: The node cast to a
+                  :class:`~labapi.tree.page.NotebookPage`.
         :raises TypeError: If the node is not a page (i.e., `is_dir()` returns `True`).
         """
         if not self.is_dir():
             from . import page
 
             return cast(page.NotebookPage, self)
-        else:
-            raise TypeError("Node is not a page")
+
+        raise TypeError("Node is not a page")
 
 
 class AbstractTreeNode(AbstractBaseTreeNode):
@@ -407,7 +410,7 @@ class AbstractTreeContainer(
         """Return a snapshot of this container's direct children.
 
         :returns: An immutable point-in-time sequence of
-            :class:`AbstractTreeNode` objects.
+                  :class:`~labapi.tree.mixins.AbstractTreeNode` objects.
         """
         self._ensure_populated()
         return tuple(self._children)
@@ -532,9 +535,11 @@ class AbstractTreeContainer(
         """Look up child nodes by name or indexed selector.
 
         - If `key` is a string, it attempts to find a single child with that name.
-        - If `key` is a slice with start of :class:`~labapi.util.index.IdIndex` (e.g., ``Index.Id:"some_id"``),
+        - If `key` is a slice with start of :attr:`~labapi.util.Index.Id`
+          (e.g., ``Index.Id:"some_id"``),
           it returns the child with the matching ID.
-        - If `key` is a slice with start of :class:`~labapi.util.index.NameIndex` (e.g., ``Index.Name:"some_name"``),
+        - If `key` is a slice with start of :attr:`~labapi.util.Index.Name`
+          (e.g., ``Index.Name:"some_name"``),
           it returns a list of all children with the matching name (as names are not unique).
 
         This method ensures the children are populated before attempting to access them.
@@ -714,7 +719,7 @@ class AbstractTreeContainer(
 
     def create(
         self,
-        cls: Type[T],
+        cls: type[T],
         name: str | NotebookPath,
         *,
         parents: bool = False,
@@ -728,20 +733,20 @@ class AbstractTreeContainer(
         :param name: The name of the new node.
         :param parents: If True, intermediate directories in the path will be created
                         using `InsertBehavior.Retain` if they don't exist.
-        :param if_exists: The behavior to take if a node with the same name and type already exists. Default is to raise a RuntimeError.
+        :param if_exists: The behavior to take if a node with the same name and
+                          type already exists. Defaults to
+                          ``InsertBehavior.Raise``.
         :returns: The newly created (or existing) node of type `cls`.
-        :raises RuntimeError: If `if_exists` is `InsertBehavior.Raise` and the node already exists.
+        :raises NodeExistsError: If ``if_exists`` is
+                                 ``InsertBehavior.Raise`` and the node already
+                                 exists.
         """
         normalized_name = NotebookPath(name) if isinstance(name, str) else name
-
-        if normalized_name.is_absolute():
-            path = normalized_name.relative_to(self)
-        else:
-            path = normalized_name.resolve(self.path).relative_to(self)
+        path = normalized_name.resolve(self.path).relative_to(self)
 
         if len(path) == 0:
             raise ValueError("Path cannot be empty")
-        elif len(path) == 1:
+        if len(path) == 1:
             nodes = [n for n in self[Index.Name : path.name] if isinstance(n, cls)]
 
             if nodes:
@@ -750,8 +755,6 @@ class AbstractTreeContainer(
                         raise NodeExistsError(
                             f'{cls.__name__} with name "{name}" already exists'
                         )
-                    case InsertBehavior.Ignore:
-                        pass
                     case InsertBehavior.Retain:
                         return nodes[0]
                     case InsertBehavior.Replace:
@@ -775,25 +778,19 @@ class AbstractTreeContainer(
                 new_node._populated = True
             self._children.append(new_node)
             return new_node
-        elif parents:
-            from .directory import NotebookDirectory
-
-            next_node = self.create(
-                NotebookDirectory,
-                path[0],
-                if_exists=InsertBehavior.Retain if parents else InsertBehavior.Raise,
-            )
+        if parents:
+            next_node = self.dir(path[0])
 
             return next_node.create(
                 cls,
                 path,
-                parents=parents,
+                parents=True,
                 if_exists=if_exists,
             )
-        else:
-            raise ValueError(
-                f'Parent path for "{name}" does not exist. Set `parents=True` to create it.'
-            )
+
+        raise ValueError(
+            f'Parent path for "{name}" does not exist. Set `parents=True` to create it.'
+        )
 
     def dir(self, name: str | NotebookPath) -> NotebookDirectory:
         """Ensure a directory exists at ``name`` and return it.

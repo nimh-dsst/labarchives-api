@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import TYPE_CHECKING, Iterator, overload, override
+from collections.abc import Iterator, Sequence
+from typing import TYPE_CHECKING, overload, override
 
 from labapi.exceptions import PathError
 
@@ -107,8 +107,8 @@ class NotebookPath(Sequence[str]):
         """
         if self._absolute:
             return f"/{'/'.join(self._parts)}"
-        else:
-            return "/".join(self._parts)
+
+        return "/".join(self._parts)
 
     def is_absolute(self) -> bool:
         """Return whether this path is absolute.
@@ -138,18 +138,18 @@ class NotebookPath(Sequence[str]):
         """
         if self.is_absolute():
             return self
-        elif self._parent is None:
+        if self._parent is None:
             if parent is not None:
                 return NotebookPath(
                     parent.resolve() if recurse else parent, *self._parts
                 )
-            else:
-                raise PathError(
-                    "Cannot resolve relative path without an absolute parent",
-                    path=str(self),
-                )
-        else:
-            return NotebookPath(self._parent, *self._parts)
+
+            raise PathError(
+                "Cannot resolve relative path without an absolute parent",
+                path=str(self),
+            )
+
+        return NotebookPath(self._parent, *self._parts)
 
     def startswith(self, other: NotebookPath) -> bool:
         """Return whether this path starts with another path's segments.
@@ -197,8 +197,6 @@ class NotebookPath(Sequence[str]):
         :returns: A relative ``NotebookPath`` from ``other`` to this path.
         :raises PathError: If this path is not located inside ``other``.
         """
-        # # TODO walk_up param
-
         if not isinstance(other, NotebookPath):
             other = NotebookPath(other)
 

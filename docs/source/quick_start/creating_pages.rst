@@ -38,9 +38,9 @@ Use :meth:`~labapi.tree.mixins.AbstractTreeContainer.create` to add new
 Handle Existing Nodes
 ~~~~~~~~~~~~~~~~~~~~~
 
-By default, ``create()`` raises :class:`~labapi.NodeExistsError` if a node with
-the same name and type already exists. Use ``if_exists`` to choose a different
-behavior:
+By default, ``create()`` raises
+:class:`~labapi.exceptions.NodeExistsError` if a node with the same name and
+type already exists. Use ``if_exists`` to choose a different behavior:
 
 .. code-block:: python
 

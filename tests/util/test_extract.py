@@ -19,7 +19,7 @@ from labapi.util.extract import (
 
 # Tests for _flatten_dict
 @pytest.mark.parametrize(
-    "val,prefix,expected",
+    ("val", "prefix", "expected"),
     [
         # Single-level, no prefix
         (
@@ -65,7 +65,7 @@ def test_flatten_dict_success(
 
 
 @pytest.mark.parametrize(
-    "val, prefix",
+    ("val", "prefix"),
     [
         ({"": {"b": int}}, ""),  # Empty key
         ({"a": {"": str}}, ""),  # Empty key nested
@@ -79,7 +79,7 @@ def test_flatten_dict_value_error(val: EtreeExtractorDict, prefix: str):
 
 # Tests for to_bool
 @pytest.mark.parametrize(
-    "s,expected",
+    ("s", "expected"),
     [
         ("true", True),
         ("TRUE", True),

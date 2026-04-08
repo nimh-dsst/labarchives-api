@@ -30,7 +30,7 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
     def __init__(self, notebooks: Sequence[NotebookInit], user: User):
         """Initialize the notebook collection.
 
-        :param notebooks: A sequence of :class:`~labapi.util.notebookinit.NotebookInit` objects
+        :param notebooks: A sequence of :class:`~labapi.util.types.NotebookInit` objects
                           containing initial data for the notebooks.
         :param user: The authenticated :class:`~labapi.user.User` associated with these notebooks.
         """
@@ -55,13 +55,16 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
         """Look up notebooks by name or indexed selector.
 
         - If `key` is a string, it attempts to find a single notebook with that name.
-        - If `key` is a slice with start of :class:`~labapi.util.index.IdIndex` (e.g., ``Index.Id:"some_id"``),
+        - If `key` is a slice with start of :attr:`~labapi.util.Index.Id`
+          (e.g., ``Index.Id:"some_id"``),
           it returns the notebook with the matching ID.
-        - If `key` is a slice with start of :class:`~labapi.util.index.NameIndex` (e.g., ``Index.Name:"some_name"``),
+        - If `key` is a slice with start of :attr:`~labapi.util.Index.Name`
+          (e.g., ``Index.Name:"some_name"``),
           it returns a list of all notebooks with the matching name (as names are not unique).
 
         :param key: The index to use for accessing notebooks. Can be a string (for name lookup),
-                    or a slice with :attr:`~labapi.util.index.Index.Id` or :attr:`~labapi.util.index.Index.Name`.
+                    or a slice with :attr:`~labapi.util.Index.Id` or
+                    :attr:`~labapi.util.Index.Name`.
         :returns: A single :class:`~labapi.tree.notebook.Notebook` object or a list of them.
         :raises KeyError: If a single notebook is requested by ID or unique name and not found.
         """
@@ -135,7 +138,12 @@ class Notebooks(Mapping[IdOrNameIndex, Notebook | Sequence[Notebook]]):
 
         :param name: The name of the new notebook.
         :returns: The newly created :class:`~labapi.tree.notebook.Notebook` object.
-        :raises RuntimeError: If the API call to create the notebook fails.
+        :raises RuntimeError: If the underlying client session has been closed.
+        :raises AuthenticationError: If LabArchives rejects the request due to
+                                     invalid or expired credentials.
+        :raises ApiError: If LabArchives returns a non-success response, or if
+                          the API returns a notebook ID that already exists in
+                          the local collection.
         """
         nbid = extract_etree(
             self._user.api_get(
