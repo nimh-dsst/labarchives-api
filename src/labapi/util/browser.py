@@ -4,78 +4,107 @@ from __future__ import annotations
 
 import os
 import warnings
-from typing import Literal
+from typing import Literal, TypeGuard
 
-_BROWSER_CHOICES = ("chrome", "firefox", "edge")
+_DETECTABLE_BROWSERS = ("chrome", "firefox", "edge")
+_CHOOSEABLE_BROWSERS = ("chrome", "firefox", "edge", "terminal")
 
 
-def _matching_browser_choice(
-    browser_name: object,
-) -> Literal["chrome", "firefox", "edge"] | None:
-    normalized_name = str(browser_name or "").lower()
+type _DetectableBrowser = Literal["chrome", "firefox", "edge"]
+type _ChoosableBrowser = Literal["chrome", "firefox", "edge", "terminal"]
 
-    for choice in _BROWSER_CHOICES:
-        if choice in normalized_name:
-            return choice
+
+def _is_choosable(string: str) -> TypeGuard[_ChoosableBrowser]:
+    return string in _CHOOSEABLE_BROWSERS
+
+
+def _parse_detectable(string: str) -> _DetectableBrowser | Literal[False]:
+    assert isinstance(string, str)
+
+    lowered = string.lower().strip()
+    for d in _DETECTABLE_BROWSERS:
+        if d in lowered:
+            return d
+    return False
+
+
+def _get_env_browser() -> _ChoosableBrowser | None:
+    # TODO put the load dotenv here
+    browser = os.getenv("LA_AUTH_BROWSER", "").strip().lower()
+
+    if browser == "":
+        return None
+    if _is_choosable(browser):
+        return browser
+
+    warnings.warn(
+        f"Unrecognized LA_AUTH_BROWSER value {browser!r}; "
+        "supported values are chrome, firefox, edge, or terminal. "
+        "Falling back to automatic browser detection.",
+        stacklevel=2,
+    )
 
     return None
 
 
-def detect_default_browser() -> Literal["chrome", "firefox", "edge", "terminal"]:
-    """Resolve the preferred browser for the current auth attempt."""
-    raw_env_browser = os.getenv("LA_AUTH_BROWSER", "").strip().lower()
-
-    if raw_env_browser == "terminal":
-        return "terminal"
-
-    real_browser = raw_env_browser if raw_env_browser in _BROWSER_CHOICES else None
-
-    if raw_env_browser and real_browser is None:
-        warnings.warn(
-            f"Unrecognized LA_AUTH_BROWSER value {raw_env_browser!r}; "
-            "supported values are chrome, firefox, edge, or terminal. "
-            "Falling back to automatic browser detection.",
-            stacklevel=2,
-        )
+def _find_chosen_browser(browser: _ChoosableBrowser | None) -> _ChoosableBrowser | None:
+    if browser == "terminal":
+        return browser
+    if browser is None:
+        return None
 
     try:
         import installed_browsers  # pyright: ignore[reportMissingImports, reportMissingTypeStubs]
     except ImportError:
-        if real_browser is not None or not raw_env_browser:
-            warnings.warn(
-                "Automatic browser detection requires the optional 'builtin-auth' "
-                "dependencies. Install them with: pip install 'labapi[builtin-auth]' "
-                "or set LA_AUTH_BROWSER=terminal for manual authentication.",
-                stacklevel=2,
-            )
+        warnings.warn(
+            "Non-terminal browsers require the optional 'builtin-auth' "
+            "dependencies. Install them with: pip install 'labapi[builtin-auth]' "
+            "or set LA_AUTH_BROWSER=terminal for manual authentication.",
+            stacklevel=2,
+        )
         return "terminal"
 
-    try:
-        if real_browser is not None:
-            if installed_browsers.do_i_have_installed(real_browser):
-                return real_browser
-            warnings.warn(
-                f"Configured LA_AUTH_BROWSER value {real_browser!r} is not installed. "
-                "Falling back to automatic browser detection.",
-                stacklevel=2,
-            )
+    if installed_browsers.do_i_have_installed(browser):
+        return browser
 
-        detected_browser = _matching_browser_choice(
-            installed_browsers.what_is_the_default_browser()
+    warnings.warn(
+        f"Configured LA_AUTH_BROWSER value {browser!r} is not installed. "
+        "Falling back to automatic browser detection.",
+        stacklevel=2,
+    )
+    return None
+
+
+def _autodetect_browser() -> _DetectableBrowser | None:
+    try:
+        import installed_browsers  # pyright: ignore[reportMissingImports, reportMissingTypeStubs]
+    except ImportError:
+        warnings.warn(
+            "Automatic browser detection requires the optional 'builtin-auth' "
+            "dependencies. Install them with: pip install 'labapi[builtin-auth]' "
+            "or set LA_AUTH_BROWSER=terminal for manual authentication.",
+            stacklevel=2,
         )
-        if detected_browser is not None:
-            return detected_browser
+        return None
+
+    try:
+        raw_default_browser = installed_browsers.what_is_the_default_browser()
+        default_browser = _parse_detectable(raw_default_browser)
+
+        if default_browser:
+            return default_browser
 
         for browser in installed_browsers.browsers():
-            detected_browser = _matching_browser_choice(browser.get("name"))
-            if detected_browser is not None:
-                return detected_browser
+            name = _parse_detectable(browser.get("name"))
+            if name:
+                return name
 
         warnings.warn(
             "Automatic browser detection failed: No compatible browser. Falling back to terminal/manual auth.",
             RuntimeWarning,
             stacklevel=2,
         )
+        return None
     except Exception as exc:
         warnings.warn(
             f"Automatic browser detection failed: {exc}. Falling back to terminal/manual auth.",
@@ -83,4 +112,13 @@ def detect_default_browser() -> Literal["chrome", "firefox", "edge", "terminal"]
             stacklevel=2,
         )
 
-    return "terminal"
+
+def detect_default_browser() -> _ChoosableBrowser:
+    """Resolve the preferred browser for the current auth attempt."""
+    env_browser = _get_env_browser()
+    chosen_browser = _find_chosen_browser(env_browser)
+
+    if chosen_browser is None:
+        return _autodetect_browser() or "terminal"
+
+    return chosen_browser

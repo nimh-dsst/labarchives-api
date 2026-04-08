@@ -109,14 +109,14 @@ the same machine sign in through a browser.
 
    from labapi import Client
 
-   client = Client()
-   user = client.default_authenticate()
+   with Client() as client:
+       user = client.default_authenticate()
 
 .. note::
    The local interactive path works best with
-   ``labapi[dotenv,builtin-auth]``. If no compatible browser is detected,
-   ``labapi`` falls back to printing a URL so you can finish the login
-   manually.
+   ``labapi[dotenv,builtin-auth]``. If automatic browser launch is
+   unavailable, ``labapi`` falls back to printing a URL so you can finish the
+   login manually.
 
 .. tip::
    For server, CI, and other headless environments, see :ref:`auth` and use

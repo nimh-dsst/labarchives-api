@@ -9,6 +9,8 @@ from __future__ import annotations
 import ssl
 import warnings
 from base64 import b64encode
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import suppress
 from datetime import datetime, timedelta
 from http.server import SimpleHTTPRequestHandler
 from io import BufferedIOBase
@@ -18,7 +20,7 @@ from secrets import token_urlsafe
 from socketserver import TCPServer
 from time import monotonic
 from types import TracebackType
-from typing import Any, Iterator, Mapping, Self, Sequence, override
+from typing import Any, Self, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cryptography.hazmat.primitives.hashes import SHA512
@@ -228,16 +230,19 @@ class _AuthResponseCollector:
         """Wait for a valid callback, then log in and return the user."""
         if self._httpd is None:
             raise RuntimeError(
-                "collect_auth_response() must be used as a context manager before waiting for a callback"
+                "collect_auth_response() must be entered before waiting for a callback"
             )
 
         deadline = None if self._timeout is None else monotonic() + self._timeout
 
         while True:
+            self._httpd.timeout = deadline if deadline is None else min(deadline, 0.5)
+            self._httpd.handle_request()
+
             if self._error is not None:
                 raise AuthenticationError(f"Authentication failed: {self._error}")
 
-            if self._auth_code is not None and self._email is not None:
+            if self._auth_code and self._email:
                 return self._client.login(self._email, self._auth_code)
 
             if deadline is not None:
@@ -249,8 +254,6 @@ class _AuthResponseCollector:
                 self._httpd.timeout = min(remaining, 0.5)
             else:
                 self._httpd.timeout = None
-
-            self._httpd.handle_request()
 
 
 class Client:
@@ -345,12 +348,8 @@ class Client:
 
     def __del__(self) -> None:
         """Best-effort cleanup for the underlying session at object finalization."""
-        try:
+        with suppress(Exception):
             self.close()
-        except Exception:
-            # __del__ may run during interpreter shutdown where module globals can
-            # already be torn down; ignore cleanup failures in that phase.
-            pass
 
     def _ensure_open(self) -> None:
         """Raise if the client has already been closed."""
@@ -406,7 +405,7 @@ class Client:
                     )
                 )
             except ValueError as e:
-                warnings.warn(f"Failed to parse notebook entry: {e}")
+                warnings.warn(f"Failed to parse notebook entry: {e}", stacklevel=2)
                 continue
 
             notebooks.append(NotebookInit(notebook_id, notebook_name, is_default))
@@ -462,8 +461,12 @@ class Client:
         :param api_method_uri: The API method URI (e.g., "get_file_attachment").
                                Can be a string or a sequence of strings representing path segments.
         :param kwargs: Additional query parameters to pass to the API method.
-        :returns: A wrapper with both an iterable byte stream and the full requests.Response.
-        :raises RuntimeError: If the API request fails.
+        :returns: A :class:`StreamingResponse` wrapper with both an iterable
+                  byte stream and the full ``requests.Response``.
+        :raises RuntimeError: If the client session has been closed.
+        :raises AuthenticationError: If LabArchives rejects the request due to
+                                     invalid or expired credentials.
+        :raises ApiError: If LabArchives returns any other non-success response.
         """
         self._ensure_open()
         request = self.session.get(
@@ -492,8 +495,12 @@ class Client:
                                Can be a string or a sequence of strings representing path segments.
         :param body: The request body, which can be a mapping of form data or a file-like object.
         :param kwargs: Additional query parameters to pass to the API method.
-        :returns: A wrapper with both an iterable byte stream and the full requests.Response.
-        :raises RuntimeError: If the API request fails.
+        :returns: A :class:`StreamingResponse` wrapper with both an iterable
+                  byte stream and the full ``requests.Response``.
+        :raises RuntimeError: If the client session has been closed.
+        :raises AuthenticationError: If LabArchives rejects the request due to
+                                     invalid or expired credentials.
+        :raises ApiError: If LabArchives returns any other non-success response.
         """
         self._ensure_open()
         request = self.session.post(
@@ -519,8 +526,11 @@ class Client:
         :param api_method_uri: The API method URI (e.g., "get_entry_data").
                                Can be a string or a sequence of strings representing path segments.
         :param kwargs: Additional query parameters to pass to the API method.
-        :returns: The requests.Response object containing the API response.
-        :raises RuntimeError: If the API request fails.
+        :returns: The ``requests.Response`` object containing the API response.
+        :raises RuntimeError: If the client session has been closed.
+        :raises AuthenticationError: If LabArchives rejects the request due to
+                                     invalid or expired credentials.
+        :raises ApiError: If LabArchives returns any other non-success response.
         """
         self._ensure_open()
         request = self.session.get(self.construct_url(api_method_uri, query=kwargs))
@@ -544,8 +554,11 @@ class Client:
                                Can be a string or a sequence of strings representing path segments.
         :param body: The request body, which can be a mapping of form data or a file-like object.
         :param kwargs: Additional query parameters to pass to the API method.
-        :returns: The requests.Response object containing the API response.
-        :raises RuntimeError: If the API request fails.
+        :returns: The ``requests.Response`` object containing the API response.
+        :raises RuntimeError: If the client session has been closed.
+        :raises AuthenticationError: If LabArchives rejects the request due to
+                                     invalid or expired credentials.
+        :raises ApiError: If LabArchives returns any other non-success response.
         """
         self._ensure_open()
         request = self.session.post(
@@ -563,8 +576,14 @@ class Client:
         :param api_method_uri: The API method URI (e.g., "get_notebook_info").
                                Can be a string or a sequence of strings representing path segments.
         :param kwargs: Additional query parameters to pass to the API method.
-        :returns: An lxml Element representing the root of the XML response.
-        :raises RuntimeError: If the API request fails or the response is not valid XML.
+        :returns: An ``lxml.etree.Element`` representing the root of the XML
+                  response.
+        :raises RuntimeError: If the client session has been closed.
+        :raises AuthenticationError: If LabArchives rejects the request due to
+                                     invalid or expired credentials.
+        :raises ApiError: If LabArchives returns any other non-success response.
+
+        Invalid XML propagates ``lxml.etree.XMLSyntaxError``.
         """
         return fromstring(self.raw_api_get(api_method_uri, **kwargs).content)
 
@@ -583,8 +602,14 @@ class Client:
                                Can be a string or a sequence of strings representing path segments.
         :param body: The request body, which can be a mapping of form data or a file-like object.
         :param kwargs: Additional query parameters to pass to the API method.
-        :returns: An lxml Element representing the root of the XML response.
-        :raises RuntimeError: If the API request fails or the response is not valid XML.
+        :returns: An ``lxml.etree.Element`` representing the root of the XML
+                  response.
+        :raises RuntimeError: If the client session has been closed.
+        :raises AuthenticationError: If LabArchives rejects the request due to
+                                     invalid or expired credentials.
+        :raises ApiError: If LabArchives returns any other non-success response.
+
+        Invalid XML propagates ``lxml.etree.XMLSyntaxError``.
         """
         return fromstring(self.raw_api_post(api_method_uri, body, **kwargs).content)
 
@@ -599,19 +624,21 @@ class Client:
         This method opens a browser window, directs the user to the LabArchives
         authentication page, and then listens on a loopback callback URL on
         ``127.0.0.1:<port>`` for the redirect containing the authorization code.
-        If no compatible
-        browser is detected, it falls back to printing the authentication URL to
-        the terminal, requiring the user to manually open it.
+        If no compatible browser is available, it falls back to printing the
+        authentication URL to the terminal so the user can open it manually.
 
         .. note::
-           This method requires the ``selenium`` package for automatic browser control.
-           Install it with: ``pip install selenium``
+           Automatic browser launching requires the optional
+           ``labapi[builtin-auth]`` dependencies.
 
         :param port: The local callback port to listen on. Defaults to ``8089``.
         :param timeout: Maximum number of seconds to wait for a valid callback.
                         Defaults to five minutes. Pass ``None`` to wait indefinitely.
         :returns: A :class:`~labapi.user.User` object representing the authenticated user session.
-        :raises ImportError: If selenium is required but not installed.
+        :raises RuntimeError: If the client session has been closed.
+        :raises ImportError: If automatic browser-based authentication is
+                             requested but the optional builtin-auth
+                             dependencies are not installed.
         :raises AuthenticationError: If authentication fails or times out.
         """
         self._ensure_open()
@@ -646,12 +673,6 @@ class Client:
                     case "terminal":
                         print("Open authentication URL in your browser:")
                         print(auth_url)
-                    case _:
-                        print(
-                            "WARNING: No compatible browser detected (chrome, firefox, edge), defaulting to terminal"
-                        )
-                        print("Open authentication URL in your browser:")
-                        print(auth_url)
 
                 if driver is not None:
                     driver.get(auth_url)
@@ -662,8 +683,8 @@ class Client:
                 return auth_response_collector.wait()
             except ImportError as e:
                 raise ImportError(
-                    "Selenium is required for automatic browser-based authentication. "
-                    "Install it with: pip install selenium\n"
+                    "The builtin-auth dependencies are required for automatic browser-based authentication. "
+                    "Install with: pip install labapi[builtin-auth]\n"
                     "Alternatively, use manual authentication with LA_AUTH_BROWSER=terminal."
                 ) from e
             finally:
@@ -680,8 +701,8 @@ class Client:
         """Return a context manager for collecting a loopback auth callback.
 
         The returned collector binds a local HTTP server on enter, waits for a
-        valid callback via :meth:`_AuthResponseCollector.wait`, and closes the
-        server on exit.
+        valid callback via its ``wait()`` method, and closes the server on
+        exit.
 
         :param port: The local callback port to listen on. Defaults to ``8089``.
         :param callback_path: The callback path to accept. Defaults to ``/``.
@@ -704,7 +725,7 @@ class Client:
         self,
         api_method_uri: str | Sequence[str],
         query: Mapping[str, Any],
-        expires_in: timedelta | datetime | None = None,
+        expires_in: timedelta | None = None,
         *,
         should_prefix_api: bool = True,
         signature_method: str | None = None,
@@ -733,7 +754,12 @@ class Client:
         if isinstance(api_method_uri, str):
             api_method_uri = api_method_uri.split("/")
 
-        method_parts = tuple(part for part in api_method_uri if part.strip())
+        raw_method_parts = tuple([part for part in api_method_uri if part.strip()])
+        method_parts = (
+            raw_method_parts[1:]
+            if raw_method_parts and raw_method_parts[0] == "api"
+            else raw_method_parts
+        )
 
         if not method_parts:
             raise ValueError(
@@ -741,16 +767,7 @@ class Client:
             )
 
         if should_prefix_api:
-            if method_parts[0] != "api":
-                method_parts = ("api", *method_parts)
-        else:
-            if method_parts[0] == "api":
-                method_parts = method_parts[1:]
-
-        if not method_parts:
-            raise ValueError(
-                "api_method_uri must contain at least one non-empty path segment"
-            )
+            method_parts = ("api", *method_parts)
 
         api_method = method_parts[-1] if signature_method is None else signature_method
 
@@ -765,8 +782,7 @@ class Client:
 
         if expires_in:
             return self._sign_url(url, api_method, expires_in)
-        else:
-            return self._sign_url(url, api_method)
+        return self._sign_url(url, api_method)
 
     def _signature(self, api_method: str, expiry: int) -> str:
         """Generate the HMAC-SHA512 signature for a LabArchives API request.
@@ -790,7 +806,7 @@ class Client:
         self,
         url: str,
         api_method: str,
-        expires_in: timedelta | datetime = timedelta(seconds=60),
+        expires_in: timedelta = timedelta(seconds=60),
     ) -> str:
         """Sign a URL and append the LabArchives auth query parameters.
 
@@ -809,8 +825,6 @@ class Client:
 
         if isinstance(expires_in, timedelta):
             expiry = round((datetime.now() + expires_in).timestamp() * 1000)
-        else:
-            expiry = round(expires_in.timestamp() * 1000)
         sig = self._signature(api_method, expiry)
 
         query["akid"] = self._akid

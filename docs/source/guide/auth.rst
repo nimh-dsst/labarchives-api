@@ -4,13 +4,14 @@
 Authentication
 ==============
 
-At the high level, authenticating with the LabArchives API is a task delegated to LabArchives itself. LabArchives provides two primary systems, a time-based Authentication token,
-and a callback-based auth flow similar to OAuth. 
+At a high level, authentication is handled by LabArchives. ``labapi`` works with two input patterns:
 
-Both systems return authentication tokens that can be used alongside a user email in the :meth:`~labapi.client.Client.login` method.
+- callback-based authentication, where LabArchives redirects back with
+  ``email`` and ``auth_code``
+- manually copied External App credentials from the LabArchives UI
 
-Since the time-based system requires the user to find the **External App authentication** button and copy the email and token into the login method (or to your app), it is generally
-more preferable to use the callback flow, which has the additional benefit of allowing Single Sign-On.
+Both can be completed through :meth:`~labapi.client.Client.login`. The callback
+flow is generally the better default because it also works with SSO.
 
 Choosing an Auth Pattern
 ------------------------
@@ -36,11 +37,15 @@ Use the flow that matches where your code runs:
 Interactive Authentication
 --------------------------
 
-``labapi`` provides a series of methods to assist with the authenticating of users. The most plug-and-play is to use the :meth:`~labapi.client.Client.default_authenticate` method.
-This method prompts the user to activate a link that will bring them to the LabArchives sign in page, and calls back to a temporary local server and immediately signs the user in.
+The most direct local workflow is
+:meth:`~labapi.client.Client.default_authenticate`. It launches or prints a
+LabArchives login URL, listens on a temporary local callback server, and then
+signs the user in immediately after the redirect completes.
 
 .. note:: 
-    When the :ref:`labapi[builtin-auth] <optional-deps>` extra dependencies are installed, :meth:`~labapi.client.Client.default_authenticate` can open a siloed browser window for the user to authenticate in.
+    When the :ref:`optional-deps` are installed, this method can open a
+    compatible local browser automatically. Without ``builtin-auth``, it still
+    works in terminal/manual mode by printing the authentication URL.
 
 .. code-block:: python
 
@@ -50,14 +55,13 @@ This method prompts the user to activate a link that will bring them to the LabA
         user = client.default_authenticate()
 
 
-``labapi`` provides two primary methods for authenticating users with LabArchives: an interactive browser-based flow and a manual flow that can be integrated into server-based applications.
-
-
 Server-Based Authentication
 ---------------------------
 
-For deeper integrations with other systems, or for use in servers, ``labapi`` provides access to the :meth:`~labapi.client.Client.generate_auth_url` function.
-This function generates a LabArchives authentication url that eventually redirects to the ``callback_url`` passed to it, allowed application developers to implement the credential capture on their own servers.
+For deeper integrations with other systems, or for use in servers, use
+:meth:`~labapi.client.Client.generate_auth_url`. It generates a LabArchives
+authentication URL that eventually redirects to the callback URL you pass in,
+letting your application handle credential capture on its own server.
 
 For service environments, this is the recommended flow:
 

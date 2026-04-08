@@ -21,6 +21,8 @@ from labapi.exceptions import ApiError, AuthenticationError
 
 
 class ConstructUrlKwargs(TypedDict, total=False):
+    """Optional keyword arguments accepted by construct_url helper tests."""
+
     should_prefix_api: bool
 
 
@@ -28,17 +30,20 @@ class FakeLoopbackTCPServer:
     """Simple test double for a bound auth callback listener."""
 
     def __init__(self, server_address, _handler_cls):
+        """Initialize the fake server with the bound address."""
         self.server_address = server_address
         self.timeout: float | None = None
 
     def __enter__(self):
+        """Return the fake server as a context manager."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Leave the fake server context without suppressing exceptions."""
         return False
 
     def server_close(self):
-        pass
+        """Record a no-op close for API compatibility."""
 
 
 def make_response(
@@ -121,16 +126,6 @@ class TestClientUnit:
         assert "expires=" in signed_url
         assert "sig=" in signed_url
         assert "param=value" in signed_url
-
-    def test_client_sign_url_with_datetime(self):
-        """Test Client._sign_url with datetime parameter."""
-        client = Client("https://api.test.com", "test_akid", "test_password")
-
-        url = "https://api.test.com/api/test_endpoint"
-        expiry_dt = datetime.fromtimestamp(1234567890)
-        signed_url = client._sign_url(url, "test_endpoint", expiry_dt)
-
-        assert "expires=1234567890000" in signed_url
 
     def test_client_construct_url_simple(self):
         """Test Client.construct_url with simple string API method."""
@@ -506,31 +501,6 @@ class TestClientUnit:
             timeout=90.0,
         )
 
-    def test_default_authenticate_warns_when_no_browser_detected(self, capsys):
-        """Test terminal fallback output when no compatible browser is detected."""
-        client = Client("https://api.test.com", "test_akid", "test_password")
-        generate_auth_url = Mock(return_value="https://auth.test/url")
-        auth_response_collector = MagicMock()
-        auth_response_collector.__enter__.return_value = auth_response_collector
-        auth_response_collector.wait.return_value = Mock(spec=User)
-
-        with (
-            patch.object(client, "generate_auth_url", generate_auth_url),
-            patch.object(
-                client,
-                "collect_auth_response",
-                return_value=auth_response_collector,
-            ),
-            patch("labapi.client.token_urlsafe", return_value="test-token"),
-            patch("labapi.client.detect_default_browser", return_value=None),
-        ):
-            client.default_authenticate()
-
-        captured = capsys.readouterr()
-        assert "WARNING: No compatible browser detected" in captured.out
-        assert "Open authentication URL in your browser:" in captured.out
-        assert "https://auth.test/url" in captured.out
-
     def test_default_authenticate_does_not_warn_when_terminal_is_explicit(self, capsys):
         """Test no warning is shown when terminal auth is explicitly configured."""
         client = Client("https://api.test.com", "test_akid", "test_password")
@@ -583,7 +553,7 @@ class TestClientUnit:
             patch("labapi.client.detect_default_browser", return_value="terminal"),
             patch(
                 "builtins.print",
-                side_effect=lambda *args, **kwargs: events.append("print"),
+                side_effect=lambda *_args, **_kwargs: events.append("print"),
             ),
         ):
             client.default_authenticate()
@@ -610,10 +580,12 @@ class TestClientUnit:
             def server_close(self):
                 bind_info["closed"] = True
 
-        with patch("labapi.client.TCPServer", FakeTCPServer):
-            with client.collect_auth_response() as auth_response_collector:
-                assert hasattr(auth_response_collector, "wait")
-                assert bind_info["server_address"] == ("127.0.0.1", 8089)
+        with (
+            patch("labapi.client.TCPServer", FakeTCPServer),
+            client.collect_auth_response() as auth_response_collector,
+        ):
+            assert hasattr(auth_response_collector, "wait")
+            assert bind_info["server_address"] == ("127.0.0.1", 8089)
 
         assert bind_info["closed"] is True
 
@@ -636,10 +608,12 @@ class TestClientUnit:
             def server_close(self):
                 bind_info["closed"] = True
 
-        with patch("labapi.client.TCPServer", FakeTCPServer):
-            with client.collect_auth_response(port=9001) as auth_response_collector:
-                assert hasattr(auth_response_collector, "wait")
-                assert bind_info["server_address"] == ("127.0.0.1", 9001)
+        with (
+            patch("labapi.client.TCPServer", FakeTCPServer),
+            client.collect_auth_response(port=9001) as auth_response_collector,
+        ):
+            assert hasattr(auth_response_collector, "wait")
+            assert bind_info["server_address"] == ("127.0.0.1", 9001)
 
         assert bind_info["closed"] is True
 
@@ -651,7 +625,7 @@ class TestClientUnit:
 
         with pytest.raises(
             RuntimeError,
-            match="must be used as a context manager before waiting for a callback",
+            match="before waiting for a callback",
         ):
             auth_response_collector.wait()
 
@@ -835,21 +809,18 @@ class TestClientIntegration:
 
     def test_client_login_creates_user(self, client):
         """Test Client.login creates User with notebooks from API response."""
-        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
-        <users>
-            <fullname>Test User</fullname>
-            <id>user_test_id</id>
-            <auto-login-allowed type="boolean">false</auto-login-allowed>
-            <request></request>
-            <notebooks type="array">
-                <notebook>
-                    <is-default type="boolean">true</is-default>
-                    <name>Notebook 1</name>
-                    <id>nb1</id>
-                </notebook>
-            </notebooks>
-        </users>
-        """
+        client.api_response = client.xml(
+            "users",
+            client.xml("fullname", "Test User"),
+            client.xml("id", "user_test_id"),
+            client.bool_xml("auto-login-allowed", False),
+            client.xml("request"),
+            client.xml(
+                "notebooks",
+                client.notebook_xml("nb1", "Notebook 1"),
+                type="array",
+            ),
+        )
 
         user = client.login("test@example.com", "authcode123")
 
@@ -857,7 +828,34 @@ class TestClientIntegration:
         assert user.id == "user_test_id"
         assert len(user.notebooks) == 1
 
-        api_call = client.api_log
+        api_call = client.pop_api_call()
         assert api_call[0] == "users/user_access_info"
         assert api_call[1]["login_or_email"] == "test@example.com"
         assert api_call[1]["password"] == "authcode123"
+
+    def test_mock_client_xml_builder_supports_nested_responses(self, client):
+        """Test MockClient XML builders create nested responses without raw strings."""
+        client.api_response = client.entries_response(
+            client.entry_xml(
+                "entry_1",
+                part_type="text entry",
+                entry_data="<p>Hello</p>",
+            )
+        )
+
+        response = client.api_get("tree_tools/get_entries_for_page")
+
+        assert response.findtext("./entry/eid") == "entry_1"
+        assert response.findtext("./entry/part-type") == "text entry"
+        assert response.findtext("./entry/entry-data") == "<p>Hello</p>"
+
+        api_call = client.pop_api_call()
+        assert api_call[0] == "tree_tools/get_entries_for_page"
+
+    def test_mock_client_xml_builder_rejects_mixed_content(self, client):
+        """Test MockClient.xml fails fast on invalid mixed-content input."""
+        with pytest.raises(
+            TypeError,
+            match="cannot mix text content with child elements",
+        ):
+            client.xml("entry", "text", client.xml("child"))
