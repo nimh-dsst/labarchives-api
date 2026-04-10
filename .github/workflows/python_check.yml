@@ -1,0 +1,47 @@
+name: Python Check
+
+on:
+  workflow_call:
+    inputs:
+      job_name:
+        required: true
+        type: string
+      command:
+        required: true
+        type: string
+      append_python_version_arg:
+        required: false
+        type: boolean
+        default: false
+      python_versions:
+        required: false
+        type: string
+        default: '["3.12", "3.13"]'
+
+jobs:
+  check:
+    name: ${{ inputs.job_name }} (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJSON(inputs.python_versions) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Run check
+        run: ${{ inputs.command }}${{ inputs.append_python_version_arg && format(' --python-version {0}', matrix.python-version) || '' }}

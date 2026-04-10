@@ -7,29 +7,15 @@ on:
     branches: ["main"]
 
 jobs:
-  typecheck:
-    name: Pyright (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.12", "3.13"]
+  pyright:
+    uses: ./.github/workflows/python_check.yml
+    with:
+      job_name: Pyright
+      command: uv run pyright
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-          version: "latest"
-
-      - name: Set up Python
-        run: uv python install ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: uv sync --all-groups
-
-      - name: Run pyright
-        run: uv run pyright
+  mypy:
+    uses: ./.github/workflows/python_check.yml
+    with:
+      job_name: Mypy
+      command: uv run mypy
+      append_python_version_arg: true
