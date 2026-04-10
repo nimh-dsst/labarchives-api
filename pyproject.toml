@@ -31,6 +31,11 @@ dependencies = [
     "requests>=2.32.5",
 ]
 
+[project.urls]
+Documentation = "https://github.com/nimh-dsst/labapi/tree/main/docs/source"
+Issues = "https://github.com/nimh-dsst/labapi/issues"
+Source = "https://github.com/nimh-dsst/labapi"
+
 [project.optional-dependencies]
 builtin-auth = [
     "selenium>=4.39.0",

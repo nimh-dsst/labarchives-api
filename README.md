@@ -3,9 +3,12 @@
 A Python client for the LabArchives API.
 
 [![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Tests](https://github.com/nimh-dsst/labapi/actions/workflows/unit_tests.yml/badge.svg?branch=main)](https://github.com/nimh-dsst/labapi/actions/workflows/unit_tests.yml)
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
 
 LabArchives is a cloud-based Electronic Lab Notebook (ELN) for research data management. `labapi` provides a clean, object-oriented Python interface to interact with LabArchives notebooks, folders, pages, and entries.
+
+[Source](https://github.com/nimh-dsst/labapi) | [Documentation](https://github.com/nimh-dsst/labapi/tree/main/docs/source) | [Issue Tracker](https://github.com/nimh-dsst/labapi/issues)
 
 ## Getting Started
 
@@ -71,7 +74,7 @@ set ACCESS_PWD=your_access_password
 
 ## First Success Tutorial
 
-If you want a single copy/paste path from install to a visible result in LabArchives, start with the [First Success Tutorial](docs/source/quick_start/tutorial.rst).
+If you want a single copy/paste path from install to a visible result in LabArchives, start with the [First Success Tutorial](https://github.com/nimh-dsst/labapi/blob/main/docs/source/quick_start/tutorial.rst).
 
 ## Usage
 
@@ -102,7 +105,7 @@ with Client() as client:
     user = client.login(email, auth_code)
 ```
 
-For detailed service-oriented patterns (server callbacks, CI/scripted workflows, and token-handling guidance), see `docs/source/guide/auth.rst`.
+For detailed service-oriented patterns (server callbacks, CI/scripted workflows, and token-handling guidance), see the [authentication guide](https://github.com/nimh-dsst/labapi/blob/main/docs/source/guide/auth.rst).
 
 ### Navigating Notebooks
 
@@ -147,10 +150,11 @@ page.entries.create_json_entry(data)
 
 ## Documentation
 
-- Quick Start: [docs/source/quick_start/index.rst](docs/source/quick_start/index.rst)
-- User Guide: [docs/source/guide/index.rst](docs/source/guide/index.rst)
-- FAQ: [docs/source/faq.rst](docs/source/faq.rst)
-- Examples: [docs/source/examples/index.rst](docs/source/examples/index.rst)
+- [Quick Start](https://github.com/nimh-dsst/labapi/blob/main/docs/source/quick_start/index.rst)
+- [User Guide](https://github.com/nimh-dsst/labapi/blob/main/docs/source/guide/index.rst)
+- [FAQ](https://github.com/nimh-dsst/labapi/blob/main/docs/source/faq.rst)
+- [Examples](https://github.com/nimh-dsst/labapi/blob/main/docs/source/examples/index.rst)
+- [Full documentation source](https://github.com/nimh-dsst/labapi/tree/main/docs/source)
 
 ## Running the tests
 
@@ -177,17 +181,17 @@ uv run pytest --cov=labapi
 If you want to contribute to `labapi` itself, clone the repository and install the development dependencies:
 
 ```bash
-git clone https://github.com/nimh-dsst/labarchives-api.git
-cd labarchives-api
+git clone https://github.com/nimh-dsst/labapi.git
+cd labapi
 uv sync
 ```
 
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+Please see the [contributing guide](https://github.com/nimh-dsst/labapi/blob/main/CONTRIBUTING.md) for development guidelines.
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/nimh-dsst/labarchives-api/tags).
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/nimh-dsst/labapi/tags).
 
 ## License
 
-This project is licensed under the CC0 1.0 Universal License - see the [LICENSE](LICENSE) file for details (or `pyproject.toml`).
+This project is licensed under the CC0 1.0 Universal License. See the [LICENSE](https://github.com/nimh-dsst/labapi/blob/main/LICENSE) file for details.
