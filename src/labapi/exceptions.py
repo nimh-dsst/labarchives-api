@@ -2,7 +2,7 @@
 
 
 class LabArchivesError(Exception):
-    """Base for all labarchives-api exceptions."""
+    """Base for all ``labapi`` exceptions."""
 
 
 class AuthenticationError(LabArchivesError):
