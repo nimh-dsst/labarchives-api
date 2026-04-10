@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import os
 import warnings
 from typing import Literal, TypeGuard
+
+from .env import getenv
 
 _DETECTABLE_BROWSERS = ("chrome", "firefox", "edge")
 _CHOOSEABLE_BROWSERS = ("chrome", "firefox", "edge", "terminal")
@@ -31,7 +32,7 @@ def _parse_detectable(string: str | None) -> _DetectableBrowser | Literal[False]
 
 def _get_env_browser() -> _ChoosableBrowser | None:
     # TODO put the load dotenv here
-    browser = os.getenv("LA_AUTH_BROWSER", "").strip().lower()
+    browser = getenv("LA_AUTH_BROWSER", "").strip().lower()
 
     if browser == "":
         return None

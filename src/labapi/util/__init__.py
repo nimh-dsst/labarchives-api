@@ -5,6 +5,8 @@ the LabArchives API client, including XML extraction, type conversions,
 indexing mechanisms, and data structures for notebook initialization.
 """
 
+from .browser import detect_default_browser
+from .env import getenv
 from .extract import extract_etree, to_bool
 from .path import NotebookPath
 from .types import (
@@ -17,21 +19,7 @@ from .types import (
     NotebookInit,
 )
 
-#: All known LabArchives entry part types.
-ALL_PART_TYPES = (
-    "Attachment",
-    "plain text entry",
-    "heading",
-    "text entry",
-    "widget entry",
-    "sketch entry",
-    "reference entry",
-    "equation entry",
-    "assignment entry",
-)
-
 __all__ = [
-    "ALL_PART_TYPES",  # See if there's a way to remove this
     "IdIndex",
     "IdOrNameIndex",
     "Index",
@@ -40,6 +28,8 @@ __all__ = [
     "NameIndex",
     "NotebookInit",
     "NotebookPath",
+    "detect_default_browser",
     "extract_etree",
+    "getenv",
     "to_bool",
 ]

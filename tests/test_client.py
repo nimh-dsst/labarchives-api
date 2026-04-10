@@ -794,6 +794,28 @@ class TestClientUnit:
         assert client._akid == "test_akid"
         assert client._base_url == "https://api.labarchives.com"
 
+    def test_client_initialization_loads_dotenv_when_values_are_missing(
+        self, monkeypatch
+    ):
+        """Test Client initialization can populate credentials via python-dotenv."""
+        mock_dotenv = MagicMock()
+
+        def populate_env():
+            monkeypatch.setenv("ACCESS_KEYID", "dotenv_akid")
+            monkeypatch.setenv("ACCESS_PWD", "dotenv_password")
+
+        mock_dotenv.load_dotenv.side_effect = populate_env
+        monkeypatch.delenv("API_URL", raising=False)
+        monkeypatch.delenv("ACCESS_KEYID", raising=False)
+        monkeypatch.delenv("ACCESS_PWD", raising=False)
+
+        with patch.dict("sys.modules", {"dotenv": mock_dotenv}):
+            client = Client()
+
+        assert client._akid == "dotenv_akid"
+        assert client._base_url == "https://api.labarchives.com"
+        mock_dotenv.load_dotenv.assert_called_once_with()
+
     @pytest.mark.skipif(
         not getenv("ACCESS_KEYID"), reason="Environment variables not set"
     )

@@ -15,7 +15,6 @@ from datetime import datetime, timedelta
 from http.server import SimpleHTTPRequestHandler
 from io import BufferedIOBase
 from operator import itemgetter
-from os import getenv
 from secrets import token_urlsafe
 from socketserver import TCPServer
 from time import monotonic
@@ -32,8 +31,7 @@ from requests.adapters import HTTPAdapter
 
 from .exceptions import ApiError, AuthenticationError
 from .user import User
-from .util import NotebookInit, extract_etree, to_bool
-from .util.browser import detect_default_browser
+from .util import NotebookInit, detect_default_browser, extract_etree, getenv, to_bool
 
 # Error codes that indicate an authentication/credential failure.
 _AUTH_ERROR_CODES: frozenset[int] = frozenset(
@@ -49,16 +47,6 @@ _DEFAULT_AUTH_CALLBACK_HOST = "127.0.0.1"
 _DEFAULT_AUTH_CALLBACK_PORT = 8089
 _DEFAULT_AUTH_CALLBACK_PATH = "/"
 _DEFAULT_AUTH_CALLBACK_TIMEOUT = 300.0
-
-
-try:
-    from dotenv import load_dotenv  # pyright: ignore[reportMissingImports]
-
-    # Optional behavior: auto-load local `.env` values when `labapi[dotenv]`
-    # (python-dotenv) is installed.
-    load_dotenv()
-except ImportError:
-    pass
 
 
 context = ssl.create_default_context()
@@ -772,6 +760,7 @@ class Client:
         api_method = method_parts[-1] if signature_method is None else signature_method
 
         scheme, netloc, path, _qs, _f = urlsplit(self._base_url)
+        path = str(path)
 
         if not path.endswith("/"):
             path += "/"

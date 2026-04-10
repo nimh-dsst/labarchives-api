@@ -64,6 +64,22 @@ def test_browser_detection_env_var_is_resolved_at_call_time(
     assert browser_module.detect_default_browser() == "edge"
 
 
+def test_browser_detection_loads_dotenv_before_reading_env(browser_module, monkeypatch):
+    """Test browser detection can populate LA_AUTH_BROWSER via python-dotenv."""
+    mock_dotenv = MagicMock()
+
+    def populate_env():
+        monkeypatch.setenv("LA_AUTH_BROWSER", "terminal")
+
+    mock_dotenv.load_dotenv.side_effect = populate_env
+    monkeypatch.delenv("LA_AUTH_BROWSER", raising=False)
+
+    with patch.dict("sys.modules", {"dotenv": mock_dotenv}):
+        assert browser_module.detect_default_browser() == "terminal"
+
+    mock_dotenv.load_dotenv.assert_called_once_with()
+
+
 def test_browser_detection_default_system(
     browser_module, mock_installed_browsers, monkeypatch
 ):
