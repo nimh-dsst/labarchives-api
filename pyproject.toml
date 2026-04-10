@@ -42,6 +42,7 @@ dotenv = [
 
 [dependency-groups]
 dev = [
+    "mypy>=1.12.0",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
     "pyright>=1.1.406",
@@ -62,6 +63,15 @@ where = ["src"]
 pythonpath = "src"
 testpaths = ["tests"]
 addopts = "--cov=labapi --cov-report=term-missing"
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src/labapi"]
+mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
+
+[[tool.mypy.overrides]]
+module = ["dotenv", "installed_browsers", "requests", "requests.*", "selenium", "selenium.*"]
+ignore_missing_imports = true
 
 [tool.ruff.lint]
 extend-select = ["A", "ARG", "B", "C4", "C90", "D", "I", "ICN", "INP", "PIE", "PLR0912", "PT", "PTH", "RET", "RUF", "SIM", "UP"]
