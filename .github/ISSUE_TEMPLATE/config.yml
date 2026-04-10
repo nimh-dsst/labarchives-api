@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Usage and setup docs
+    url: https://github.com/nimh-dsst/labarchives-api/tree/main/docs/source
+    about: Start here for installation, authentication, quick-start, and FAQ guidance.
+  - name: Contributing guide
+    url: https://github.com/nimh-dsst/labarchives-api/blob/main/CONTRIBUTING.md
+    about: Review local setup, testing commands, and code-quality expectations for contributions.

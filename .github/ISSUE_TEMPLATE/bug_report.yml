@@ -1,0 +1,110 @@
+name: Bug report
+description: Report a reproducible problem in labapi.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem.
+
+        Please redact API credentials, auth keys, notebook content, and any other sensitive data before submitting.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A short description of the problem and the impact it has on your workflow.
+      placeholder: default_authenticate() raises an exception after opening the browser callback flow.
+    validations:
+      required: true
+  - type: input
+    id: labapi-version
+    attributes:
+      label: labapi version
+      description: The package version you are using, or the commit/branch name if installed from source.
+      placeholder: 0.1.0, main, or a git commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: python-version
+    attributes:
+      label: Python version
+      description: Which Python version reproduces the issue?
+      options:
+        - "3.12"
+        - "3.13"
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: install-profile
+    attributes:
+      label: Install profile
+      description: Which install path most closely matches your environment?
+      options:
+        - Installed from source with `uv sync`
+        - `pip install labapi`
+        - `pip install 'labapi[dotenv]'`
+        - `pip install 'labapi[builtin-auth]'`
+        - `pip install 'labapi[dotenv,builtin-auth]'`
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include your OS, shell, and any other environment details that matter.
+      placeholder: |
+        Windows 11
+        PowerShell 7
+        API_URL=https://api.labarchives.com
+        Running behind a VPN
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Share the smallest sequence of steps that reproduces the issue.
+      placeholder: |
+        1. Create a client with `Client()`
+        2. Call `default_authenticate()`
+        3. Complete the browser auth flow
+        4. Observe the exception
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: The client should authenticate and return the current user object.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: The browser flow completes, but the callback server times out after 60 seconds.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproducible example
+      description: If possible, share a small script that reproduces the problem.
+      render: python
+  - type: textarea
+    id: logs
+    attributes:
+      label: Traceback or logs
+      description: Paste any error output, traceback, or debug logs that may help.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the existing issues before opening this report.
+          required: true
+        - label: I redacted secrets and sensitive notebook data from the details above.
+          required: true
