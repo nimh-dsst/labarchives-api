@@ -808,6 +808,7 @@ class TestClientUnit:
         monkeypatch.delenv("API_URL", raising=False)
         monkeypatch.delenv("ACCESS_KEYID", raising=False)
         monkeypatch.delenv("ACCESS_PWD", raising=False)
+        monkeypatch.setattr("labapi.util.env._loaded", False)
 
         with patch.dict("sys.modules", {"dotenv": mock_dotenv}):
             client = Client()
