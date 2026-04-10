@@ -2,11 +2,26 @@
 
 import contextlib
 from os import getenv as _getenv
+from typing import Any, overload
 
 _loaded = False
 
 
-def getenv[T](key: str, default: T = None, *args, **kwargs) -> str | T:
+@overload
+def getenv(key: str) -> str | None: ...
+
+
+@overload
+def getenv(key: str, default: None, *args: Any, **kwargs: Any) -> str | None: ...
+
+
+@overload
+def getenv[T](key: str, default: T, *args: Any, **kwargs: Any) -> str | T: ...
+
+
+def getenv[T](
+    key: str, default: T | None = None, *args: Any, **kwargs: Any
+) -> str | T | None:
     """Return an environment variable, loading ``.env`` on first use.
 
     If ``python-dotenv`` is installed, this wrapper calls ``load_dotenv()``
@@ -21,7 +36,7 @@ def getenv[T](key: str, default: T = None, *args, **kwargs) -> str | T:
 
     if not _loaded:
         with contextlib.suppress(ImportError):
-            from dotenv import load_dotenv
+            from dotenv import load_dotenv  # pyright: ignore[reportMissingImports]
 
             load_dotenv()
             _loaded = True

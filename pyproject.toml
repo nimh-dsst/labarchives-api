@@ -42,7 +42,6 @@ dotenv = [
 
 [dependency-groups]
 dev = [
-    "mypy>=1.12.0",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
     "pyright>=1.1.406",
@@ -54,6 +53,7 @@ dev = [
     "sphinx-breeze-theme>=0.13.1",
     "sphinx-copybutton>=0.5.2",
     "sphinx-design>=0.7.0",
+    "ty>=0.0.29",
 ]
 
 [tool.setuptools.packages.find]
@@ -64,14 +64,45 @@ pythonpath = "src"
 testpaths = ["tests"]
 addopts = "--cov=labapi --cov-report=term-missing"
 
-[tool.mypy]
-python_version = "3.12"
-files = ["src/labapi"]
-mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
+[tool.ty.analysis]
+replace-imports-with-any = [
+    "dotenv.**",
+    "installed_browsers.**",
+    "requests.**",
+    "selenium.**",
+]
 
-[[tool.mypy.overrides]]
-module = ["dotenv", "installed_browsers", "requests", "requests.*", "selenium", "selenium.*"]
-ignore_missing_imports = true
+[[tool.ty.overrides]]
+include = [
+    "src/labapi/tree/collection.py",
+    "src/labapi/tree/mixins.py",
+]
+
+[tool.ty.overrides.rules]
+invalid-method-override = "ignore"
+
+[[tool.ty.overrides]]
+include = ["src/labapi/tree/mixins.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+
+[[tool.ty.overrides]]
+include = ["src/labapi/util/extract.py"]
+
+[tool.ty.overrides.rules]
+invalid-assignment = "ignore"
+unresolved-attribute = "ignore"
+
+[tool.ty.environment]
+python-version = "3.12"
+root = ["./src"]
+
+[tool.ty.src]
+include = ["src/labapi"]
+
+[tool.ty.terminal]
+error-on-warning = true
 
 [tool.ruff.lint]
 extend-select = ["A", "ARG", "B", "C4", "C90", "D", "I", "ICN", "INP", "PIE", "PLR0912", "PT", "PTH", "RET", "RUF", "SIM", "UP"]

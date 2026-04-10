@@ -56,6 +56,10 @@ class NotebookPath(Sequence[str]):
             string path for later resolution. Must be absolute.
         :raises PathError: If ``parent`` is not absolute.
         """
+        self._parent: NotebookPath | None = None
+        self._parts: Sequence[str] = ()
+        self._absolute: bool = False
+
         if parent is not None:
             self._parent = NotebookPath(parent)
             if not self._parent.is_absolute():
@@ -68,19 +72,15 @@ class NotebookPath(Sequence[str]):
             self._parent = None
 
         if isinstance(part, NotebookPath):
-            self._parts: Sequence[str] = NotebookPath._combine(
-                part._parts, parts, part._absolute
-            )
-            self._absolute: bool = part._absolute
+            self._parts = NotebookPath._combine(part._parts, parts, part._absolute)
+            self._absolute = part._absolute
             self._parent = part._parent
         elif isinstance(part, str):
             is_abs = NotebookPath._is_absolute_seq(part) and self._parent is None
-            self._parts: Sequence[str] = NotebookPath._combine((part,), parts, is_abs)
+            self._parts = NotebookPath._combine((part,), parts, is_abs)
             self._absolute = is_abs
         else:
-            self._parts: Sequence[str] = NotebookPath._combine(
-                NotebookPath._of_node(part), parts, True
-            )
+            self._parts = NotebookPath._combine(NotebookPath._of_node(part), parts, True)
             self._absolute = True
 
     def __truediv__(self, other: str | NotebookPath) -> NotebookPath:

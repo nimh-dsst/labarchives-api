@@ -54,7 +54,7 @@ class UnimplementedEntry(
 ):
     """Fallback entry wrapper for known upstream part types not yet implemented."""
 
-    @UnknownEntry.content.setter
+    @UnknownEntry.content.setter  # type: ignore[attr-defined]
     @override
     def content(self, value: str) -> None:
         """Reject updates for recognized-but-unimplemented entry types."""

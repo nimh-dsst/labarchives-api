@@ -39,9 +39,9 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
         :param user: The authenticated user.
         """
         super().__init__(eid, caption, user)
-        self._filedata = None
-        self._filename = None
-        self._mime_type = None
+        self._filedata: Attachment | None = None
+        self._filename: str | None = None
+        self._mime_type: str | None = None
 
     def _ensure_attachment(self, use_tempfile: bool) -> None:
         if self._filedata is None or self._filedata.closed:

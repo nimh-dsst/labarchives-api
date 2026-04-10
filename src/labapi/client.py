@@ -13,13 +13,12 @@ from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
 from datetime import datetime, timedelta
 from http.server import SimpleHTTPRequestHandler
-from io import BufferedIOBase
 from operator import itemgetter
 from secrets import token_urlsafe
 from socketserver import TCPServer
 from time import monotonic
 from types import TracebackType
-from typing import Any, Self, override
+from typing import IO, Any, Self, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cryptography.hazmat.primitives.hashes import SHA512
@@ -471,7 +470,7 @@ class Client:
     def stream_api_post(
         self,
         api_method_uri: str | Sequence[str],
-        body: Mapping[str, str] | BufferedIOBase,
+        body: Mapping[str, str] | IO[bytes] | IO[str],
         **kwargs: Any,
     ) -> StreamingResponse:
         """Send a POST request and return a streamed response wrapper.
@@ -529,7 +528,7 @@ class Client:
     def raw_api_post(
         self,
         api_method_uri: str | Sequence[str],
-        body: Mapping[str, str] | BufferedIOBase,
+        body: Mapping[str, str] | IO[bytes] | IO[str],
         **kwargs: Any,
     ) -> Response:
         """Send a POST request and return the raw ``requests.Response``.
@@ -578,7 +577,7 @@ class Client:
     def api_post(
         self,
         api_method_uri: str | Sequence[str],
-        body: Mapping[str, str] | BufferedIOBase,
+        body: Mapping[str, str] | IO[bytes] | IO[str],
         **kwargs: Any,
     ) -> Element:
         """Send a POST request and parse the XML response into an element.

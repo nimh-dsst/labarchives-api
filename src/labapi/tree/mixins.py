@@ -293,8 +293,8 @@ class AbstractTreeNode(AbstractBaseTreeNode):
     modifying the node's name, copying, moving, and deleting the node.
     """
 
-    @HasNameMixin.name.setter
-    def name(self, value: str):
+    @HasNameMixin.name.setter  # type: ignore[attr-defined]
+    def name(self, value: str) -> None:
         """Set the tree node name.
 
         This operation updates the node's name in LabArchives via an API call.

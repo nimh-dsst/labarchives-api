@@ -48,8 +48,8 @@ class Notebook(AbstractTreeContainer):
         """
         return self._id
 
-    @HasNameMixin.name.setter
-    def name(self, value: str):
+    @HasNameMixin.name.setter  # type: ignore[attr-defined]
+    def name(self, value: str) -> None:
         """Set the notebook name.
 
         This operation updates the notebook's name in LabArchives via an API call.

@@ -7,12 +7,17 @@ from typing import Literal, TypeGuard
 
 from .env import getenv
 
-_DETECTABLE_BROWSERS = ("chrome", "firefox", "edge")
-_CHOOSEABLE_BROWSERS = ("chrome", "firefox", "edge", "terminal")
-
-
 type _DetectableBrowser = Literal["chrome", "firefox", "edge"]
 type _ChoosableBrowser = Literal["chrome", "firefox", "edge", "terminal"]
+
+
+_DETECTABLE_BROWSERS: tuple[_DetectableBrowser, ...] = ("chrome", "firefox", "edge")
+_CHOOSEABLE_BROWSERS: tuple[_ChoosableBrowser, ...] = (
+    "chrome",
+    "firefox",
+    "edge",
+    "terminal",
+)
 
 
 def _is_choosable(string: str) -> TypeGuard[_ChoosableBrowser]:
@@ -113,6 +118,7 @@ def _autodetect_browser() -> _DetectableBrowser | None:
             RuntimeWarning,
             stacklevel=2,
         )
+        return None
 
 
 def detect_default_browser() -> _ChoosableBrowser:

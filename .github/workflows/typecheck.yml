@@ -13,9 +13,9 @@ jobs:
       job_name: Pyright
       command: uv run pyright
 
-  mypy:
+  ty:
     uses: ./.github/workflows/python_check.yml
     with:
-      job_name: Mypy
-      command: uv run mypy
+      job_name: ty
+      command: uv run ty check
       append_python_version_arg: true

@@ -4,10 +4,22 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from inspect import isabstract
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, cast
 
 if TYPE_CHECKING:
     from labapi.user import User
+
+
+class _EntryFactory(Protocol):
+    _is_meta: ClassVar[bool]
+
+    def __call__(self, eid: str, data: str, user: User) -> Entry[Any]: ...
+
+
+class _MetaEntryFactory(Protocol):
+    _is_meta: ClassVar[bool]
+
+    def __call__(self, eid: str, data: str, user: User, *, part_type: str) -> Entry[Any]: ...
 
 
 _entries_registry: dict[str, type[Entry[Any]]] = {}
@@ -27,7 +39,8 @@ class Entry[T](ABC):
     :param T: The type of content stored in the entry (e.g., str for text, Attachment for files).
     """
 
-    _part_type: str
+    _part_type: ClassVar[str]
+    _is_meta: ClassVar[bool]
 
     @staticmethod
     def is_registered(part_type: str) -> bool:
@@ -75,9 +88,9 @@ class Entry[T](ABC):
             return UnknownEntry(eid, data, user, part_type=part_type)
 
         if klass._is_meta:
-            return klass(eid, data, user, part_type=part_type)  # pyright: ignore[reportCallIssue]
+            return cast(_MetaEntryFactory, klass)(eid, data, user, part_type=part_type)
 
-        return klass(eid, data, user)
+        return cast(_EntryFactory, klass)(eid, data, user)
 
     # TODO perms
     def __init__(
@@ -118,7 +131,7 @@ class Entry[T](ABC):
         super().__init_subclass__(**kwargs)
 
     @property
-    def id(self):
+    def id(self) -> str:
         """Return the unique identifier of the entry.
 
         :returns: The entry's ID as a string.
