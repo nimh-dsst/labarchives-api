@@ -19,7 +19,9 @@ class _EntryFactory(Protocol):
 class _MetaEntryFactory(Protocol):
     _is_meta: ClassVar[bool]
 
-    def __call__(self, eid: str, data: str, user: User, *, part_type: str) -> Entry[Any]: ...
+    def __call__(
+        self, eid: str, data: str, user: User, *, part_type: str
+    ) -> Entry[Any]: ...
 
 
 _entries_registry: dict[str, type[Entry[Any]]] = {}

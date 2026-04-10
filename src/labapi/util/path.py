@@ -80,7 +80,9 @@ class NotebookPath(Sequence[str]):
             self._parts = NotebookPath._combine((part,), parts, is_abs)
             self._absolute = is_abs
         else:
-            self._parts = NotebookPath._combine(NotebookPath._of_node(part), parts, True)
+            self._parts = NotebookPath._combine(
+                NotebookPath._of_node(part), parts, True
+            )
             self._absolute = True
 
     def __truediv__(self, other: str | NotebookPath) -> NotebookPath:

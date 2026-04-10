@@ -15,7 +15,6 @@ from labapi.util import extract_etree
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
-    from io import BufferedIOBase
 
     from labapi.util import NotebookInit
 
