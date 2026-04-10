@@ -1,3 +1,5 @@
+"""Helpers for reading environment variables with optional `.env` loading."""
+
 import contextlib
 from os import getenv as _getenv
 
