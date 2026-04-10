@@ -1,0 +1,50 @@
+name: Feature request
+description: Suggest an improvement to the library, docs, or developer workflow.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement to labapi.
+
+        Clear examples of the workflow you want to support make it much easier to evaluate the request.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What are you trying to do, and what is hard or missing today?
+      placeholder: I need a simpler way to authenticate in a headless CI job without wiring my own callback server.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the API, behavior, or docs change you would like to see.
+      placeholder: Add a helper that exchanges a one-time auth token for a session using environment variables.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Share any workarounds, adjacent APIs, or alternative approaches you have tried.
+      placeholder: Today I build the auth URL myself and parse the callback in a separate script.
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example usage
+      description: If helpful, sketch the code or command-line flow you want.
+      render: python
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add links, screenshots, docs references, or other details that would help.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the existing issues before opening this request.
+          required: true
