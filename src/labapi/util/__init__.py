@@ -31,6 +31,7 @@ ALL_PART_TYPES = (
 )
 
 __all__ = [
+    "ALL_PART_TYPES",
     "IdIndex",
     "IdOrNameIndex",
     "Index",
@@ -39,7 +40,6 @@ __all__ = [
     "NameIndex",
     "NotebookInit",
     "NotebookPath",
-    "ALL_PART_TYPES",
     "extract_etree",
     "to_bool",
 ]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from inspect import isabstract
-from typing import TYPE_CHECKING, Any, Generic, Type, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 if TYPE_CHECKING:
     from labapi.user import User
@@ -12,10 +12,10 @@ if TYPE_CHECKING:
 
 T = TypeVar("T")
 
-_entries_registry: dict[str, Type[Entry[Any]]] = {}
+_entries_registry: dict[str, type[Entry[Any]]] = {}
 
 
-class Entry(ABC, Generic[T]):
+class Entry[T](ABC):
     """Abstract base class for all entry types on a LabArchives page.
 
     This class provides a common interface for different entry types such as
@@ -41,7 +41,7 @@ class Entry(ABC, Generic[T]):
         return part_type in _entries_registry
 
     @staticmethod
-    def class_of(part_type: str) -> Type[Entry[Any]]:
+    def class_of(part_type: str) -> type[Entry[Any]]:
         """Return the registered entry class for ``part_type``.
 
         :param part_type: The LabArchives part type identifier.
@@ -69,8 +69,8 @@ class Entry(ABC, Generic[T]):
         try:
             klass = _entries_registry[part_type]
             return klass(eid, data, user)
-        except KeyError:
-            raise NotImplementedError(f"{part_type}")
+        except KeyError as err:
+            raise NotImplementedError(f"{part_type}") from err
 
     # TODO perms
     def __init__(

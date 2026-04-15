@@ -32,6 +32,7 @@ class FakePage:
     """Minimal page double for exercising the download helper."""
 
     def __init__(self, name: str, page_id: str):
+        """Initialize the page double with stable identity fields."""
         self.name = name
         self.id = page_id
         self.entries = []

@@ -46,7 +46,7 @@ class TestEntryIntegration:
     """Integration tests with real objects and mocked API."""
 
     @pytest.mark.parametrize(
-        "part_type,cls",
+        ("part_type", "cls"),
         [
             ("text entry", TextEntry),
             ("plain text entry", PlainTextEntry),

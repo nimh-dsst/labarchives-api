@@ -31,6 +31,7 @@ class RecordingContainer:
     """Minimal container double for get_or_create_page tests."""
 
     def __init__(self, traverse_result=None, traverse_error: Exception | None = None):
+        """Initialize the double with an optional traversal result or error."""
         self.traverse_result = traverse_result
         self.traverse_error = traverse_error
         self.create_calls: list[
@@ -38,6 +39,7 @@ class RecordingContainer:
         ] = []
 
     def traverse(self, _path: str):
+        """Return the configured traversal result or raise the configured error."""
         if self.traverse_error is not None:
             raise self.traverse_error
         return self.traverse_result
@@ -50,6 +52,7 @@ class RecordingContainer:
         parents: bool,
         if_exists: InsertBehavior,
     ):
+        """Record page creation requests and return a placeholder result."""
         self.create_calls.append((cls, path, parents, if_exists))
         return "created-page"
 
@@ -58,6 +61,7 @@ class DirectoryNode:
     """Minimal non-page node for testing download error handling."""
 
     def as_page(self):
+        """Raise because this test double does not represent a page."""
         raise TypeError("Node is not a page")
 
 
@@ -65,10 +69,12 @@ class NotebookDouble:
     """Minimal notebook double for traversal-based example tests."""
 
     def __init__(self, traverse_result=None, traverse_error: Exception | None = None):
+        """Initialize the double with an optional traversal result or error."""
         self.traverse_result = traverse_result
         self.traverse_error = traverse_error
 
     def traverse(self, _path: str):
+        """Return the configured traversal result or raise the configured error."""
         if self.traverse_error is not None:
             raise self.traverse_error
         return self.traverse_result
@@ -78,6 +84,7 @@ class UserDouble:
     """Minimal user double exposing the notebooks mapping."""
 
     def __init__(self, notebook):
+        """Expose the supplied notebook through the expected mapping shape."""
         self.notebooks = {"My Notebook": notebook}
 
 

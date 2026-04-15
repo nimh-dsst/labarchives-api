@@ -5,8 +5,9 @@ import argparse
 import json
 from pathlib import Path
 
-from labapi import Client
 from model_logger import ModelLogger
+
+from labapi import Client
 
 
 def main() -> None:

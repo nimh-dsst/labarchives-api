@@ -1,10 +1,10 @@
 """Log Jupyter notebook runs, outputs, and artifacts to LabArchives."""
 
 import html
-import os
 from datetime import datetime
 from io import BytesIO
 from mimetypes import guess_type
+from pathlib import Path
 from secrets import token_urlsafe
 from typing import Any
 
@@ -123,12 +123,13 @@ class NotebookLogger:
 
     def track_file(self, path: str) -> None:
         """Register a file to be uploaded with the next log() call."""
-        abs_path = os.path.abspath(path)
-        if not os.path.exists(abs_path):
+        file_path = Path(path).resolve()
+        resolved_path = str(file_path)
+        if not file_path.exists():
             print(f"Warning: File {path} not found.")
             return
-        if abs_path not in self.tracked_files:
-            self.tracked_files.append(abs_path)
+        if resolved_path not in self.tracked_files:
+            self.tracked_files.append(resolved_path)
             print(f"Tracking file for LabArchives: {path}")
 
     def _capture_figures(self) -> list[bytes]:
@@ -207,11 +208,11 @@ class NotebookLogger:
         unique_paths: list[str] = []
         seen: set[str] = set()
         for path in combined:
-            abs_path = os.path.abspath(path)
-            if abs_path in seen:
+            resolved_path = str(Path(path).resolve())
+            if resolved_path in seen:
                 continue
-            seen.add(abs_path)
-            unique_paths.append(abs_path)
+            seen.add(resolved_path)
+            unique_paths.append(resolved_path)
 
         return unique_paths
 
@@ -285,14 +286,15 @@ class NotebookLogger:
             entries.create(AttachmentEntry, attachment)
 
         for path in file_paths:
-            if not os.path.isfile(path):
+            file_path = Path(path)
+            if not file_path.is_file():
                 print(f"Warning: Tracked file '{path}' is not a valid file.")
                 continue
 
-            with open(path, "rb") as f:
+            with file_path.open("rb") as f:
                 content = f.read()
-                mime_type = guess_type(path)[0] or "application/octet-stream"
-                filename = os.path.basename(path)
+                mime_type = guess_type(file_path.name)[0] or "application/octet-stream"
+                filename = file_path.name
                 attachment = Attachment(
                     BytesIO(content),
                     mime_type,

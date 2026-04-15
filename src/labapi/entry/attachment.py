@@ -5,9 +5,10 @@ from __future__ import annotations
 import shutil
 import tempfile
 from collections.abc import Buffer
+from contextlib import ExitStack
 from mimetypes import guess_type
-from os.path import basename
-from typing import IO, Any, BinaryIO, Protocol, TypeAlias, cast
+from pathlib import Path
+from typing import IO, Any, BinaryIO, Protocol, cast
 
 # NOTE: from Pylance
 # Unfortunately PEP 688 does not allow us to distinguish read-only
@@ -15,7 +16,7 @@ from typing import IO, Any, BinaryIO, Protocol, TypeAlias, cast
 # Perhaps a future extension of the buffer protocol will allow us to
 # distinguish these cases in the type system.
 # Same as WriteableBuffer, but also includes read-only buffer types (like bytes).
-ReadableBuffer: TypeAlias = Buffer  # stable
+type ReadableBuffer = Buffer  # stable
 
 
 class NamedBinaryIO(Protocol):
@@ -78,22 +79,26 @@ class Attachment:
         if not file.seekable():
             raise ValueError("Attachment.from_file requires a seekable file object")
 
-        remote_filename = basename(file.name)
+        remote_filename = Path(file.name).name
         mime_type = guess_type(file.name)[0] or "application/octet-stream"
         original_position = file.tell()
 
         # Create a spooled temporary file as the new backing buffer.
         # It stays in memory until it reaches 4MB, then rolls over to disk.
-        backing: BinaryIO = cast(
-            BinaryIO,
-            tempfile.SpooledTemporaryFile(max_size=4 * 1024 * 1024, mode="w+b"),
-        )
-        try:
-            file.seek(0)
-            shutil.copyfileobj(file, backing)
-        finally:
-            file.seek(original_position)
-        backing.seek(0)
+        with ExitStack() as stack:
+            backing = cast(
+                BinaryIO,
+                stack.enter_context(
+                    tempfile.SpooledTemporaryFile(max_size=4 * 1024 * 1024, mode="w+b")
+                ),
+            )
+            try:
+                file.seek(0)
+                shutil.copyfileobj(file, backing)
+            finally:
+                file.seek(original_position)
+            backing.seek(0)
+            stack.pop_all()
 
         return Attachment(
             backing,

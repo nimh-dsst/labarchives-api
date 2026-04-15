@@ -1,3 +1,5 @@
+"""Integration tests that exercise the library against a live LabArchives setup."""
+
 import json
 import os
 from collections.abc import Mapping
@@ -22,7 +24,7 @@ except ImportError:
 
 @pytest.fixture(scope="session")
 def la_client():
-    """Initializes the LabArchives API Client from .env file."""
+    """Initialize the LabArchives API client from environment variables."""
     if (
         not os.getenv("ACCESS_KEYID")
         or not os.getenv("ACCESS_PWD")
@@ -37,7 +39,7 @@ def la_client():
 
 @pytest.fixture(scope="session")
 def la_user(la_client: LA.Client):
-    """Authenticates the user via auth code or interactive browser."""
+    """Authenticate the test user via API key or interactive browser flow."""
     interactive = os.getenv("AUTH_INTERACTIVE", "false").lower() == "true"
 
     if interactive:
@@ -65,7 +67,7 @@ def test_notebook(la_user: LA.User):
 def get_or_create_dir(
     parent: LA.Notebook | LA.NotebookDirectory, name: str
 ) -> LA.NotebookDirectory:
-    """Helper to find a directory by name or create it if missing."""
+    """Return a child directory by name, creating it when needed."""
     existing = parent[Index.Name : name]
     if existing:
         assert isinstance(existing[0], LA.NotebookDirectory)
@@ -75,25 +77,25 @@ def get_or_create_dir(
 
 @pytest.fixture(scope="session")
 def root_test_dir(test_notebook: LA.Notebook):
-    """Returns the 'LabArchives API Test' directory."""
+    """Return the shared root directory used for integration tests."""
     return get_or_create_dir(test_notebook, "LabArchives API Test")
 
 
 @pytest.fixture(scope="session")
 def tests_dir(root_test_dir: LA.NotebookDirectory):
-    """Returns the 'tests' subdirectory."""
+    """Return the directory that stores per-test workspaces."""
     return get_or_create_dir(root_test_dir, "tests")
 
 
 def add_readme(workspace: LA.NotebookDirectory, scenario: str, actions: str):
-    """Helper to add the required README to the test workspace."""
+    """Add the required README page to a test workspace."""
     readme_page = workspace.create(LA.NotebookPage, "README")
     content = f"SCENARIO: {scenario}\n\nACTIONS TAKEN:\n{actions}"
     readme_page.entries.create(LA.PlainTextEntry, content)
 
 
 def create_json_rich_text(data: dict) -> str:
-    """Formats a dictionary as a JSON string inside an HTML <pre> block."""
+    """Format a dictionary as JSON inside an HTML ``<pre>`` block."""
     pretty_json = json.dumps(data, indent=4)
     return f"<pre>{pretty_json}</pre>"
 
@@ -104,9 +106,7 @@ def get_or_create_page_with_entry(
     entry_type: str,
     data: LA.Attachment | str,
 ) -> LA.NotebookPage:
-    """Finds a page by name. If it exists, returns it.
-    If not, creates the page and adds the specified entry.
-    """
+    """Return a page by name, creating it with the requested entry when absent."""
     existing = parent[Index.Name : name]
     if len(existing) > 0:
         assert isinstance(existing[0], LA.NotebookPage)
@@ -120,9 +120,7 @@ def get_or_create_page_with_entry(
 def get_or_create_page_with_json(
     parent: LA.NotebookDirectory, name: str, data: dict
 ) -> LA.NotebookPage:
-    """Finds a page by name. If it exists, returns it.
-    If not, creates the page and uses the new dual-entry JSON system.
-    """
+    """Return a page by name, creating it with JSON entries when absent."""
     existing = parent[Index.Name : name]
     if len(existing) > 0:
         return existing[0].as_page()
@@ -135,6 +133,7 @@ def get_or_create_page_with_json(
 
 @pytest.fixture(scope="session")
 def data_dir_structure(root_test_dir: LA.NotebookDirectory):
+    """Build and return the baseline notebook structure shared by integration tests."""
     data_dir = get_or_create_dir(root_test_dir, "data")
     m1_dir = get_or_create_dir(data_dir, "method_1")
 
@@ -160,7 +159,7 @@ def data_dir_structure(root_test_dir: LA.NotebookDirectory):
         if not sess_1[Index.Name : "data.json"]:
             from pathlib import Path
 
-            with open(Path(__file__).parent / "test_entry.json", "rb") as f:
+            with (Path(__file__).parent / "test_entry.json").open("rb") as f:
                 data_att = LA.Attachment.from_file(f)
                 sess_1.create(LA.NotebookPage, "data.json").entries.create(
                     LA.AttachmentEntry, data_att
@@ -183,9 +182,7 @@ def test_env(
     tests_dir: LA.NotebookDirectory,
     data_dir_structure: LA.NotebookDirectory,
 ):
-    """Creates a timestamped directory for the specific test,
-    copies the data structure into it, and returns the workspace.
-    """
+    """Create an isolated workspace for a single integration test run."""
     timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
     test_folder_name = f"test: {request.node.name} {timestamp}"  # pyright: ignore[reportUnknownMemberType]
 

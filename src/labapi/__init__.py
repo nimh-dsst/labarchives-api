@@ -13,6 +13,8 @@ Key components include:
 - :mod:`~labapi.util`: General utility functions and data structures.
 """
 
+from importlib.metadata import PackageNotFoundError, version
+
 from .client import Client
 from .entry import (
     Attachment,
@@ -40,7 +42,6 @@ from .tree import (
 )
 from .user import User
 from .util import Index, InsertBehavior, JsonData, NotebookPath
-from importlib.metadata import version, PackageNotFoundError
 
 try:
     __version__ = version("labapi")
@@ -48,9 +49,8 @@ except PackageNotFoundError:
     __version__ = "unknown"
 
 __all__ = [
-    "__version__",
-    "ApiError",
     "AbstractTreeContainer",
+    "ApiError",
     "Attachment",
     "AttachmentEntry",
     "AuthenticationError",
@@ -61,16 +61,17 @@ __all__ = [
     "InsertBehavior",
     "JsonData",
     "LabArchivesError",
+    "NodeExistsError",
     "Notebook",
     "NotebookDirectory",
     "NotebookPage",
-    "NodeExistsError",
+    "NotebookPath",
     "PathError",
     "PlainTextEntry",
-    "NotebookPath",
     "TextEntry",
     "TraversalError",
     "UnknownEntry",
     "User",
     "WidgetEntry",
+    "__version__",
 ]

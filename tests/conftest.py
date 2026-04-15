@@ -1,9 +1,12 @@
+"""Pytest configuration for selecting integration tests."""
+
 from __future__ import annotations
 
 import pytest
 
 
 def pytest_addoption(parser: pytest.Parser):
+    """Register the command-line flag for running integration tests."""
     parser.addoption(
         "--integration",
         action="store_true",
@@ -13,6 +16,7 @@ def pytest_addoption(parser: pytest.Parser):
 
 
 def pytest_configure(config: pytest.Config):
+    """Register the custom marker used by integration tests."""
     config.addinivalue_line(
         "markers", "integration: mark test as requiring live LabArchives access"
     )
@@ -21,6 +25,7 @@ def pytest_configure(config: pytest.Config):
 def pytest_collection_modifyitems(
     config: pytest.Config, items: list[pytest.Item]
 ) -> None:
+    """Skip integration tests unless the integration flag was requested."""
     if config.getoption("--integration"):
         return
 

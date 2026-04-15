@@ -2,8 +2,9 @@
 """Log model metadata, metrics, and artifacts to LabArchives."""
 
 import sys
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Any, Sequence
+from typing import Any
 
 from labapi import (
     Attachment,

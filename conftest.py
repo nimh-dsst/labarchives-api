@@ -1,3 +1,5 @@
+"""Shared pytest fixtures and mock helpers for the test suite."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
@@ -18,21 +20,23 @@ from labapi.tree.collection import Notebooks
 
 
 def pytest_configure(config: pytest.Config):
+    """Register the custom marker used by interactive tests."""
     config.addinivalue_line(
         "markers", "is_interactive: mark test as requiring interactive mode"
     )
 
 
 def pytest_runtest_setup(item: pytest.Item):
-    if "is_interactive" in item.keywords:
-        if item.config.getoption("capture") != "no":
-            pytest.skip("skipping interactive test in non-interactive mode")
+    """Skip interactive tests unless pytest capture has been disabled."""
+    if "is_interactive" in item.keywords and item.config.getoption("capture") != "no":
+        pytest.skip("skipping interactive test in non-interactive mode")
 
 
 class MockClient(LA.Client):
     """Mock client for testing without hitting the real API."""
 
     def __init__(self):
+        """Initialize the mock client with empty response and log queues."""
         super().__init__("https://test-labapi.test", "test", "test")
         self._api_response: list[etree.Element | Exception] = []
         self._api_logs: list[tuple[str | Sequence[str], dict[str, Any]]] = []
@@ -65,6 +69,7 @@ class MockClient(LA.Client):
 
     @property
     def api_response(self):
+        """Return the next queued API response without consuming it."""
         return self._api_response[0]
 
     @api_response.setter
@@ -76,17 +81,19 @@ class MockClient(LA.Client):
 
     @property
     def api_log(self):
+        """Return and consume the oldest recorded API call."""
         return self._api_logs.pop(0)
 
     def flush_responses(self):
-        """Clears all queued API responses."""
+        """Clear all queued API responses."""
         self._api_response.clear()
 
     def flush_logs(self):
-        """Clears all recorded API logs."""
+        """Clear all recorded API logs."""
         self._api_logs.clear()
 
     def clear_log(self):
+        """Clear all recorded API logs."""
         self.flush_logs()
 
     @override
@@ -219,7 +226,7 @@ def new_notebook(client: MockClient, notebooks: Notebooks):
 
 
 def traverse_populate(node: LA.Notebook | LA.NotebookDirectory):
-    """Helper function to recursively populate a notebook tree."""
+    """Populate a notebook tree recursively by walking all descendants."""
     # Trigger population
     len(node)
 

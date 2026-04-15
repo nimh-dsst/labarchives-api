@@ -43,7 +43,7 @@ class TestWidgetEntryIntegration:
         """Test WidgetEntry.content setter raises AttributeError as it is read-only."""
         entry = WidgetEntry("eid_widget", "Old widget data", user)
 
-        with pytest.raises(AttributeError, match="Widget entries are read-only."):
+        with pytest.raises(AttributeError, match=r"Widget entries are read-only\."):
             entry.content = "New widget data"
 
         assert entry.content == "Old widget data"

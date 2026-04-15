@@ -115,6 +115,19 @@ include = ["src/labapi"]
 [tool.ty.terminal]
 error-on-warning = true
 
+[tool.ruff]
+extend-exclude = [
+    ".pre-commit-cache",
+    ".pre-commit-cache-2",
+    ".pytest_tmp",
+    ".pytest_tmp_local",
+    "_codex",
+    "download-target",
+    "pytest_tmp_local",
+    "pytest_tmp_run",
+    "tmp__*",
+]
+
 [tool.ruff.lint]
 extend-select = ["A", "ARG", "B", "C4", "C90", "D", "I", "ICN", "INP", "PIE", "PLR0912", "PT", "PTH", "RET", "RUF", "SIM", "UP"]
 

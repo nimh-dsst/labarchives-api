@@ -184,7 +184,7 @@ class TestEntriesIntegration:
         return page
 
     @pytest.mark.parametrize(
-        "cls,data",
+        ("cls", "data"),
         [
             (TextEntry, "<p>New content</p>"),
             (HeaderEntry, "<h1>Title</h1>"),

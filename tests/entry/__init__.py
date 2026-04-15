@@ -1,0 +1,1 @@
+"""Entry tests for labapi."""

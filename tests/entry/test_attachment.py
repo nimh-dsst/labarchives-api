@@ -22,7 +22,7 @@ def test_attachment_from_file():
 
     try:
         # Open the file and create attachment
-        with open(temp_file_path, "r+b") as file:
+        with Path(temp_file_path).open("r+b") as file:
             attachment = Attachment.from_file(file)
 
             assert attachment.filename == Path(temp_file_path).name
@@ -44,7 +44,7 @@ def test_attachment_from_file_buffered_reader():
 
     try:
         # Open the file with 'rb' (read-only binary mode)
-        with open(temp_file_path, "rb") as file:
+        with Path(temp_file_path).open("rb") as file:
             attachment = Attachment.from_file(file)
 
             # Read content from attachment to verify cloning
@@ -65,7 +65,7 @@ def test_attachment_from_file_preserves_cursor_and_copies_full_file():
         temp_file_path = temp_file.name
 
     try:
-        with open(temp_file_path, "r+b") as file:
+        with Path(temp_file_path).open("r+b") as file:
             file.seek(4)
 
             attachment = Attachment.from_file(file)
@@ -86,7 +86,7 @@ def test_attachment_from_file_unknown_mimetype():
         temp_file_path = temp_file.name
 
     try:
-        with open(temp_file_path, "r+b") as file:
+        with Path(temp_file_path).open("r+b") as file:
             attachment = Attachment.from_file(file)
 
             assert attachment.mime_type == "application/octet-stream"

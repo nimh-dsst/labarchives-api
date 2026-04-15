@@ -7,10 +7,10 @@ import sys
 from pathlib import Path
 
 from labapi import (
+    AbstractTreeContainer,
     AttachmentEntry,
     Client,
     InsertBehavior,
-    AbstractTreeContainer,
     NotebookPage,
     TraversalError,
     User,

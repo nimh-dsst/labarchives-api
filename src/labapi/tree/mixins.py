@@ -717,6 +717,45 @@ class AbstractTreeContainer(
         all_nodes = self.enumerate_nodes(depth=depth, timeout=timeout)
         return [path for path, node in all_nodes if not node.is_dir()]
 
+    def _resolve_existing_child(
+        self,
+        cls: type[T],
+        name: str,
+        *,
+        original_name: str | NotebookPath,
+        if_exists: InsertBehavior,
+    ) -> T | None:
+        """Apply ``if_exists`` behaviour for an already-matching child node."""
+        nodes = [n for n in self[Index.Name : name] if isinstance(n, cls)]
+        if not nodes:
+            return None
+        if if_exists is InsertBehavior.Raise:
+            raise NodeExistsError(
+                f'{cls.__name__} with name "{original_name}" already exists'
+            )
+        if if_exists is InsertBehavior.Retain:
+            return cast(T, nodes[0])
+        for node in nodes:
+            node.delete()
+        return None
+
+    def _create_direct_child(self, cls: type[T], name: str) -> T:
+        """Create a single child node directly under this container."""
+        create_tree = self.user.api_get(
+            "tree_tools/insert_node",
+            nbid=self.root.id,
+            parent_tree_id=self.tree_id,
+            display_text=name,
+            is_folder=("true" if issubclass(cls, AbstractTreeContainer) else "false"),
+        )
+
+        tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
+        new_node = cls(tree_id, name, self.root, self, self.user)
+        if isinstance(new_node, AbstractTreeContainer):
+            new_node._populated = True
+        self._children.append(new_node)
+        return new_node
+
     def create(
         self,
         cls: type[T],
@@ -747,49 +786,26 @@ class AbstractTreeContainer(
         if len(path) == 0:
             raise ValueError("Path cannot be empty")
         if len(path) == 1:
-            nodes = [n for n in self[Index.Name : path.name] if isinstance(n, cls)]
-
-            if nodes:
-                match if_exists:
-                    case InsertBehavior.Raise:
-                        raise NodeExistsError(
-                            f'{cls.__name__} with name "{name}" already exists'
-                        )
-                    case InsertBehavior.Retain:
-                        return nodes[0]
-                    case InsertBehavior.Replace:
-                        for node in nodes:
-                            node.delete()
-
-            create_tree = self.user.api_get(
-                "tree_tools/insert_node",
-                nbid=self.root.id,
-                parent_tree_id=self.tree_id,
-                display_text=path.name,
-                is_folder=(
-                    "true" if issubclass(cls, AbstractTreeContainer) else "false"
-                ),
-            )
-
-            tree_id = extract_etree(create_tree, {"node": {"tree-id": str}})["tree-id"]
-
-            new_node = cls(tree_id, path.name, self.root, self, self.user)
-            if isinstance(new_node, AbstractTreeContainer):
-                new_node._populated = True
-            self._children.append(new_node)
-            return new_node
-        if parents:
-            next_node = self.dir(path[0])
-
-            return next_node.create(
+            existing = self._resolve_existing_child(
                 cls,
-                path,
-                parents=True,
+                path.name,
+                original_name=name,
                 if_exists=if_exists,
             )
+            if existing is not None:
+                return existing
+            return self._create_direct_child(cls, path.name)
+        if not parents:
+            raise ValueError(
+                f'Parent path for "{name}" does not exist. Set `parents=True` to create it.'
+            )
 
-        raise ValueError(
-            f'Parent path for "{name}" does not exist. Set `parents=True` to create it.'
+        next_node = self.dir(path[0])
+        return next_node.create(
+            cls,
+            path,
+            parents=True,
+            if_exists=if_exists,
         )
 
     def dir(self, name: str | NotebookPath) -> NotebookDirectory:

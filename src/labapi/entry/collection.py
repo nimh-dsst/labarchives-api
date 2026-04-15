@@ -7,7 +7,7 @@ from datetime import datetime
 from html import escape
 from io import BytesIO
 from json import dumps
-from typing import TYPE_CHECKING, Any, SupportsIndex, Type, TypeVar, overload, override
+from typing import TYPE_CHECKING, Any, SupportsIndex, TypeVar, overload, override
 
 from labapi.util import extract_etree
 
@@ -131,17 +131,17 @@ class Entries(Sequence["Entry[Any]"]):
     @overload
     def create(
         self,
-        cls: Type[AttachmentEntry],
+        cls: type[AttachmentEntry],
         data: Attachment,
         *,
         client_ip: str | None = None,
     ) -> AttachmentEntry: ...
 
     @overload
-    def create(self, cls: Type[E], data: str, *, client_ip: str | None = None) -> E: ...
+    def create(self, cls: type[E], data: str, *, client_ip: str | None = None) -> E: ...
 
     def create(
-        self, cls: Type[E], data: str | Attachment, *, client_ip: str | None = None
+        self, cls: type[E], data: str | Attachment, *, client_ip: str | None = None
     ) -> E:
         """Create a new entry on the page.
 

@@ -256,7 +256,7 @@ class TestNotebookPageIntegration:
         """
 
         entries1 = page.entries
-        client.api_log  # consume the load call
+        client.api_log  # noqa: B018
 
         entries2 = page.entries
 
@@ -291,7 +291,7 @@ class TestNotebookPageIntegration:
         assert isinstance(entries[0], UnknownEntry)
         assert entries[0].content_type == "sketch entry"
         assert entries[0].content == "sketch payload"
-        client.api_log
+        client.api_log  # noqa: B018
         client.clear_log()
 
     def test_page_entries_wrap_unknown_type(self, client, notebook_tree: Notebook):
@@ -320,7 +320,7 @@ class TestNotebookPageIntegration:
         assert isinstance(entries[0], UnknownEntry)
         assert entries[0].content_type == "future entry"
         assert entries[0].content == "future payload"
-        client.api_log
+        client.api_log  # noqa: B018
         client.clear_log()
 
     def test_page_refresh(self, client, notebook_tree: Notebook):
@@ -344,7 +344,7 @@ class TestNotebookPageIntegration:
 
         entries1 = page.entries
         assert len(entries1) == 1
-        client.api_log  # consume the load call
+        client.api_log  # noqa: B018
 
         page.refresh()
 
