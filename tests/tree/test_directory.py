@@ -51,19 +51,41 @@ class TestNotebookDirectoryIntegration:
         destination = notebook_tree
 
         assert isinstance(source_dir, NotebookDirectory)
-        client.clear_api_calls()
+        client.clear_log()
 
         # 1. Create new directory
-        client.api_response = client.tree_node_response("dir-copy")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>dir-copy</tree-id>
+            </node>
+        </tree-tools>
+        """
         # 2. Create copy of child Page A
-        client.api_response = client.tree_node_response("page-copy-1")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>page-copy-1</tree-id>
+            </node>
+        </tree-tools>
+        """
         # 3. Load entries for Page A (empty)
-        client.api_response = client.entries_response()
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries></entries>
+        """
 
         # 4. Create copy of child Page B
-        client.api_response = client.tree_node_response("page-copy-2")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>page-copy-2</tree-id>
+            </node>
+        </tree-tools>
+        """
         # 5. Load entries for Page B (empty)
-        client.api_response = client.entries_response()
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries></entries>
+        """
 
         new_dir = source_dir.copy_to(destination)
 
@@ -71,14 +93,14 @@ class TestNotebookDirectoryIntegration:
         assert new_dir.name == source_dir.name
         assert new_dir.id == "dir-copy"
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/insert_node"
 
-        _ = client.pop_api_call()  # Page A creation
-        _ = client.pop_api_call()  # Page A entries
-        _ = client.pop_api_call()  # Page B creation
-        _ = client.pop_api_call()  # Page B entries
-        client.clear_api_calls()
+        _ = client.api_log  # Page A creation
+        _ = client.api_log  # Page A entries
+        _ = client.api_log  # Page B creation
+        _ = client.api_log  # Page B entries
+        client.clear_log()
 
     def test_directory_copy_to_self_raises(self, notebook_tree: Notebook):
         """Test NotebookDirectory.copy_to rejects copying into itself."""

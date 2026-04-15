@@ -823,18 +823,21 @@ class TestClientIntegration:
 
     def test_client_login_creates_user(self, client):
         """Test Client.login creates User with notebooks from API response."""
-        client.api_response = client.xml(
-            "users",
-            client.xml("fullname", "Test User"),
-            client.xml("id", "user_test_id"),
-            client.bool_xml("auto-login-allowed", False),
-            client.xml("request"),
-            client.xml(
-                "notebooks",
-                client.notebook_xml("nb1", "Notebook 1"),
-                type="array",
-            ),
-        )
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <users>
+            <fullname>Test User</fullname>
+            <id>user_test_id</id>
+            <auto-login-allowed type="boolean">false</auto-login-allowed>
+            <request></request>
+            <notebooks type="array">
+                <notebook>
+                    <is-default type="boolean">true</is-default>
+                    <name>Notebook 1</name>
+                    <id>nb1</id>
+                </notebook>
+            </notebooks>
+        </users>
+        """
 
         user = client.login("test@example.com", "authcode123")
 
@@ -842,20 +845,25 @@ class TestClientIntegration:
         assert user.id == "user_test_id"
         assert len(user.notebooks) == 1
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "users/user_access_info"
         assert api_call[1]["login_or_email"] == "test@example.com"
         assert api_call[1]["password"] == "authcode123"
 
-    def test_mock_client_xml_builder_supports_nested_responses(self, client):
-        """Test MockClient XML builders create nested responses without raw strings."""
-        client.api_response = client.entries_response(
-            client.entry_xml(
-                "entry_1",
-                part_type="text entry",
-                entry_data="<p>Hello</p>",
-            )
-        )
+    def test_mock_client_supports_nested_xml_string_responses(self, client):
+        """Test MockClient accepts nested responses provided as raw XML strings."""
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <entries>
+            <response></response>
+            <entry>
+                <eid>entry_1</eid>
+                <part-type>text entry</part-type>
+                <attach-file-name></attach-file-name>
+                <attach-content-type></attach-content-type>
+                <entry-data><![CDATA[<p>Hello</p>]]></entry-data>
+            </entry>
+        </entries>
+        """
 
         response = client.api_get("tree_tools/get_entries_for_page")
 
@@ -863,13 +871,10 @@ class TestClientIntegration:
         assert response.findtext("./entry/part-type") == "text entry"
         assert response.findtext("./entry/entry-data") == "<p>Hello</p>"
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/get_entries_for_page"
 
-    def test_mock_client_xml_builder_rejects_mixed_content(self, client):
-        """Test MockClient.xml fails fast on invalid mixed-content input."""
-        with pytest.raises(
-            TypeError,
-            match="cannot mix text content with child elements",
-        ):
-            client.xml("entry", "text", client.xml("child"))
+    def test_mock_client_rejects_malformed_xml_response(self, client):
+        """Test MockClient fails fast when given malformed raw XML."""
+        with pytest.raises(XMLSyntaxError):
+            client.api_response = "<entry>"

@@ -128,12 +128,14 @@ class TestTreeMixinsIntegration:
     def test_name_setter(self, client, notebook_tree: Notebook):
         """Test updating a node's name."""
         page = expect_page(notebook_tree[Index.Id : "page-1"])
-        client.api_response = client.xml("success")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <success>true</success>
+        """
 
         page.name = "New Name"
 
         assert page.name == "New Name"
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["display_text"] == "New Name"
 
@@ -146,13 +148,15 @@ class TestTreeMixinsIntegration:
         original_path = str(page_a.path)
         assert original_path == "/Test Folder A/Dir1 Test Page A"
 
-        client.api_response = client.xml("success")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <success>true</success>
+        """
         folder_a.name = "Renamed Folder A"
 
         assert str(page_a.path) == "/Renamed Folder A/Dir1 Test Page A"
         assert page_a.traverse("..") is folder_a
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["display_text"] == "Renamed Folder A"
 
@@ -162,7 +166,9 @@ class TestTreeMixinsIntegration:
         folder_a = expect_dir(notebook_tree[Index.Id : "dir-1"])
         old_parent = page.parent
 
-        client.api_response = client.xml("success")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <success>true</success>
+        """
 
         page.move_to(folder_a)
 
@@ -170,7 +176,7 @@ class TestTreeMixinsIntegration:
         assert page in folder_a.children
         assert page not in old_parent.children
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["parent_tree_id"] == folder_a.tree_id
 
@@ -191,7 +197,9 @@ class TestTreeMixinsIntegration:
             == "/Test Folder B/Dir2 Subfolder B/Dir2 Subfolder B Subfolder"
         )
 
-        client.api_response = client.xml("success")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <success>true</success>
+        """
         source_dir.move_to(destination)
 
         assert (
@@ -200,7 +208,7 @@ class TestTreeMixinsIntegration:
         )
         assert descendant.traverse("..").name == "Dir2 Subfolder B"
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/update_node"
         assert api_call[1]["parent_tree_id"] == destination.tree_id
 
@@ -213,7 +221,7 @@ class TestTreeMixinsIntegration:
         with pytest.raises(ValueError, match="Cannot move a node to itself"):
             folder_a.move_to(folder_a)
 
-        assert client.api_calls == ()
+        assert len(client._api_logs) == 0  # pyright: ignore[reportPrivateUsage]
 
     def test_move_to_descendant_raises_without_api_call(
         self, client, notebook_tree: Notebook
@@ -227,7 +235,7 @@ class TestTreeMixinsIntegration:
         ):
             source_dir.move_to(descendant_dir)
 
-        assert client.api_calls == ()
+        assert len(client._api_logs) == 0  # pyright: ignore[reportPrivateUsage]
 
     def test_move_to_other_notebook_raises_without_api_call(
         self, client, notebook_tree: Notebook, notebooks
@@ -239,17 +247,27 @@ class TestTreeMixinsIntegration:
         with pytest.raises(ValueError, match="Cannot move a node across notebooks"):
             page.move_to(other_notebook)
 
-        assert client.api_calls == ()
+        assert len(client._api_logs) == 0  # pyright: ignore[reportPrivateUsage]
 
     def test_delete(self, client, notebook_tree: Notebook):
         """Test deleting a node (moving to API Deleted Items)."""
         page = notebook_tree[Index.Id : "page-1"].as_page()
         # 2. Create "API Deleted Items" directory
-        client.api_response = client.tree_node_response("deleted-dir")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>deleted-dir</tree-id>
+            </node>
+        </tree-tools>
+        """
         # 3. Update name
-        client.api_response = client.xml("success")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <success>true</success>
+        """
         # 4. Move to deleted directory
-        client.api_response = client.xml("success")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <success>true</success>
+        """
 
         page.delete()
 
@@ -257,9 +275,9 @@ class TestTreeMixinsIntegration:
         assert page.parent.name == "API Deleted Items"
 
         # Verify sequence of calls
-        _ = client.pop_api_call()  # insert_node for dir creation
-        _ = client.pop_api_call()  # update_node for name
-        _ = client.pop_api_call()  # update_node for move
+        _ = client.api_log  # insert_node for dir creation
+        _ = client.api_log  # update_node for name
+        _ = client.api_log  # update_node for move
 
     def test_mapping_methods(self, notebook_tree: Notebook):
         """Test keys(), values(), and items() on a container."""
@@ -309,11 +327,17 @@ class TestTreeMixinsIntegration:
 
         assert isinstance(snapshot, tuple)
 
-        client.api_response = client.tree_node_response("snapshot-page-id")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>snapshot-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
 
         notebook_tree.create(NotebookPage, "Snapshot Test Page")
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/insert_node"
         assert api_call[1]["display_text"] == "Snapshot Test Page"
 
@@ -327,13 +351,17 @@ class TestTreeMixinsIntegration:
         dir_1 = notebook_tree[Index.Id : "dir-1"].as_dir()
         dir_1._populated = False
 
-        client.api_response = client.tree_level_response(
-            client.tree_level_node(
-                tree_id="broken-child",
-                display_text=None,
-                is_page=False,
-            )
-        )
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <level-nodes type="array">
+                <level-node>
+                    <is-page type="boolean">false</is-page>
+                    <tree-id>broken-child</tree-id>
+                    <display-text> </display-text>
+                </level-node>
+            </level-nodes>
+        </tree-tools>
+        """
 
         with pytest.raises(
             TreeChildParseError,
@@ -344,7 +372,7 @@ class TestTreeMixinsIntegration:
         ):
             _ = dir_1.children
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/get_tree_level"
         assert api_call[1]["parent_tree_id"] == "dir-1"
 
@@ -444,7 +472,13 @@ class TestTreeMixinsIntegration:
 
     def test_create_page(self, client, notebook_tree: Notebook):
         """Test creating a new page."""
-        client.api_response = client.tree_node_response("new-page-id")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>new-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
 
         new_page = notebook_tree.create(NotebookPage, "New Page")
 
@@ -453,14 +487,20 @@ class TestTreeMixinsIntegration:
         assert new_page.id == "new-page-id"
         assert new_page in notebook_tree.children
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/insert_node"
         assert api_call[1]["display_text"] == "New Page"
         assert api_call[1]["is_folder"] == "false"
 
     def test_create_directory(self, client, notebook_tree: Notebook):
         """Test creating a new directory."""
-        client.api_response = client.tree_node_response("new-dir-id")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>new-dir-id</tree-id>
+            </node>
+        </tree-tools>
+        """
 
         new_dir = notebook_tree.create(NotebookDirectory, "New Folder")
 
@@ -469,7 +509,7 @@ class TestTreeMixinsIntegration:
         assert new_dir.id == "new-dir-id"
         assert new_dir in notebook_tree.children
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/insert_node"
         assert api_call[1]["display_text"] == "New Folder"
         assert api_call[1]["is_folder"] == "true"
@@ -482,13 +522,19 @@ class TestTreeMixinsIntegration:
         class CustomNotebookPage(NotebookPage):
             pass
 
-        client.api_response = client.tree_node_response("custom-page-id")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>custom-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
 
         new_page = notebook_tree.create(CustomNotebookPage, "Subclass Page")
 
         assert isinstance(new_page, CustomNotebookPage)
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/insert_node"
         assert api_call[1]["display_text"] == "Subclass Page"
         assert api_call[1]["is_folder"] == "false"
@@ -501,13 +547,19 @@ class TestTreeMixinsIntegration:
         class CustomNotebookDirectory(NotebookDirectory):
             pass
 
-        client.api_response = client.tree_node_response("custom-dir-id")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>custom-dir-id</tree-id>
+            </node>
+        </tree-tools>
+        """
 
         new_dir = notebook_tree.create(CustomNotebookDirectory, "Subclass Folder")
 
         assert isinstance(new_dir, CustomNotebookDirectory)
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/insert_node"
         assert api_call[1]["display_text"] == "Subclass Folder"
         assert api_call[1]["is_folder"] == "true"
@@ -515,9 +567,21 @@ class TestTreeMixinsIntegration:
     def test_create_nested_with_parents(self, client, notebook_tree: Notebook):
         """Test creating a nested page with parents=True."""
         # 1. Create parent folder "Parent"
-        client.api_response = client.tree_node_response("parent-id")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>parent-id</tree-id>
+            </node>
+        </tree-tools>
+        """
         # 2. Create child page "Child"
-        client.api_response = client.tree_node_response("child-id")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>child-id</tree-id>
+            </node>
+        </tree-tools>
+        """
 
         new_page = notebook_tree.create(NotebookPage, "Parent/Child", parents=True)
 
@@ -548,11 +612,11 @@ class TestTreeMixinsIntegration:
         #      -> insert_node "Child" -> returns child-id
         #      -> returns new NotebookPage "Child"
 
-        api_call1 = client.pop_api_call()
+        api_call1 = client.api_log
         assert api_call1[0] == "tree_tools/insert_node"
         assert api_call1[1]["display_text"] == "Parent"
 
-        api_call2 = client.pop_api_call()
+        api_call2 = client.api_log
         assert api_call2[0] == "tree_tools/insert_node"
         assert api_call2[1]["display_text"] == "Child"
 
@@ -566,7 +630,13 @@ class TestTreeMixinsIntegration:
     ):
         """Test create accepts absolute strings that stay inside the container."""
         folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
-        client.api_response = client.tree_node_response("absolute-page-id")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>absolute-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
 
         new_page = folder_a.create(NotebookPage, "/Test Folder A/Absolute String Page")
 
@@ -574,7 +644,7 @@ class TestTreeMixinsIntegration:
         assert new_page.name == "Absolute String Page"
         assert new_page.parent is folder_a
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/insert_node"
         assert api_call[1]["display_text"] == "Absolute String Page"
 
@@ -587,14 +657,20 @@ class TestTreeMixinsIntegration:
         with pytest.raises(PathError, match="outside of"):
             folder_a.create(NotebookPage, "/Test Folder B/Outside Page")
 
-        assert client.api_calls == ()
+        assert len(client._api_logs) == 0  # pyright: ignore[reportPrivateUsage]
 
     def test_create_absolute_notebook_path_within_container(
         self, client, notebook_tree: Notebook
     ):
         """Test create still accepts absolute NotebookPath inputs."""
         folder_a = notebook_tree[Index.Id : "dir-1"].as_dir()
-        client.api_response = client.tree_node_response("absolute-dir-id")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>absolute-dir-id</tree-id>
+            </node>
+        </tree-tools>
+        """
 
         new_dir = folder_a.create(
             NotebookDirectory, NotebookPath("/Test Folder A/Absolute String Dir")
@@ -604,7 +680,7 @@ class TestTreeMixinsIntegration:
         assert new_dir.name == "Absolute String Dir"
         assert new_dir.parent is folder_a
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/insert_node"
         assert api_call[1]["display_text"] == "Absolute String Dir"
 
@@ -613,7 +689,13 @@ class TestTreeMixinsIntegration:
     ):
         """Test dir inherits absolute string handling from create."""
         folder_b = notebook_tree[Index.Id : "dir-2"].as_dir()
-        client.api_response = client.tree_node_response("absolute-wrapper-dir-id")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>absolute-wrapper-dir-id</tree-id>
+            </node>
+        </tree-tools>
+        """
 
         new_dir = folder_b.dir("/Test Folder B/Absolute Wrapper Dir")
 
@@ -621,7 +703,7 @@ class TestTreeMixinsIntegration:
         assert new_dir.name == "Absolute Wrapper Dir"
         assert new_dir.parent is folder_b
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/insert_node"
         assert api_call[1]["display_text"] == "Absolute Wrapper Dir"
 
@@ -630,7 +712,13 @@ class TestTreeMixinsIntegration:
     ):
         """Test page inherits absolute string handling from create."""
         folder_b = notebook_tree[Index.Id : "dir-2"].as_dir()
-        client.api_response = client.tree_node_response("absolute-wrapper-page-id")
+        client.api_response = """<?xml version="1.0" encoding="UTF-8"?>
+        <tree-tools>
+            <node>
+                <tree-id>absolute-wrapper-page-id</tree-id>
+            </node>
+        </tree-tools>
+        """
 
         new_page = folder_b.page("/Test Folder B/Absolute Wrapper Page")
 
@@ -638,7 +726,7 @@ class TestTreeMixinsIntegration:
         assert new_page.name == "Absolute Wrapper Page"
         assert new_page.parent is folder_b
 
-        api_call = client.pop_api_call()
+        api_call = client.api_log
         assert api_call[0] == "tree_tools/insert_node"
         assert api_call[1]["display_text"] == "Absolute Wrapper Page"
 
