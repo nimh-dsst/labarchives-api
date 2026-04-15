@@ -725,7 +725,7 @@ class Client:
         self,
         api_method_uri: str | Sequence[str],
         query: Mapping[str, Any],
-        expires_in: timedelta | None = None,
+        expires_in: timedelta | datetime | None = None,
         *,
         should_prefix_api: bool = True,
         signature_method: str | None = None,
@@ -806,7 +806,7 @@ class Client:
         self,
         url: str,
         api_method: str,
-        expires_in: timedelta = timedelta(seconds=60),
+        expires_in: timedelta | datetime = timedelta(seconds=60),
     ) -> str:
         """Sign a URL and append the LabArchives auth query parameters.
 
@@ -825,6 +825,8 @@ class Client:
 
         if isinstance(expires_in, timedelta):
             expiry = round((datetime.now() + expires_in).timestamp() * 1000)
+        else:
+            expiry = round(expires_in.timestamp() * 1000)
         sig = self._signature(api_method, expiry)
 
         query["akid"] = self._akid

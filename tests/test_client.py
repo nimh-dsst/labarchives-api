@@ -240,6 +240,20 @@ class TestClientUnit:
             (fixed_now + timedelta(seconds=60)).timestamp() * 1000
         )
 
+    def test_client_construct_url_accepts_absolute_datetime_expiry(self):
+        """Test construct_url preserves explicit absolute expiration datetimes."""
+        client = Client("https://api.test.com", "test_akid", "test_password")
+        absolute_expiry = datetime(2026, 4, 1, 12, 5, 0)
+
+        signed_url = client.construct_url(
+            "users/get_info",
+            {"uid": "123"},
+            expires_in=absolute_expiry,
+        )
+
+        expires = dict(parse_qsl(urlsplit(signed_url).query))["expires"]
+        assert int(expires) == round(absolute_expiry.timestamp() * 1000)
+
     def test_client_api_get_parses_raw_response_bytes(self):
         """Test Client.api_get parses response.content rather than re-encoded text."""
         client = Client("https://api.test.com", "test_akid", "test_password")
