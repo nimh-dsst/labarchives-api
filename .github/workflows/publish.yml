@@ -12,11 +12,11 @@ permissions:
 
 jobs:
   publish:
-    name: Publish to TestPyPI
+    name: Publish to PyPI
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://test.pypi.org/project/labapi/
+      url: https://pypi.org/project/labapi/
 
     steps:
       - name: Checkout code
@@ -36,5 +36,5 @@ jobs:
       - name: Build distributions
         run: uv build --python 3.13 --clear --no-build-logs
 
-      - name: Publish to TestPyPI
-        run: uv publish --trusted-publishing always --check-url https://test.pypi.org/simple/ --publish-url https://test.pypi.org/legacy/
+      - name: Publish to PyPI
+        run: uv publish --trusted-publishing always
