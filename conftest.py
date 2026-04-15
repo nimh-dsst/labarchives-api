@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
-from io import BufferedIOBase
-from typing import Any, override
+from typing import IO, Any, override
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import pytest
@@ -113,11 +112,11 @@ class MockClient(LA.Client):
     def raw_api_post(
         self,
         api_method_uri: str | Sequence[str],
-        body: Mapping[str, str] | BufferedIOBase,
+        body: Mapping[str, str] | IO[bytes] | IO[str],
         **kwargs: Any,
     ) -> requests.Response:
         log_kwargs = {**kwargs}
-        if not isinstance(body, BufferedIOBase):
+        if isinstance(body, Mapping):
             log_kwargs.update(body)
 
         self._api_logs.append((api_method_uri, log_kwargs))

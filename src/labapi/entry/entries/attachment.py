@@ -9,7 +9,7 @@ from __future__ import annotations
 from email.message import Message
 from io import BytesIO
 from tempfile import TemporaryFile
-from typing import TYPE_CHECKING, override
+from typing import IO, TYPE_CHECKING, override
 
 from labapi.entry.attachment import Attachment
 from labapi.exceptions import ApiError
@@ -18,6 +18,10 @@ from .base import Entry
 
 if TYPE_CHECKING:
     from labapi.user import User
+
+
+def _make_backing_io(use_tempfile: bool) -> IO[bytes]:
+    return TemporaryFile() if use_tempfile else BytesIO()
 
 
 class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
@@ -35,9 +39,34 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
         :param user: The authenticated user.
         """
         super().__init__(eid, caption, user)
-        self._filedata = None
-        self._filename = None
-        self._mime_type = None
+        self._filedata: Attachment | None = None
+        self._filename: str | None = None
+        self._mime_type: str | None = None
+
+    def _ensure_attachment(self, use_tempfile: bool) -> None:
+        if self._filedata is None or self._filedata.closed:
+            output = _make_backing_io(use_tempfile)
+
+            with self._user.client.stream_api_get(
+                "entries/entry_attachment", uid=self._user.id, eid=self.id
+            ) as attachment_stream:
+                for chunk in attachment_stream:
+                    output.write(chunk)
+
+            headers = attachment_stream.headers
+
+            msg = Message()
+            msg["Content-Type"] = (
+                headers.get("Content-Type") or "application/octet-stream"
+            )
+            msg["Content-Disposition"] = headers.get("Content-Disposition")
+            filename = msg.get_filename()
+            mime_type = msg.get_content_type()
+
+            if filename is None:
+                raise ApiError("Could not determine filename from API response headers")
+
+            self._filedata = Attachment(output, mime_type, filename, self._data)
 
     def get_attachment(self, use_tempfile: bool = False) -> Attachment:
         """Return the attachment payload as an independent stream copy.
@@ -50,35 +79,10 @@ class AttachmentEntry(Entry[Attachment], part_type="Attachment"):
                              Defaults to False.
         :returns: An :class:`~labapi.entry.attachment.Attachment` object containing the file data and metadata.
         """
-        if self._filedata is None or self._filedata.closed:
-            output = TemporaryFile() if use_tempfile else BytesIO()
-
-            with self._user.client.stream_api_get(
-                "entries/entry_attachment", uid=self._user.id, eid=self.id
-            ) as attachment_stream:
-                for chunk in attachment_stream:
-                    output.write(chunk)
-
-            msg = Message()
-            msg["Content-Type"] = (
-                attachment_stream.headers.get("Content-Type")
-                or "application/octet-stream"
-            )
-            msg["Content-Disposition"] = attachment_stream.headers.get(
-                "Content-Disposition"
-            )
-            filename = msg.get_filename()
-            mime_type = msg.get_content_type()
-
-            if filename is None:
-                raise ApiError("Could not determine filename from API response headers")
-
-            output.seek(0)
-
-            self._filedata = Attachment(output, mime_type, filename, self._data)
+        self._ensure_attachment(use_tempfile)
 
         assert self._filedata is not None
-        output = TemporaryFile() if use_tempfile else BytesIO()
+        output = _make_backing_io(use_tempfile)
 
         # Return an independent copy so each caller gets isolated read/seek/close state
         # while still sharing a single downloaded backing attachment in the cache.

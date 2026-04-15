@@ -8,14 +8,13 @@ accessing user-specific information.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import IO, TYPE_CHECKING, Any
 
 from labapi.tree.collection import Notebooks
 from labapi.util import extract_etree
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
-    from io import BufferedIOBase
 
     from labapi.util import NotebookInit
 
@@ -97,7 +96,7 @@ class User:
     def api_post(
         self,
         api_method_uri: str | Sequence[str],
-        body: Mapping[str, str] | BufferedIOBase,
+        body: Mapping[str, str] | IO[bytes] | IO[str],
         **kwargs: Any,
     ):
         """Send a POST request on behalf of this user.

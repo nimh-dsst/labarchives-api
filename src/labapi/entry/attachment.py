@@ -7,7 +7,7 @@ import tempfile
 from collections.abc import Buffer
 from mimetypes import guess_type
 from os.path import basename
-from typing import Any, BinaryIO, Protocol, TypeAlias
+from typing import IO, Any, BinaryIO, Protocol, TypeAlias, cast
 
 # NOTE: from Pylance
 # Unfortunately PEP 688 does not allow us to distinguish read-only
@@ -84,7 +84,10 @@ class Attachment:
 
         # Create a spooled temporary file as the new backing buffer.
         # It stays in memory until it reaches 4MB, then rolls over to disk.
-        backing = tempfile.SpooledTemporaryFile(max_size=4 * 1024 * 1024, mode="w+b")
+        backing: BinaryIO = cast(
+            BinaryIO,
+            tempfile.SpooledTemporaryFile(max_size=4 * 1024 * 1024, mode="w+b"),
+        )
         try:
             file.seek(0)
             shutil.copyfileobj(file, backing)
@@ -101,7 +104,7 @@ class Attachment:
 
     def __init__(
         self,
-        backing: BinaryIO,
+        backing: IO[bytes],
         mime_type: str,
         filename: str,
         caption: str,
