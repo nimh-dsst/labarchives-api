@@ -20,7 +20,9 @@ from collections.abc import (
     ValuesView,
 )
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Literal, Self, TypeVar, cast, overload, override
+from typing import TYPE_CHECKING, Literal, TypeVar, cast, overload
+
+from typing_extensions import Self, override
 
 from labapi.exceptions import (
     ExtractionError,

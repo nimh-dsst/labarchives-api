@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import warnings
-from typing import Literal, TypeGuard
+from typing import Literal, TypeAlias, TypeGuard
 
 from .env import getenv
 
-type _DetectableBrowser = Literal["chrome", "firefox", "edge"]
-type _ChoosableBrowser = Literal["chrome", "firefox", "edge", "terminal"]
+_DetectableBrowser: TypeAlias = Literal["chrome", "firefox", "edge"]
+_ChoosableBrowser: TypeAlias = Literal["chrome", "firefox", "edge", "terminal"]
 
 
 _DETECTABLE_BROWSERS: tuple[_DetectableBrowser, ...] = ("chrome", "firefox", "edge")

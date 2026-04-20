@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from datetime import datetime, timedelta
-from typing import IO, Any, NamedTuple, override
+from typing import IO, Any, NamedTuple
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import pytest
@@ -13,6 +13,7 @@ import requests
 
 # from dotenv import load_dotenv
 from lxml import etree
+from typing_extensions import override
 
 import labapi as LA
 from labapi.tree.collection import Notebooks

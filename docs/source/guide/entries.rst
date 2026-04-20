@@ -122,6 +122,10 @@ You can also create an attachment directly from a file on disk:
        attachment = Attachment.from_file(f)
        page.entries.create(AttachmentEntry, attachment)
 
+``Attachment.from_file()`` requires a random-access file object so it can
+rewind the stream while cloning it. In practice, standard binary file handles
+opened from disk work well.
+
 Working with JSON Data
 ----------------------
 

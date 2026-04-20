@@ -3,8 +3,9 @@
 import json
 import os
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from io import BytesIO
+from typing import TypeAlias
 
 import pytest
 
@@ -13,7 +14,7 @@ from labapi import Index
 
 pytestmark = pytest.mark.integration
 
-type AnyDict = Mapping[str, AnyDict | str | bool | int | float]
+AnyDict: TypeAlias = "Mapping[str, AnyDict | str | bool | int | float]"
 try:
     from dotenv import load_dotenv  # pyright: ignore[reportMissingImports]
 
@@ -183,7 +184,7 @@ def test_env(
     data_dir_structure: LA.NotebookDirectory,
 ):
     """Create an isolated timestamped workspace for the current test."""
-    timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     test_folder_name = f"test: {request.node.name} {timestamp}"  # pyright: ignore[reportUnknownMemberType]
 
     # Create the isolated workspace

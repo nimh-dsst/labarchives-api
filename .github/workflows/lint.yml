@@ -10,4 +10,3 @@ jobs:
     with:
       job_name: Ruff lint
       command: uv run ruff check .
-      python_versions: '["3.13"]'

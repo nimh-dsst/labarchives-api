@@ -2,7 +2,7 @@
 
 A Python client for the LabArchives API.
 
-[![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://github.com/nimh-dsst/labapi/actions/workflows/unit_tests.yml/badge.svg?branch=main)](https://github.com/nimh-dsst/labapi/actions/workflows/unit_tests.yml)
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
 
@@ -20,7 +20,7 @@ A Python client for the LabArchives API.
 
 Requirements:
 
-- Python 3.12+
+- Python 3.10+
 - `uv` (recommended) or `pip`
 
 Recommended install for local use:

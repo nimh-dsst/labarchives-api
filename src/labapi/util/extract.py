@@ -9,14 +9,16 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Callable, Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 from labapi.exceptions import ExtractionError
 
 if TYPE_CHECKING:
     from lxml.etree import Element
 
-type EtreeExtractorDict = Mapping[str, "EtreeExtractorDict | Callable[[Any], Any]"]
+EtreeExtractorDict: TypeAlias = (
+    "Mapping[str, EtreeExtractorDict | Callable[[Any], Any]]"
+)
 """
 Type alias for a dictionary used to define the structure and extraction
 logic for `lxml.etree.Element` objects.

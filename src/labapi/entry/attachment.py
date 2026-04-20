@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import shutil
 import tempfile
-from collections.abc import Buffer
 from mimetypes import guess_type
 from pathlib import Path
-from typing import IO, Any, BinaryIO, Protocol, cast
+from typing import IO, Any, BinaryIO, Protocol, TypeAlias, cast
+
+from typing_extensions import Buffer
 
 # NOTE: from Pylance
 # Unfortunately PEP 688 does not allow us to distinguish read-only
@@ -15,7 +16,7 @@ from typing import IO, Any, BinaryIO, Protocol, cast
 # Perhaps a future extension of the buffer protocol will allow us to
 # distinguish these cases in the type system.
 # Same as WriteableBuffer, but also includes read-only buffer types (like bytes).
-type ReadableBuffer = Buffer
+ReadableBuffer: TypeAlias = Buffer
 
 
 class NamedBinaryIO(Protocol):
@@ -63,19 +64,44 @@ class Attachment:
     """
 
     @staticmethod
+    def _is_seekable(stream: IO[bytes] | NamedBinaryIO) -> bool:
+        """Return whether ``stream`` supports random access."""
+        seekable = getattr(stream, "seekable", None)
+        if callable(seekable):
+            try:
+                return bool(seekable())
+            except (OSError, ValueError):
+                return False
+
+        seek = getattr(stream, "seek", None)
+        tell = getattr(stream, "tell", None)
+        if not callable(seek) or not callable(tell):
+            return False
+
+        try:
+            position = tell()
+            seek(position)
+        except (OSError, TypeError, ValueError):
+            return False
+
+        return True
+
+    @staticmethod
     def from_file(file: NamedBinaryIO) -> Attachment:
-        """Create an attachment by cloning a seekable file object.
+        """Create an attachment by cloning a random-access file object.
 
         The content of the provided file is copied into a temporary buffer,
         making the Attachment independent of the original file's state.
         The MIME type is automatically guessed from the local file name.
         If the MIME type cannot be determined, it defaults to
-        "application/octet-stream".
+        "application/octet-stream". The file handle must support random
+        access so ``labapi`` can rewind it, typically via ``seekable()`` or
+        working ``seek()`` and ``tell()`` methods.
 
         :param file: The file object to create an attachment from. Must have a `name` attribute.
         :returns: A new Attachment object wrapping a clone of the file.
         """
-        if not file.seekable():
+        if not Attachment._is_seekable(file):
             raise ValueError("Attachment.from_file requires a seekable file object")
 
         remote_filename = Path(file.name).name
@@ -118,7 +144,7 @@ class Attachment:
         :param caption: A descriptive caption for the attachment.
         """
         self._backing = backing
-        if self._backing.seekable():
+        if self._is_seekable(self._backing):
             self._backing.seek(0)
 
         self._mime_type = mime_type
@@ -159,7 +185,7 @@ class Attachment:
 
     def seekable(self) -> bool:
         """Return whether the backing stream supports random access."""
-        return self._backing.seekable()
+        return self._is_seekable(self._backing)
 
     @property
     def filename(self) -> str:

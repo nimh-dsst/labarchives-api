@@ -7,7 +7,7 @@ name = "labapi"
 dynamic = ["version"]
 description = "A Python client for the LabArchives API."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 license = { text = "CC0-1.0" }
 authors = [
   { name = "Christoph Li", email = "christoph.li@nih.gov" },
@@ -22,6 +22,8 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -35,6 +37,7 @@ dependencies = [
     "cryptography>=46.0.3",
     "lxml>=6.0.2",
     "requests>=2.32.5",
+    "typing-extensions>=4.12.2",
 ]
 
 [project.urls]
@@ -60,10 +63,10 @@ dev = [
     "ruff>=0.14.11",
     "types-lxml>=2026.1.1",
     "pre-commit>=4.5.1",
-    "sphinx>=9.1.0",
+    "sphinx>=8.1.3,<8.2",
     "sphinx-breeze-theme>=0.13.1",
     "sphinx-copybutton>=0.5.2",
-    "sphinx-design>=0.7.0",
+    "sphinx-design>=0.6.1,<0.7",
     "ty>=0.0.29",
 ]
 
@@ -106,7 +109,7 @@ invalid-assignment = "ignore"
 unresolved-attribute = "ignore"
 
 [tool.ty.environment]
-python-version = "3.12"
+python-version = "3.10"
 root = ["./src"]
 
 [tool.ty.src]
@@ -114,6 +117,9 @@ include = ["src/labapi"]
 
 [tool.ty.terminal]
 error-on-warning = true
+
+[tool.ruff]
+target-version = "py310"
 
 [tool.ruff.lint]
 extend-select = ["A", "ARG", "B", "C4", "C90", "D", "I", "ICN", "INP", "PIE", "PLR0912", "PT", "PTH", "RET", "RUF", "SIM", "UP"]
