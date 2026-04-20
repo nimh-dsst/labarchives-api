@@ -18,7 +18,7 @@ from secrets import token_urlsafe
 from socketserver import TCPServer
 from time import monotonic
 from types import TracebackType
-from typing import IO, Any, Self, override
+from typing import IO, Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from cryptography.hazmat.primitives.hashes import SHA512
@@ -27,6 +27,7 @@ from lxml.etree import Element, fromstring
 from requests import Response, Session
 from requests import codes as status_codes
 from requests.adapters import HTTPAdapter
+from typing_extensions import Self, override
 
 from .exceptions import ApiError, AuthenticationError
 from .user import User

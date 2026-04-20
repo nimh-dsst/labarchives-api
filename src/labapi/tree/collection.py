@@ -8,7 +8,9 @@ It provides methods for accessing, iterating over, and creating notebooks.
 from __future__ import annotations
 
 from collections.abc import ItemsView, Iterator, KeysView, Mapping, Sequence, ValuesView
-from typing import TYPE_CHECKING, Literal, overload, override
+from typing import TYPE_CHECKING, Literal, overload
+
+from typing_extensions import override
 
 from labapi.exceptions import ApiError
 from labapi.util import IdOrNameIndex, Index, NotebookInit, extract_etree

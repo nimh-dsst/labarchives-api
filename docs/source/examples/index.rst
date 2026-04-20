@@ -52,7 +52,7 @@ Getting Started
 
 All published examples assume:
 
-- Python 3.12+.
+- Python 3.10+.
 - The recommended local interactive profile:
   ``labapi[dotenv,builtin-auth]``.
 - A repository-root working directory when you run ``uv run ...`` commands.

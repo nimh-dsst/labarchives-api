@@ -9,7 +9,7 @@ credential setup options used throughout the rest of the docs.
 Python Version
 --------------
 
-Supports Python 3.12 and newer.
+Supports Python 3.10 and newer.
 
 Choose an Install Profile
 -------------------------

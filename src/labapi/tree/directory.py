@@ -9,7 +9,7 @@ nodes and be managed as a node itself.
 
 from __future__ import annotations
 
-from typing import override
+from typing_extensions import override
 
 from labapi.util import InsertBehavior
 

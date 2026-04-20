@@ -9,7 +9,9 @@ from __future__ import annotations
 from email.message import Message
 from io import BytesIO
 from tempfile import TemporaryFile
-from typing import IO, TYPE_CHECKING, override
+from typing import IO, TYPE_CHECKING
+
+from typing_extensions import override
 
 from labapi.entry.attachment import Attachment
 from labapi.exceptions import ApiError

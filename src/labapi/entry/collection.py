@@ -7,7 +7,9 @@ from datetime import datetime
 from html import escape
 from io import BytesIO
 from json import dumps
-from typing import TYPE_CHECKING, Any, SupportsIndex, TypeVar, overload, override
+from typing import TYPE_CHECKING, Any, SupportsIndex, TypeVar, overload
+
+from typing_extensions import override
 
 from labapi.util import extract_etree
 
