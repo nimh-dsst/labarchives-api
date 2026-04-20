@@ -88,13 +88,15 @@ class Attachment:
 
     @staticmethod
     def from_file(file: NamedBinaryIO) -> Attachment:
-        """Create an attachment by cloning a seekable file object.
+        """Create an attachment by cloning a random-access file object.
 
         The content of the provided file is copied into a temporary buffer,
         making the Attachment independent of the original file's state.
         The MIME type is automatically guessed from the local file name.
         If the MIME type cannot be determined, it defaults to
-        "application/octet-stream".
+        "application/octet-stream". The file handle must support random
+        access so ``labapi`` can rewind it, typically via ``seekable()`` or
+        working ``seek()`` and ``tell()`` methods.
 
         :param file: The file object to create an attachment from. Must have a `name` attribute.
         :returns: A new Attachment object wrapping a clone of the file.

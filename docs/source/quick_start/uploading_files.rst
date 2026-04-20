@@ -20,9 +20,12 @@ Build an :class:`~labapi.entry.attachment.Attachment` from a binary file handle:
        attachment = Attachment.from_file(f)
 
 .. note::
-   :meth:`~labapi.entry.attachment.Attachment.from_file` requires a seekable
-   binary file object. Standard file handles opened with ``"rb"`` or
-   ``"rb+"`` work well.
+   :meth:`~labapi.entry.attachment.Attachment.from_file` requires a
+   random-access binary file object so it can rewind the stream before
+   copying it. Standard file handles opened with ``"rb"`` or ``"rb+"`` work
+   well. On some Python 3.10 stdlib file objects, working ``seek()`` and
+   ``tell()`` support is sufficient even if a ``seekable()`` method is not
+   exposed.
 
 If the MIME type cannot be determined from the filename, ``labapi`` falls back
 to ``application/octet-stream``.
