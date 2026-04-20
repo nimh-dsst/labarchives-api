@@ -2,9 +2,10 @@
 
 import contextlib
 from os import getenv as _getenv
-from typing import Any, overload
+from typing import Any, TypeVar, overload
 
 _loaded = False
+T = TypeVar("T")
 
 
 @overload
@@ -16,10 +17,10 @@ def getenv(key: str, default: None, *args: Any, **kwargs: Any) -> str | None: ..
 
 
 @overload
-def getenv[T](key: str, default: T, *args: Any, **kwargs: Any) -> str | T: ...
+def getenv(key: str, default: T, *args: Any, **kwargs: Any) -> str | T: ...
 
 
-def getenv[T](
+def getenv(
     key: str, default: T | None = None, *args: Any, **kwargs: Any
 ) -> str | T | None:
     """Return an environment variable, loading ``.env`` on first use.

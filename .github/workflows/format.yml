@@ -10,4 +10,3 @@ jobs:
     with:
       job_name: Ruff format
       command: uv run ruff format --check .
-      python_versions: '["3.13"]'

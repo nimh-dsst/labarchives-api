@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from inspect import isabstract
-from typing import TYPE_CHECKING, Any, ClassVar, Protocol, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Protocol, TypeVar, cast
 
 if TYPE_CHECKING:
     from labapi.user import User
+
+T = TypeVar("T")
 
 
 class _EntryFactory(Protocol):
@@ -27,7 +29,7 @@ class _MetaEntryFactory(Protocol):
 _entries_registry: dict[str, type[Entry[Any]]] = {}
 
 
-class Entry[T](ABC):
+class Entry(Generic[T], ABC):
     """Abstract base class for all entry types on a LabArchives page.
 
     This class provides a common interface for different entry types such as

@@ -7,7 +7,7 @@ the LabArchives API client.
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal
+from typing import Literal, TypeAlias
 
 
 class InsertBehavior(Enum):
@@ -32,20 +32,20 @@ class Index(Enum):
     """Index by the human-readable name of an item."""
 
 
-type IdIndex = "slice[Literal[Index.Id], str, None]"
+IdIndex: TypeAlias = "slice[Literal[Index.Id], str, None]"
 """
 Type alias for indexing by item ID.
 
 Example: ``Index.Id:"some_id"``
 """
-type NameIndex = "slice[Literal[Index.Name], str, None]"
+NameIndex: TypeAlias = "slice[Literal[Index.Name], str, None]"
 """
 Type alias for indexing by item name.
 
 Example: ``Index.Name:"some_name"``
 """
 
-type IdOrNameIndex = str | IdIndex | NameIndex
+IdOrNameIndex: TypeAlias = "str | IdIndex | NameIndex"
 """
 Type alias representing a flexible index that can be either an item's ID (string),
 or a slice using :attr:`Index.Id` or :attr:`Index.Name`.
@@ -67,8 +67,8 @@ class NotebookInit:
     """A value indicating if this notebook is the user's default."""
 
 
-type JsonData = (
-    Sequence["JsonData"] | Mapping[str, "JsonData"] | str | bool | int | float | None
+JsonData: TypeAlias = (
+    "Sequence[JsonData] | Mapping[str, JsonData] | str | bool | int | float | None"
 )
 """
 A recursive type alias representing any data structure that can be
