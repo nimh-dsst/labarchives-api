@@ -45,6 +45,9 @@ Documentation = "https://github.com/nimh-dsst/labapi/tree/main/docs/source"
 Issues = "https://github.com/nimh-dsst/labapi/issues"
 Source = "https://github.com/nimh-dsst/labapi"
 
+[project.scripts]
+labapi-emulator = "labapi.emulator.cli:main"
+
 [project.optional-dependencies]
 builtin-auth = [
     "selenium>=4.39.0",
@@ -52,6 +55,12 @@ builtin-auth = [
 ]
 dotenv = [
     "python-dotenv>=1.2.1",
+]
+emulator = [
+    "fastapi>=0.115.0",
+    "peewee>=3.17.9",
+    "uvicorn>=0.32.0",
+    "xsdata>=24.5",
 ]
 
 [dependency-groups]
@@ -63,6 +72,7 @@ dev = [
     "ruff>=0.14.11",
     "types-lxml>=2026.1.1",
     "pre-commit>=4.5.1",
+    "peewee>=3.17.9",
     "sphinx>=8.1.3,<8.2",
     "sphinx-breeze-theme>=0.13.1",
     "sphinx-copybutton>=0.5.2",
