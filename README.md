@@ -4,6 +4,7 @@ A Python client for the LabArchives API.
 
 [![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://github.com/nimh-dsst/labapi/actions/workflows/unit_tests.yml/badge.svg?branch=main)](https://github.com/nimh-dsst/labapi/actions/workflows/unit_tests.yml)
+[![DOI](https://zenodo.org/badge/991482626.svg)](https://doi.org/10.5281/zenodo.19599400)
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
 
 `labapi` helps you authenticate with LabArchives, navigate notebook trees, and create or update notebook content from Python.
