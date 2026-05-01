@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
-from typing import TYPE_CHECKING, overload
+from enum import Enum
+from typing import TYPE_CHECKING, NamedTuple, overload
 
 from typing_extensions import override
 
@@ -11,6 +12,60 @@ from labapi.exceptions import PathError
 
 if TYPE_CHECKING:
     from labapi.tree.mixins import AbstractBaseTreeNode
+
+
+class _LexerState(Enum):
+    BASE = 1
+    ESCAPE = 2
+
+
+def _lexe(*paths: str) -> tuple[Sequence[str], bool]:
+    segments: list[str] = []
+    segment = ""
+    lexe_state = _LexerState.BASE
+
+    path = "/".join(paths)
+
+    for char in path:
+        match char, lexe_state:
+            case "\\", _LexerState.BASE:
+                lexe_state = _LexerState.ESCAPE
+            case "/", _LexerState.BASE:
+                if len(segment) > 0:
+                    segments.append(segment)
+                    segment = ""
+            case _, _LexerState.BASE:
+                segment += char
+            case _, _LexerState.ESCAPE:
+                segment += char
+                lexe_state = _LexerState.BASE
+    
+    if len(segment):
+        segments.append(segment)
+
+    return segments, path.startswith("/")
+
+
+def _canonicalize(*path: str, from_root: bool) -> Sequence[str]:
+    assert not isinstance(path, str)
+
+    canonical: list[str] = []
+
+    for segment in path:
+        match segment:
+            case ".":
+                continue
+            case ".." if len(canonical) == 0:
+                if not from_root:
+                    canonical.append("..")
+            case ".." if canonical[-1] == "..":
+                canonical.append("..")
+            case "..":
+                canonical.pop()
+            case _:
+                canonical.append(segment)
+
+    return canonical
 
 
 class NotebookPath(Sequence[str]):
@@ -73,18 +128,18 @@ class NotebookPath(Sequence[str]):
         else:
             self._parent = None
 
+        other_parts, _ = _lexe(*parts)
+
         if isinstance(part, NotebookPath):
-            self._parts = NotebookPath._combine(part._parts, parts, part._absolute)
+            self._parts = _canonicalize(*part._parts, *other_parts, from_root=part._absolute)
             self._absolute = part._absolute
             self._parent = part._parent
         elif isinstance(part, str):
-            is_abs = NotebookPath._is_absolute_seq(part) and self._parent is None
-            self._parts = NotebookPath._combine((part,), parts, is_abs)
-            self._absolute = is_abs
+            lexed, is_absolute = _lexe(part)
+            self._absolute = is_absolute and self._parent is None
+            self._parts = _canonicalize(*lexed, *other_parts, from_root=self._absolute)
         else:
-            self._parts = NotebookPath._combine(
-                NotebookPath._of_node(part), parts, True
-            )
+            self._parts = _canonicalize(*NotebookPath._of_node(part), *other_parts, from_root=True)
             self._absolute = True
 
     def __truediv__(self, other: str | NotebookPath) -> NotebookPath:
@@ -310,44 +365,6 @@ class NotebookPath(Sequence[str]):
     def __str__(self) -> str:
         """Return the slash-separated string form of the path."""
         return self.to_string()
-
-    @staticmethod
-    def _is_absolute_seq(a: Sequence[str]) -> bool:
-        """Return ``True`` if the first element of ``a`` starts with ``/``."""
-        return len(a) > 0 and a[0].startswith("/")
-
-    @staticmethod
-    def _combine(a: Sequence[str], b: Sequence[str], from_root: bool) -> Sequence[str]:
-        """Merge two sequences of raw path segments into a normalised list.
-
-        Splits each element on ``/``, strips whitespace, drops empty segments
-        and ``.``, and resolves ``..`` (popping the previous segment, or
-        keeping ``..`` literally at the start of a relative path).
-
-        :param a: First sequence of raw segments (e.g. from an existing path).
-        :param b: Second sequence of raw segments to append.
-        :param from_root: Whether the combined path is rooted (absolute). When
-            ``True``, a leading ``..`` is silently dropped instead of kept.
-        :returns: A flat list of normalised, non-empty segment strings.
-        """
-        canonical: list[str] = []
-
-        # NOTE no support for escapes
-        for segment in [k.strip() for part in [*a, *b] for k in part.split("/")]:
-            match segment:
-                case "." | "":
-                    continue
-                case "..":
-                    if len(canonical) == 0:
-                        if not from_root:
-                            canonical.append("..")
-                    elif canonical[-1] == "..":
-                        canonical.append("..")
-                    else:
-                        canonical.pop()
-                case _:
-                    canonical.append(segment)
-        return canonical
 
     @staticmethod
     def _of_node(a: AbstractBaseTreeNode) -> Sequence[str]:

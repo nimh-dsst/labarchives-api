@@ -33,6 +33,30 @@ def test_notebook_path_normalization():
     assert str(path) == "/Experiments/2024"
 
 
+def test_notebook_path_escaped_slash_is_literal_segment_character():
+    """Test escaped slashes do not split path segments."""
+    path = NotebookPath(r"/Experiments/Figure\/1")
+
+    assert path.is_absolute() is True
+    assert list(path) == ["Experiments", "Figure/1"]
+    assert path.name == "Figure/1"
+
+
+def test_notebook_path_escaped_segments_with_multiple_parts():
+    """Test escaped slashes work across appended path parts."""
+    path = NotebookPath(r"Folder\/Name", r"Page\/Name")
+
+    assert path.is_absolute() is False
+    assert list(path) == ["Folder/Name", "Page/Name"]
+
+
+def test_notebook_path_div_operator_accepts_escaped_slashes():
+    """Test path appending keeps escaped slashes inside a single segment."""
+    path = NotebookPath("/Experiments") / r"Figure\/1"
+
+    assert list(path) == ["Experiments", "Figure/1"]
+
+
 def test_notebook_path_from_node():
     """Test NotebookPath creation from a tree node."""
     mock_root = Mock()
