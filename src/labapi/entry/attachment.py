@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 import tempfile
 from mimetypes import guess_type
+from os import PathLike
 from pathlib import Path
 from typing import IO, Any, BinaryIO, Protocol, TypeAlias, cast
 
@@ -87,20 +88,29 @@ class Attachment:
         return True
 
     @staticmethod
-    def from_file(file: NamedBinaryIO) -> Attachment:
-        """Create an attachment by cloning a random-access file object.
+    def from_file(file: NamedBinaryIO | PathLike[str] | str) -> Attachment:
+        """Create an attachment by cloning a file object or filesystem path.
 
         The content of the provided file is copied into a temporary buffer,
-        making the Attachment independent of the original file's state.
-        The MIME type is automatically guessed from the local file name.
-        If the MIME type cannot be determined, it defaults to
-        "application/octet-stream". The file handle must support random
-        access so ``labapi`` can rewind it, typically via ``seekable()`` or
+        making the Attachment independent of the original file's state. If a
+        filesystem path is provided, ``labapi`` opens it in binary mode before
+        cloning it. The MIME type is automatically guessed from the local file
+        name. If the MIME type cannot be determined, it defaults to
+        ``"application/octet-stream"``. File-like inputs must support random
+        access so ``labapi`` can rewind them, typically via ``seekable()`` or
         working ``seek()`` and ``tell()`` methods.
 
-        :param file: The file object to create an attachment from. Must have a `name` attribute.
+        :param file: The filesystem path or file object to create an
+                     attachment from.
         :returns: A new Attachment object wrapping a clone of the file.
         """
+        match (
+            file
+        ):  # This is sorta dumb but the typechecker was complaining about isinstance
+            case str(s) | PathLike(s):
+                with Path(s).open("rb") as stream:
+                    return Attachment.from_file(cast(NamedBinaryIO, stream))
+
         if not Attachment._is_seekable(file):
             raise ValueError("Attachment.from_file requires a seekable file object")
 

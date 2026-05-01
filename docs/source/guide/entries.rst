@@ -120,11 +120,9 @@ You can also create an attachment directly from a file on disk:
 
    with open("data.csv", "rb") as f:
        attachment = Attachment.from_file(f)
-       page.entries.create(AttachmentEntry, attachment)
+   page.entries.create(AttachmentEntry, attachment)
 
-``Attachment.from_file()`` requires a random-access file object so it can
-rewind the stream while cloning it. In practice, standard binary file handles
-opened from disk work well.
+``Attachment.from_file()`` requires a random-access file object or file path.
 
 Working with JSON Data
 ----------------------
@@ -156,9 +154,8 @@ For attachments, setting the ``content`` property with a new :class:`~labapi.ent
 
 .. code-block:: python
 
-   with open("updated_data.csv", "rb") as f:
-       new_attachment = Attachment.from_file(f)
-       attachment_entry.content = new_attachment
+   new_attachment = Attachment.from_file("updated_data.csv")
+   attachment_entry.content = new_attachment
 
 Related Pages
 -------------
