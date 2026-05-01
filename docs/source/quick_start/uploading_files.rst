@@ -10,22 +10,19 @@ the target page. The examples below assume you already have a ``page`` object.
 Create an Attachment
 --------------------
 
-Build an :class:`~labapi.entry.attachment.Attachment` from a binary file handle:
+Build an :class:`~labapi.entry.attachment.Attachment` from a filename or path:
 
 .. code-block:: python
 
    from labapi import Attachment
 
-   with open("my_file.txt", "rb") as f:
-       attachment = Attachment.from_file(f)
+   attachment = Attachment.from_file("my_file.txt")
 
 .. note::
    :meth:`~labapi.entry.attachment.Attachment.from_file` requires a
    random-access binary file object so it can rewind the stream before
-   copying it. Standard file handles opened with ``"rb"`` or ``"rb+"`` work
-   well. On some Python 3.10 stdlib file objects, working ``seek()`` and
-   ``tell()`` support is sufficient even if a ``seekable()`` method is not
-   exposed.
+   copying it. Standard file handles opened with ``"rb"`` or ``"rb+"`` should work
+   well.
 
 If the MIME type cannot be determined from the filename, ``labapi`` falls back
 to ``application/octet-stream``.

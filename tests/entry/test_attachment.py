@@ -33,6 +33,44 @@ def test_attachment_from_file():
         temp_file_path.unlink(missing_ok=True)
 
 
+def test_attachment_from_filename_str():
+    """Test creating Attachment from a filesystem path string."""
+    with tempfile.NamedTemporaryFile(
+        mode="w+b", suffix=".txt", delete=False
+    ) as temp_file:
+        temp_file.write(b"Test content from str path")
+        temp_file_path = Path(temp_file.name)
+
+    try:
+        attachment = Attachment.from_file(str(temp_file_path))
+
+        temp_file_path.unlink()
+
+        assert attachment.read() == b"Test content from str path"
+        assert attachment.filename == temp_file_path.name
+        assert attachment.mime_type == "text/plain"
+    finally:
+        temp_file_path.unlink(missing_ok=True)
+
+
+def test_attachment_from_filename_pathlike():
+    """Test creating Attachment from a Path object."""
+    with tempfile.NamedTemporaryFile(
+        mode="w+b", suffix=".txt", delete=False
+    ) as temp_file:
+        temp_file.write(b"Test content from Path")
+        temp_file_path = Path(temp_file.name)
+
+    try:
+        attachment = Attachment.from_file(temp_file_path)
+
+        assert attachment.read() == b"Test content from Path"
+        assert attachment.filename == temp_file_path.name
+        assert attachment.mime_type == "text/plain"
+    finally:
+        temp_file_path.unlink(missing_ok=True)
+
+
 def test_attachment_from_file_buffered_reader():
     """Test creating Attachment from a BufferedReader (opened with rb)."""
     # Create a temporary file
@@ -96,7 +134,7 @@ def test_attachment_from_file_unknown_mimetype():
 
 
 def test_attachment_from_file_requires_seekable_file():
-    """Test cloning rejects non-seekable file-like objects."""
+    """Test cloning rejects non-seekable file-like inputs."""
 
     class NonSeekableBytesIO(BytesIO):
         def __init__(self, data: bytes, name: str):

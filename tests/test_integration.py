@@ -160,11 +160,10 @@ def data_dir_structure(root_test_dir: LA.NotebookDirectory):
         if not sess_1[Index.Name : "data.json"]:
             from pathlib import Path
 
-            with (Path(__file__).parent / "test_entry.json").open("rb") as f:
-                data_att = LA.Attachment.from_file(f)
-                sess_1.create(LA.NotebookPage, "data.json").entries.create(
-                    LA.AttachmentEntry, data_att
-                )
+            sess_1.create(LA.NotebookPage, "data.json").entries.create(
+                LA.AttachmentEntry,
+                LA.Attachment.from_file(Path(__file__).parent / "test_entry.json"),
+            )
 
         # notes.txt
         if not sess_1[Index.Name : "notes.txt"]:

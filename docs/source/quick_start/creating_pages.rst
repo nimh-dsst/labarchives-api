@@ -64,10 +64,7 @@ page:
    page.entries.create(HeaderEntry, "Experiment Results")
    page.entries.create(TextEntry, "<p>This is <b>bold</b> text.</p>")
    page.entries.create(PlainTextEntry, "Simple unformatted text")
-
-   with open("results.csv", "rb") as f:
-       attachment = Attachment(f, "text/csv", "results.csv", "Experiment data")
-       page.entries.create(AttachmentEntry, attachment)
+   page.entries.create(AttachmentEntry, Attachment.from_file("results.csv"))
 
 Entry Types
 ~~~~~~~~~~~
