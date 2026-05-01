@@ -7,7 +7,7 @@ import tempfile
 from mimetypes import guess_type
 from os import PathLike
 from pathlib import Path
-from typing import IO, Any, BinaryIO, Protocol, TypeAlias, cast
+from typing import IO, Any, BinaryIO, Protocol, TypeAlias, TypeGuard, cast
 
 from typing_extensions import Buffer
 
@@ -51,6 +51,11 @@ class NamedBinaryIO(Protocol):
     def seekable(self) -> bool:
         """Return whether the stream supports random access."""
         ...
+
+
+def is_strpathlike(obj: Any) -> TypeGuard[PathLike[str]]:
+    """Return whether ``obj`` is a path-like object with a string path."""
+    return isinstance(obj, PathLike) and isinstance(obj.__fspath__(), str)
 
 
 class Attachment:
@@ -104,12 +109,11 @@ class Attachment:
                      attachment from.
         :returns: A new Attachment object wrapping a clone of the file.
         """
-        match (
-            file
-        ):  # This is sorta dumb but the typechecker was complaining about isinstance
-            case str(s) | PathLike(s):
-                with Path(s).open("rb") as stream:
-                    return Attachment.from_file(cast(NamedBinaryIO, stream))
+        if isinstance(file, str) or is_strpathlike(file):
+            with Path(file).open("rb") as stream:
+                return Attachment.from_file(cast(NamedBinaryIO, stream))
+
+        assert not isinstance(file, PathLike)
 
         if not Attachment._is_seekable(file):
             raise ValueError("Attachment.from_file requires a seekable file object")
