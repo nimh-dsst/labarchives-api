@@ -31,6 +31,7 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosummary",
+    "sphinx.ext.githubpages",
     "sphinx_copybutton",
     "sphinx_design",
 ]
@@ -46,6 +47,7 @@ language = "en"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "breeze"
+html_baseurl = "https://nimh-dsst.github.io/labapi/"
 html_static_path = ["_static"]
 
 # Intersphinx mapping
